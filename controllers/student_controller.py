@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from data_helper import get_student_subjects_grades
+from helpers.data_helper import get_student_subjects_grades
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors

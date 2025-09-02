@@ -4,10 +4,12 @@ import os
 import pymongo
 from pymongo import MongoClient
 import time
+from config.constants import MONGODB_URI
+
+
 pd.set_option('display.max_columns', None)
 
-uri = f"mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net/mit261"
-client = MongoClient(uri)
+client = MongoClient(MONGODB_URI)
 
 max_age = 3600  # 1 hour
 
@@ -284,9 +286,9 @@ def get_instructor_subjects(instructor_name=None, limit=1000):
 # ===============================
 if __name__ == "__main__":
 
-    data = get_subjects() #329747
+    data = test() #329747
 
-    print(data.head(30))
+    print(data)
 
-    pass
+    
 

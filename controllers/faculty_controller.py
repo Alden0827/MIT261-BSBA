@@ -1,4 +1,4 @@
-from data_helper import get_instructor_subjects
+from helpers.data_helper import get_instructor_subjects
 import pandas as pd
 
 def faculty_view(st):

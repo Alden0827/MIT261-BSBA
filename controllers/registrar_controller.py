@@ -1,6 +1,6 @@
 
 import streamlit as st
-from data_helper import get_student_grades_with_info
+from helpers.data_helper import get_student_grades_with_info
 import matplotlib.pyplot as plt
 
 def registrar_view(st, semesters, subjects):
