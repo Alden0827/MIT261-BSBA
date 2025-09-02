@@ -217,7 +217,7 @@ def registrar_view(st, db):
             if st.form_submit_button("Save Semester"):
                 db.semester.insert_one({"schoolYear": sy, "term": term, "status": status})
                 st.success("Semester added")
-                st.experimental_rerun()
+                st.rerun()
 
         # Update Semester Status
         if semesters:
@@ -226,7 +226,7 @@ def registrar_view(st, db):
             if st.button("Update Status"):
                 db.semester.update_one({"_id": selected_sem}, {"$set": {"status": new_status}})
                 st.success("Semester status updated")
-                st.experimental_rerun()
+                st.rerun()
 
     # ---------------------------
     # 3️⃣ Class Scheduling
@@ -258,7 +258,7 @@ def registrar_view(st, db):
                     "schedule": []
                 })
                 st.success("Class schedule added")
-                st.experimental_rerun()
+                st.rerun()
 
     # ---------------------------
     # 4️⃣ Enrollment Approvals
@@ -277,12 +277,12 @@ def registrar_view(st, db):
                 if st.button("✅ Approve", key=f"approve_{e['_id']}"):
                     db.enrollments.update_one({"_id": e["_id"]}, {"$set": {"status": "Enrolled"}})
                     st.success("Enrollment approved")
-                    st.experimental_rerun()
+                    st.rerun()
             with col2:
                 if st.button("❌ Deny", key=f"deny_{e['_id']}"):
                     db.enrollments.update_one({"_id": e["_id"]}, {"$set": {"status": "Denied"}})
                     st.warning("Enrollment denied")
-                    st.experimental_rerun()
+                    st.rerun()
 
     # ---------------------------
     # 5️⃣ Grade Management
@@ -301,7 +301,7 @@ def registrar_view(st, db):
             if st.button("Save Grade", key=f"save_{e['_id']}"):
                 db.enrollments.update_one({"_id": e["_id"]}, {"$set": {"grade": grade, "status": status}})
                 st.success("Grade saved")
-                st.experimental_rerun()
+                st.rerun()
 
     # ---------------------------
     # 6️⃣ Reports

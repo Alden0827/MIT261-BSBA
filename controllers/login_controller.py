@@ -24,7 +24,7 @@ def login_view():
                 st.session_state["user_role"] = user["role"]
                 st.session_state["username"] = user["username"]
                 st.success("Logged in successfully!")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Invalid username or password.")
 
