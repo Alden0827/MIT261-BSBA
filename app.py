@@ -5,10 +5,15 @@ from controllers.student_controller import student_view
 from controllers.dashboard_controller import dasboard_view
 from controllers.login_controller import login_view
 from helpers.data_helper import get_students, get_grades, get_semesters, get_subjects
+from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError, AutoReconnect
-from config.constants import APP_TITLE, DEFAULT_PAGE_TITLE
+from config.constants import APP_TITLE, DEFAULT_PAGE_TITLE, MONGODB_URI
 
 st.set_page_config(page_title=DEFAULT_PAGE_TITLE, layout="wide")
+
+# Database connection
+client = MongoClient(MONGODB_URI)
+db = client["mit261"]
 
 # Initialize session state
 if "logged_in" not in st.session_state:
@@ -79,7 +84,7 @@ def main():
     elif menu == "Faculty":
         faculty_view(st)
     elif menu == "Registrar":
-        registrar_view(st, semesters, subjects)
+        registrar_view(st, db)
 
     # ---------------- Footer ----------------
     st.markdown("""
