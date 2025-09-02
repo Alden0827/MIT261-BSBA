@@ -4,6 +4,7 @@ import os
 import pymongo
 from pymongo import MongoClient
 import time
+import bcrypt
 from config.constants import MONGODB_URI
 
 
@@ -279,6 +280,21 @@ def get_instructor_subjects(instructor_name=None, limit=1000):
 
     return load_or_query(cache_key, query)
 
+
+
+def get_user(username):
+    """
+    Fetches a user from the userAccounts collection.
+    """
+    db = client["mit261"]
+    users_collection = db["userAccounts"]
+    return users_collection.find_one({"username": username})
+
+def verify_password(password, hashed_password):
+    """
+    Verifies a password against a hashed password.
+    """
+    return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 
 
 # ===============================
