@@ -296,15 +296,29 @@ def verify_password(password, hashed_password):
     """
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 
+def generate_password_hash(password: str) -> bytes:
+    """
+    Generates a bcrypt hash for a given plain-text password.
+
+    Args:
+        password (str): The plain-text password to hash.
+
+    Returns:
+        bytes: The hashed password as bytes (compatible with verify_password).
+    """
+    password_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed
 
 # ===============================
 # TEST RUN
 # ===============================
 if __name__ == "__main__":
 
-    data = test() #329747
-
-    print(data)
+    
+    print( generate_password_hash("1234")) #   b'$2b$12$7gc.TcApIFGSEC3anIVHoufkm5L/vx.t0O5Vj8syaCAn7UOvW6Nyu'
+    print( generate_password_hash("12345")) #   b'$2b$12$cyfm3cRoTZRzg6SMeL3.n.B.RZDy0k77aXU.YxCKQw/OU1kdozRoi'
 
     
 

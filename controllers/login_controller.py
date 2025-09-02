@@ -1,9 +1,10 @@
 import streamlit as st
 from helpers.data_helper import get_user, verify_password
+from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 
 def login_view():
     """
-    Displays the login form and handles user authentication.
+    Displays the login form and handles user authentication with error handling.
     """
     st.title("Login")
 
@@ -15,13 +16,24 @@ def login_view():
             st.error("Please enter both username and password.")
             return
 
-        user = get_user(username)
+        try:
+            user = get_user(username)  # This may raise a PyMongoError if DB is down
 
-        if user and verify_password(password, user["passwordHash"]):
-            st.session_state["logged_in"] = True
-            st.session_state["user_role"] = user["role"]
-            st.session_state["username"] = user["username"]
-            st.success("Logged in successfully!")
-            st.experimental_rerun()
-        else:
-            st.error("Invalid username or password.")
+            if user and verify_password(password, user["passwordHash"]):
+                st.session_state["logged_in"] = True
+                st.session_state["user_role"] = user["role"]
+                st.session_state["username"] = user["username"]
+                st.success("Logged in successfully!")
+                st.experimental_rerun()
+            else:
+                st.error("Invalid username or password.")
+
+        except ServerSelectionTimeoutError as e:
+            st.error("Cannot connect to the database. Please try again later.")
+            # st.exception(e)
+        except PyMongoError as e:
+            st.error("A database error occurred. Please contact support.")
+            st.exception(e)
+        except Exception as e:
+            st.error("An unexpected error occurred.")
+            st.exception(e)
