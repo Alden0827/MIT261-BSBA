@@ -10,12 +10,11 @@ def registrar_view(st, db):
     menu = st.sidebar.radio(
         "Registrar Menu",
         [
-            "📚 Dashboard",
+            "📊 Dashboard",
             "📚 Curriculum Manager",
-            "🧑‍🎓 Student Records",
+            "🧑‍ Student Records",
             "🗓 Semester Control",
             "📑 Class Scheduling",
-            # "🧑‍ Enrollment Approvals",
             # "📝 Grade Management",
             "📈 Reports"
         ]
@@ -24,7 +23,7 @@ def registrar_view(st, db):
     # ---------------------------
     # 1️⃣ Curriculum Manager
     # ---------------------------
-    if menu == "📚 Dashboard":
+    if menu == "📊 Dashboard":
         dasboard_view(st)
 
     # ---------------------------
@@ -37,7 +36,7 @@ def registrar_view(st, db):
     # ---------------------------
     # 🧑‍🎓 Student Records
     # ---------------------------
-    elif menu == "🧑‍🎓 Student Records":
+    elif menu == "🧑‍ Student Records":
         from .registrar.student_records_manager import student_records_manager_page
         student_records_manager_page(st,db)
 
