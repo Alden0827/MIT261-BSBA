@@ -1,38 +1,17 @@
-import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
-import os
-import pickle
-import time
+from streamlit_echarts import st_echarts #pip install streamlit-echarts
+import os, pickle, time
 from helpers.data_helper import get_students, get_grades, get_semesters, get_subjects
 
 CACHE_FILE = "./cache/dashboard_cache.pkl"
 CACHE_TTL = 3600  # 1 hour in seconds
 
-def load_or_cache_data(subjects, students, grades, semesters):
-    """
-    Load cached data from pickle if it exists and is recent.
-    Otherwise, cache the current data to pickle.
-    """
-    if os.path.exists(CACHE_FILE):
-        cache_age = time.time() - os.path.getmtime(CACHE_FILE)
-        if cache_age < CACHE_TTL:
-            with open(CACHE_FILE, "rb") as f:
-                return pickle.load(f)
-
-    # Cache does not exist or is expired, save current data
-    data = (subjects, students, grades, semesters)
-    with open(CACHE_FILE, "wb") as f:
-        pickle.dump(data, f)
-    return data
-
 def dasboard_view(st):
-    # Load cached data
     grades = get_grades()
     students = get_students()
     semesters = get_semesters()
     subjects = get_subjects()
-    # subjects, students, grades, semesters = load_or_cache_data(subjects, students, grades, semesters)
 
     st.title("🎓 University Dashboard")
 
@@ -54,35 +33,51 @@ def dasboard_view(st):
         students_per_course = students.groupby("Course")["_id"].count().reset_index()
         students_per_course.rename(columns={"_id": "Count"}, inplace=True)
 
-        fig1, ax1 = plt.subplots(figsize=(6, 4))
-        ax1.bar(students_per_course["Course"], students_per_course["Count"], color="skyblue")
-        ax1.set_xlabel("Course")
-        ax1.set_ylabel("Number of Students")
-        ax1.set_title("Students per Course")
-        ax1.set_xticklabels(students_per_course["Course"], rotation=45, ha="right")
-        for i, v in enumerate(students_per_course["Count"]):
-            ax1.text(i, v + 0.5, str(v), ha="center")
-        st.pyplot(fig1)
+        option1 = {
+            "tooltip": {"trigger": "axis"},
+            "xAxis": {"type": "category", "data": students_per_course["Course"].tolist()},
+            "yAxis": {"type": "value"},
+            "series": [{
+                "data": students_per_course["Count"].tolist(),
+                "type": "bar",
+                "itemStyle": {"color": "#5DADE2"},
+                "label": {"show": True, "position": "top"}
+            }]
+        }
+        st_echarts(options=option1, height="400px")
 
     # Grade Distribution
     with row1_col2:
         st.subheader("📊 Grade Distribution")
         all_grades_list = [g for row in grades["Grades"] for g in row]
-        df_grades_dist = pd.DataFrame({"Grade": all_grades_list})
 
-        fig3, ax3 = plt.subplots(figsize=(6, 4))
-        ax3.hist(df_grades_dist["Grade"], bins=10, color="salmon", edgecolor="black")
-        ax3.set_xlabel("Grade")
-        ax3.set_ylabel("Number of Students")
-        ax3.set_title("Grade Distribution")
-        st.pyplot(fig3)
+        option2 = {
+            "tooltip": {},
+            "xAxis": {"type": "category", "data": list(range(50, 101, 5))},
+            "yAxis": {"type": "value"},
+            "series": [{
+                "type": "histogram",
+                "data": all_grades_list,
+                "itemStyle": {"color": "#E74C3C"}
+            }]
+        }
+        # ECharts has no direct "histogram", we simulate with bar count
+        import numpy as np
+        hist, bins = np.histogram(all_grades_list, bins=10)
+        option2["xAxis"]["data"] = [f"{int(bins[i])}-{int(bins[i+1])}" for i in range(len(bins)-1)]
+        option2["series"] = [{
+            "data": hist.tolist(),
+            "type": "bar",
+            "itemStyle": {"color": "#E74C3C"},
+            "label": {"show": True, "position": "top"}
+        }]
+        st_echarts(options=option2, height="400px")
 
     st.markdown("---")
 
     # ---------------- Charts Row 2 ----------------
     st.subheader("📈 Average GPA per Semester")
 
-    # Flatten grades with semester info
     all_grades = []
     for idx, row in grades.iterrows():
         for g, sem_id in zip(
@@ -92,22 +87,23 @@ def dasboard_view(st):
             all_grades.append({"Grade": g, "SemesterID": sem_id})
     df_grades = pd.DataFrame(all_grades)
 
-    # Merge with semesters to get semester names and school year
     df_grades = df_grades.merge(semesters, left_on="SemesterID", right_on="_id", how="left")
-
-    # Create a combined label for semester + school year
     df_grades["SemesterLabel"] = df_grades["Semester"].astype(str) + " " + df_grades["SchoolYear"].astype(str)
 
-    # Calculate average GPA per semester label
     gpa_per_semester = df_grades.groupby("SemesterLabel")["Grade"].mean().reset_index()
 
-    # Plot GPA trend
-    fig2, ax2 = plt.subplots(figsize=(12, 4))
-    ax2.plot(gpa_per_semester["SemesterLabel"], gpa_per_semester["Grade"], marker="o", color="darkorange")
-    ax2.set_xlabel("Semester & School Year")
-    ax2.set_ylabel("Average GPA")
-    ax2.set_title("Average GPA Trend by Semester")
-    ax2.set_ylim(50, 100)
-    ax2.set_xticklabels(gpa_per_semester["SemesterLabel"], rotation=45, ha="right")
-    ax2.grid(True)
-    st.pyplot(fig2)
+    option3 = {
+        "tooltip": {"trigger": "axis"},
+        "xAxis": {"type": "category", "data": gpa_per_semester["SemesterLabel"].tolist()},
+        "yAxis": {"type": "value", "min": 50, "max": 100},
+        "series": [{
+            "data": gpa_per_semester["Grade"].round(2).tolist(),
+            "type": "line",
+            "smooth": True,
+            "symbol": "circle",
+            "symbolSize": 10,
+            "itemStyle": {"color": "#F39C12"},
+            "label": {"show": True, "position": "top"}
+        }]
+    }
+    st_echarts(options=option3, height="400px")
