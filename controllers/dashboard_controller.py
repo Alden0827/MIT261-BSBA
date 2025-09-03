@@ -4,6 +4,7 @@ import streamlit as st
 import os
 import pickle
 import time
+from helpers.data_helper import get_students, get_grades, get_semesters, get_subjects
 
 CACHE_FILE = "./cache/dashboard_cache.pkl"
 CACHE_TTL = 3600  # 1 hour in seconds
@@ -25,9 +26,13 @@ def load_or_cache_data(subjects, students, grades, semesters):
         pickle.dump(data, f)
     return data
 
-def dasboard_view(st, subjects, students, grades, semesters):
+def dasboard_view(st):
     # Load cached data
-    subjects, students, grades, semesters = load_or_cache_data(subjects, students, grades, semesters)
+    grades = get_grades()
+    students = get_students()
+    semesters = get_semesters()
+    subjects = get_subjects()
+    # subjects, students, grades, semesters = load_or_cache_data(subjects, students, grades, semesters)
 
     st.title("🎓 University Dashboard")
 

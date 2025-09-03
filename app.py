@@ -26,25 +26,26 @@ def main():
     # ---------------- Header ----------------
     st.markdown(f"""
         <div style="background-color:#4B8BBE;padding:10px;border-radius:5px">
-            <h2 style="color:white;text-align:center;">{APP_TITLE}</h2>
+            <h5 style="color:white;text-align:center;">{APP_TITLE}</h5>
         </div>
     """, unsafe_allow_html=True)
 
     # ---------------- Load data safely ----------------
-    students, semesters, subjects = None, None, None
+    # students, semesters, subjects = None, None, None
 
-    try:
-        students = get_students()
-        semesters = get_semesters()
-        subjects = get_subjects()
-    except (ServerSelectionTimeoutError, AutoReconnect) as e:
-        st.error("❌ Could not connect to MongoDB. Please check your connection.")
-        st.code(str(e))
-        st.stop()
-    except Exception as e:
-        st.error("⚠️ Unexpected error while loading data.")
-        st.code(str(e))
-        st.stop()
+    # try:
+        # grades = get_grades()
+    # students = get_students()
+        # semesters = get_semesters()
+        # subjects = get_subjects()
+    # except (ServerSelectionTimeoutError, AutoReconnect) as e:
+    #     st.error("❌ Could not connect to MongoDB. Please check your connection.")
+    #     st.code(str(e))
+    #     st.stop()
+    # except Exception as e:
+    #     st.error("⚠️ Unexpected error while loading data.")
+    #     st.code(str(e))
+    #     st.stop()
 
     # ---------------- Sidebar Navigation ----------------
     menu_options = {
@@ -68,19 +69,19 @@ def main():
         st.session_state["logged_in"] = False
         st.session_state["user_role"] = None
         st.session_state["username"] = None
-        st.experimental_rerun()
+        st.rerun()
 
 
     # ---------------- Pages ----------------
     if menu == "Dashboard":
         try:
-            grades = get_grades()
-            dasboard_view(st, subjects, students, grades, semesters)
+            
+            dasboard_view(st)
         except Exception as e:
             st.error("⚠️ Failed to load grades.")
             st.code(str(e))
     elif menu == "Student Evaludation":
-        student_view(st, students)
+        student_view(st)
     elif menu == "Faculty":
         faculty_view(st)
     elif menu == "Registrar":

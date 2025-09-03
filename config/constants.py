@@ -1,6 +1,6 @@
 DEFAULT_PAGE_TITLE = "MIT261-BSBA"
 # APP_TITLE = "🏫 University DASHBOARD"
-APP_TITLE = "🏫 DASHBOARD"
+APP_TITLE = "🏫 BSBA Department Academic Records Management System"
 
 
 

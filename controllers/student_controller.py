@@ -7,9 +7,10 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 import matplotlib.pyplot as plt
+from helpers.data_helper import get_students
 
 def student_view(st, students):
-
+    students = get_students()
     st.title("🧑‍🎓 Student Prospectus & GPA")
 
     # ---------------- ACTION BAR (TOP) ----------------

@@ -1,10 +1,56 @@
 
-### my uri
-uri = "mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net/mit261"
+### uri -------------------------------------------------------------------------------
+uri = "mongodb+srv://{username}:{password}@cluster0.l7fdbmf.mongodb.net/mit261"
+
+### helpers ---------------------------------------------------------------------------
+link to helpers: https://drive.google.com/drive/folders/1ur1fB7jEjsAgV_Kib-rm1Gq_0VLxANfh?usp=sharing
+
+//para sa login page nyo, use the verify password helper under data_helper.py
+example:
+
+import streamlit as st
+from data_helper import get_user, verify_password
+from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
+
+def login_view():
+    """
+    Displays the login form and handles user authentication with error handling.
+    """
+    st.title("Login")
+
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+        if not username or not password:
+            st.error("Please enter both username and password.")
+            return
+
+        try:
+            user = get_user(username)  # This may raise a PyMongoError if DB is down
+
+            if user and verify_password(password, user["passwordHash"]):
+                st.session_state["logged_in"] = True
+                st.session_state["user_role"] = user["role"]
+                st.session_state["username"] = user["username"]
+                st.success("Logged in successfully!")
+                st.rerun()
+            else:
+                st.error("Invalid username or password.")
+
+        except ServerSelectionTimeoutError as e:
+            st.error("Cannot connect to the database. Please try again later.")
+            # st.exception(e)
+        except PyMongoError as e:
+            st.error("A database error occurred. Please contact support.")
+            st.exception(e)
+        except Exception as e:
+            st.error("An unexpected error occurred.")
+            st.exception(e)
 
 
 
-### current collection with sample data (default from maam brenda)
+### current collection with sample data (default from maam brenda)---------------------
 collection: grades | sample data:  {'_id': 1, 'StudentID': 1, 'SubjectCodes': ['IT304'], 'Grades': [79], 'Teachers': ['Prof. Henry Dologuin'], 'SemesterID': 1}
 collection: semesters | sample data:  {'_id': 1, 'Semester': 'FirstSem', 'SchoolYear': 2020}
 collection: students | sample data:  {'_id': 1, 'Name': 'Lejeune, Niel Alfred F.', 'Course': 'Information Technology', 'YearLevel': 1}
