@@ -12,35 +12,6 @@ collection: subjects | sample data:  {'_id': 'IT101', 'Description': 'Introducti
 
 ### additional collections ------------------------------------------------------------
 
-# prospectus collection
-{
-  "_id": 1,
-  "studentId": 1,                     
-  "curruculum": [
-    {
-      "_id": {
-        "$oid": "68b6a4a4b4ad4b9a7a79e496"
-      },
-      "programCode": "BSBA",
-      "programName": "BACHELOR OF SCIENCE IN BUSINESS ADMINISTRATION",
-      "curriculumYear": "2025-2026",
-      "subjects": [
-        {
-          "year": 1,
-          "semester": "First",
-          "code": "GE 200",
-          "name": "Understanding the Sell",
-          "lec": 3,
-          "lab": 0,
-          "unit": 3,
-          "preRequisites": [],
-          "grade": 86
-        },
-      ]
-    }
-  ]
-}
-
 #curriculum
 {
   "_id": {

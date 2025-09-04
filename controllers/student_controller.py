@@ -9,7 +9,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 import matplotlib.pyplot as plt
 from helpers.data_helper import get_students
 
-def student_view(st, students):
+def student_view(st):
     students = get_students()
     st.title("🧑‍🎓 Student Prospectus & GPA")
 

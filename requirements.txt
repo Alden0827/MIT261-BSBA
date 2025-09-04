@@ -5,3 +5,4 @@ python-dotenv
 matplotlib
 bcrypt
 fpdf2
+streamlit-echarts

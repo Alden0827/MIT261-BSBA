@@ -1,0 +1,581 @@
+📘 First Year
+
+First Semester (23 units)
+
+Understanding the Self (GE 101) – 3
+
+Readings in Philippine History (GE 103) – 3
+
+Mathematics in the Modern World (GE 402) – 3
+
+Science, Technology and Society (GE 302) – 3
+
+Arts Appreciation (GE 301) – 3
+
+Living in the IT Era (GE 501) – 3
+
+Principles of Marketing (Mktg 1) – 3
+
+PE 1: Physical Activities Toward Health and Fitness 1 – 2
+
+NSTP 1 – 3
+
+Second Semester (23 units)
+
+Ethics (GE 303) – 3
+
+Purposive Communication (GE 102) – 3
+
+The Contemporary World (GE 104) – 3
+
+Civic Welfare Training Service 2 (NSTP 2) – 3
+
+Physical Activities Toward Health and Fitness 2 – 2
+
+(Other Business Core subjects continue, like Fundamentals of Accounting, Business Statistics, etc. — as shown in Year 2)
+
+📘 Second Year
+
+First Semester (20 units)
+
+Purposive Communication (GE 102) – 3
+
+The Contemporary World (GE 104) – 3
+
+Product Management (Mktg 1) – 3
+
+Marketing Management (BACC 3) – 3
+
+International Business & Trade (Mktg 1) – 3
+
+E-Commerce & Internet Marketing (Mktg 1) – 3
+
+PE 2: Health and Fitness 3 Dance – 2
+
+Second Semester (20 units)
+
+Fundamentals of Accounting 1 (Acctg 1) – 3
+
+Business Statistics (Math 201) – 3
+
+Human Resource Management (BACC 3) – 3
+
+Business Law & Contracts – 3
+
+Distribution Management (MM3) – 3
+
+Marketing Research (MM4) – 3
+
+PE 3: Physical Activities Toward Health and Fitness 4 Sports – 2
+
+📘 Third Year
+
+First Semester (15 units)
+
+Methods of Business Research (Math 201) – 3
+
+Social Responsibility & Good Governance – 3
+
+Advertising – 3
+
+Retail Management (MM3) – 3
+
+Income Taxation (Acctg 1) – 3
+
+Second Semester (15 units)
+
+Business Research (Thesis 2) – 3
+
+Qualitative Techniques in Business – 3
+
+Franchising – 3
+
+Pricing Strategy (MM3) – 3
+
+Operations Management (TQM) – 3
+
+📘 Fourth Year
+
+First Semester (15 units)
+
+Strategic Management (CSMEC) – 3
+
+Feasibility Study (Acctg 11) – 3
+
+Professional Salesmanship (Mktg1) – 3
+
+Entrepreneurial Management (CSMEC) – 3
+
+New Market Development (MM2) – 3
+
+Second Semester (6 units)
+
+Internship / Work Integrated Learning (600 hrs) – 6
+
+
+
+-------------------
+{
+  "_id": {
+    "$oid": "68b6a4a4b4ad4b9a7a79e496"
+  },
+  "programCode": "BSBA",
+  "programName": "BACHELOR OF SCIENCE IN BUSINESS ADMINISTRATION Major in Marketing Management",
+  "curriculumYear": "2025-2026",
+  "subjects": [
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 101",
+      "name": "Understanding the Self",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 103",
+      "name": "Readings in Philippine History",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 104",
+      "name": "The Contemporary World",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 301",
+      "name": "Arts Appreciation",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 501",
+      "name": "Living in the IT Era",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "Mktg 1",
+      "name": "Principles of Marketing",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "PE 1",
+      "name": "Physical Activities Towards Health and Fitness 1 - Movement Competency Training",
+      "lec": 2,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "NSTP 1",
+      "name": "Civic Welfare Training Services 1",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "GE 402",
+      "name": "Mathematics in the Modern World",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "GE 302",
+      "name": "Ethics",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "GE 303",
+      "name": "Science, Technology and Society",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "GE 200",
+      "name": "Purposive Communication",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "PE 2",
+      "name": "Physical Activities Towards Health and Fitness 2 - Exercise-based Fitness Activities",
+      "lec": 2,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": ["PE 1"]
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "NSTP 2",
+      "name": "Civic Welfare Training Services 2",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": ["NSTP 1"]
+    }
+
+    // year 2
+	{
+	"year": 2,
+	"semester": "First",
+	"code": "GE 200",
+	"name": "Purposive Communication",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": []
+	},
+	{
+	"year": 2,
+	"semester": "First",
+	"code": "GE 104",
+	"name": "The Contemporary World",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": []
+	},
+	{
+	"year": 2,
+	"semester": "First",
+	"code": "Mktg 1",
+	"name": "Product Management",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": ["Mktg 1"]
+	},
+	{
+	"year": 2,
+	"semester": "First",
+	"code": "BACC 3",
+	"name": "Marketing Management",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": []
+	},
+	{
+	"year": 2,
+	"semester": "First",
+	"code": "MM3",
+	"name": "International Business & Trade",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": ["Mktg 1"]
+	},
+	{
+	"year": 2,
+	"semester": "First",
+	"code": "MM 1",
+	"name": "E-Commerce & Internet Marketing",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": ["Mktg 1"]
+	},
+	{
+	"year": 2,
+	"semester": "First",
+	"code": "PE 2",
+	"name": "Physical Activities Towards Health and Fitness 3 - Dance",
+	"lec": 2,
+	"lab": 0,
+	"unit": 2,
+	"preRequisites": ["PE 1"]
+	},
+	{
+	"year": 2,
+	"semester": "Second",
+	"code": "ACCTG 1",
+	"name": "Fundamentals of Accounting 1",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": []
+	},
+	{
+	"year": 2,
+	"semester": "Second",
+	"code": "Math 201",
+	"name": "Business Statistics",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": ["GE 402"]
+	},
+	{
+	"year": 2,
+	"semester": "Second",
+	"code": "BACC 3",
+	"name": "Human Resource Management",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": []
+	},
+	{
+	"year": 2,
+	"semester": "Second",
+	"code": "BACC 4",
+	"name": "Business Law (Obligation and Contracts)",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": []
+	},
+	{
+	"year": 2,
+	"semester": "Second",
+	"code": "MM3",
+	"name": "Distribution Management",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": ["MM3"]
+	},
+	{
+	"year": 2,
+	"semester": "Second",
+	"code": "MM 4",
+	"name": "Marketing Research",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": ["MM2"]
+	},
+	{
+	"year": 2,
+	"semester": "Second",
+	"code": "PE 3",
+	"name": "Physical Activities Towards Health and Fitness 4 - Sports",
+	"lec": 2,
+	"lab": 0,
+	"unit": 2,
+	"preRequisites": ["PE 2"]
+	}
+
+	# year 3
+
+	{
+	"year": 3,
+	"semester": "First",
+	"code": "Thesis 1",
+	"name": "Methods of Business Research",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": ["Math 201"]
+	},
+	{
+	"year": 3,
+	"semester": "First",
+	"code": "MM 6",
+	"name": "Social Responsibility & Good Governance",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": []
+	},
+	{
+	"year": 3,
+	"semester": "First",
+	"code": "ELEC 1",
+	"name": "Advertising",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": []
+	},
+	{
+	"year": 3,
+	"semester": "First",
+	"code": "MM 3",
+	"name": "Retail Management",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": ["MM3"]
+	},
+	{
+	"year": 3,
+	"semester": "First",
+	"code": "ACCTG 11",
+	"name": "Income Taxation",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": ["ACCTG 1"]
+	},
+	{
+	"year": 3,
+	"semester": "Second",
+	"code": "Thesis 2",
+	"name": "Business Research",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": ["Thesis 1"]
+	},
+	{
+	"year": 3,
+	"semester": "Second",
+	"code": "MM 7",
+	"name": "Qualitative Techniques in Business",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": []
+	},
+	{
+	"year": 3,
+	"semester": "Second",
+	"code": "ELEC 2",
+	"name": "Franchising",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": ["ELEC 1"]
+	},
+	{
+	"year": 3,
+	"semester": "Second",
+	"code": "MM 7",
+	"name": "Pricing Strategy",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": ["MM3"]
+	},
+	{
+	"year": 3,
+	"semester": "Second",
+	"code": "TQM 3",
+	"name": "Operations Management (TQM)",
+	"lec": 3,
+	"lab": 0,
+	"unit": 3,
+	"preRequisites": []
+	}
+
+	# year 4
+
+
+  {
+    "year": 4,
+    "semester": "First",
+    "code": "CSMEC",
+    "name": "Strategic Management",
+    "lec": 3,
+    "lab": 0,
+    "unit": 3,
+    "preRequisites": ["CSMEC"]
+  },
+  {
+    "year": 4,
+    "semester": "First",
+    "code": "ACCTG 11",
+    "name": "Feasibility Study",
+    "lec": 3,
+    "lab": 0,
+    "unit": 3,
+    "preRequisites": ["ACCTG 11"]
+  },
+  {
+    "year": 4,
+    "semester": "First",
+    "code": "Mktg 1",
+    "name": "Professional Salesmanship",
+    "lec": 3,
+    "lab": 0,
+    "unit": 3,
+    "preRequisites": ["Mktg 1"]
+  },
+  {
+    "year": 4,
+    "semester": "First",
+    "code": "CSMEC",
+    "name": "Entrepreneurial Management",
+    "lec": 3,
+    "lab": 0,
+    "unit": 3,
+    "preRequisites": ["CSMEC"]
+  },
+  {
+    "year": 4,
+    "semester": "First",
+    "code": "MM 2",
+    "name": "New Market Development",
+    "lec": 3,
+    "lab": 0,
+    "unit": 3,
+    "preRequisites": ["MM2"]
+  },
+  {
+    "year": 4,
+    "semester": "Second",
+    "code": "MM 9",
+    "name": "Internship / Work Integrated Learning (600 hrs)",
+    "lec": 6,
+    "lab": 0,
+    "unit": 6,
+    "preRequisites": ["Graduating"]
+  }
+	
+
+
+  ]
+}
+
+

@@ -7,3 +7,4 @@ APP_TITLE = "🏫 BSBA Department Academic Records Management System"
 
 
 MONGODB_URI = f"mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net/mit261"
+DB_NAME = "mit261"

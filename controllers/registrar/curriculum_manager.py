@@ -130,13 +130,13 @@ def curriculum_manager_page(st, db):
                                 col2.write(subj["name"])
                                 col3.markdown(
                                     f"""
-                                    <span>Le: <b>{subj['lec']}</b></span> &nbsp;
+                                    <span>Lec: <b>{subj['lec']}</b></span> &nbsp;
                                     <span>Lab: <b>{subj['lab']}</b></span> &nbsp;
                                     <span>Unit: <b>{subj['unit']}</b></span>
                                     """,
                                     unsafe_allow_html=True
                                 )
-                                col4.write(", ".join(map(str, subj["preRequisites"])))
+                                col4.write("Prerequisites:" + ", ".join(map(str, subj["preRequisites"])))
 
                                 try:
                                     if col5.button("✏️", key=f"edit_{subj['code']}"):
