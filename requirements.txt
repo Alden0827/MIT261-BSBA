@@ -6,3 +6,4 @@ matplotlib
 bcrypt
 fpdf2
 streamlit-echarts
+reportlab
