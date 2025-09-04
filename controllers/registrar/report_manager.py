@@ -243,7 +243,7 @@ def generate_enrollment_summary_pdf(db):
             pdf.cell(40, 10, str(student.get("YearLevel", "N/A")), 1)
             pdf.ln()
 
-    return pdf.output(dest='S').encode('latin-1')
+    return pdf.output(dest='S') #return pdf.output(dest='S').encode('latin-1')
 
 def generate_grade_distribution_pdf(db):
     pdf = PDF('P', 'mm', 'A4', title='Grade Distribution Report')
@@ -253,7 +253,7 @@ def generate_grade_distribution_pdf(db):
     all_enrollments = list(db.enrollments.find({"grade": {"$ne": None}}))
     if not all_enrollments:
         pdf.cell(0, 10, "No grades available for this report.", ln=True)
-        return pdf.output(dest='S').encode('latin-1')
+        return pdf.output(dest='S')
 
     grades = [enrollment['grade'] for enrollment in all_enrollments]
     letter_grades = [get_letter_grade(score) for score in grades]
@@ -289,7 +289,7 @@ def generate_grade_distribution_pdf(db):
             pdf.cell(30, 10, get_letter_grade(enrollment.get("grade", 0)), 1)
             pdf.ln()
 
-    return pdf.output(dest='S').encode('latin-1')
+    return pdf.output(dest='S')
 
 def generate_faculty_workload_pdf(db):
     pdf = PDF('P', 'mm', 'A4', title='Faculty Workload Report')
@@ -309,7 +309,7 @@ def generate_faculty_workload_pdf(db):
 
     if not workload_data:
         pdf.cell(0, 10, "No faculty workload data available.", ln=True)
-        return pdf.output(dest='S').encode('latin-1')
+        return pdf.output(dest='S')
 
     for faculty in workload_data:
         pdf.set_font('Arial', 'B', 12)
@@ -324,7 +324,7 @@ def generate_faculty_workload_pdf(db):
             pdf.cell(0, 10, f"- {subject}", ln=True)
         pdf.ln(5)
 
-    return pdf.output(dest='S').encode('latin-1')
+    return pdf.output(dest='S')
 
 def generate_class_schedule_pdf(db):
     pdf = PDF('L', 'mm', 'A4', title='Class Schedule Report') # Landscape mode
@@ -347,7 +347,7 @@ def generate_class_schedule_pdf(db):
 
     if not schedule_data:
         pdf.cell(0, 10, "No class schedule data available.", ln=True)
-        return pdf.output(dest='S').encode('latin-1')
+        return pdf.output(dest='S')
 
     # Table Header
     pdf.set_font('Arial', 'B', 8)
@@ -371,7 +371,7 @@ def generate_class_schedule_pdf(db):
             pdf.cell(25, 10, schedule_entry.get('room', 'N/A'), 1)
             pdf.ln()
 
-    return pdf.output(dest='S').encode('latin-1')
+    return pdf.output(dest='S')
 
 # --- Main Page ---
 
