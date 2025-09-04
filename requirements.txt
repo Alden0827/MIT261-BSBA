@@ -4,6 +4,6 @@ pymongo
 python-dotenv
 matplotlib
 bcrypt
-fpdf2
+fpdf
 streamlit-echarts
 reportlab
