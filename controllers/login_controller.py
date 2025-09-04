@@ -1,55 +1,39 @@
 import streamlit as st
+from helpers.data_helper import get_user, verify_password
+from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 
-# Inject Bootstrap CSS
-st.markdown(
+def login_view():
     """
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    """,
-    unsafe_allow_html=True,
-)
-
-# Centered login card
-st.markdown(
+    Displays the login form and handles user authentication with error handling.
     """
-    <div class="container d-flex justify-content-center align-items-center" 
-         style="min-height: 100vh;">
-        <div class="card shadow-lg p-4 rounded-4" style="max-width: 420px; width: 100%;">
-            
-            <!-- Logo + University Name -->
-            <div class="text-center mb-4">
-                <img src="https://upload.wikimedia.org/wikipedia/en/thumb/5/50/University_of_the_Philippines_seal.svg/120px-University_of_the_Philippines_seal.svg.png" 
-                     width="80" class="mb-3"/>
-                <h4 class="fw-bold">Your University Name</h4>
-                <p class="text-muted">Login Portal</p>
-            </div>
-            
-            <!-- Username + Password fields (labels only, Streamlit will render inputs) -->
-            <div class="mb-3">
-                <label class="form-label">Username</label>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-            </div>
-            
-            <!-- Placeholder for Streamlit inputs -->
-        </div>
-    </div>
-    
-    <!-- Author -->
-    <div class="text-center mt-3 text-muted">
-        <small>Developed by <b>Alden A. Quiñones</b></small>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+    st.title("Login")
 
-# Streamlit inputs (aligned with Bootstrap labels above)
-username = st.text_input("Username", key="username_input")
-password = st.text_input("Password", type="password", key="password_input")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
 
-# Login button
-if st.button("Login", use_container_width=True):
-    if username == "admin" and password == "1234":
-        st.success("✅ Login successful!")
-    else:
-        st.error("❌ Invalid username or password")
+    if st.button("Login"):
+        if not username or not password:
+            st.error("Please enter both username and password.")
+            return
+
+        try:
+            user = get_user(username)  # This may raise a PyMongoError if DB is down
+
+            if user and verify_password(password, user["passwordHash"]):
+                st.session_state["logged_in"] = True
+                st.session_state["user_role"] = user["role"]
+                st.session_state["username"] = user["username"]
+                st.success("Logged in successfully!")
+                st.rerun()
+            else:
+                st.error("Invalid username or password.")
+
+        except ServerSelectionTimeoutError as e:
+            st.error("Cannot connect to the database. Please try again later.")
+            # st.exception(e)
+        except PyMongoError as e:
+            st.error("A database error occurred. Please contact support.")
+            st.exception(e)
+        except Exception as e:
+            st.error("An unexpected error occurred.")
+            st.exception(e)
