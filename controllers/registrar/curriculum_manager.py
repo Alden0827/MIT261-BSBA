@@ -1,4 +1,5 @@
 import pandas as pd
+from helpers.data_helper import get_subjects
 
 def curriculum_manager_page(st, db):
     # --- Custom button CSS ---
@@ -46,25 +47,63 @@ def curriculum_manager_page(st, db):
     # ✅ Dialog for Add Subject
     @st.dialog("Add Subject")
     def add_subject_dialog(program_doc):
+        # --- Fetch subjects for dropdown ---
+        subjects_df = get_subjects()
+        if subjects_df.empty:
+            st.warning("⚠️ No subjects found in the database. Please add subjects first.")
+            return
+
+        subjects_list = subjects_df.to_dict('records')
+        subject_options = {s['Description']: s for s in subjects_list}
+
         with st.form("add_subject"):
-            subj_code = st.text_input("Subject Code").strip().upper()
-            subj_name = st.text_input("Subject Name")
             year = st.number_input("Year Level", min_value=1, max_value=5, value=1)
             semester = st.selectbox("Semester", ["First", "Second", "Summer"])
-            lec = st.number_input("Lecture Units", min_value=0, max_value=10)
-            lab = st.number_input("Lab Units", min_value=0, max_value=10)
+
+            selected_subject_name = st.selectbox(
+                "Select Subject",
+                options=[""] + list(subject_options.keys()),
+                index=0,
+                format_func=lambda x: "Select a subject..." if x == "" else x
+            )
+
+            # --- Auto-populate fields based on selection ---
+            selected_subject = None
+            if selected_subject_name:
+                selected_subject = subject_options[selected_subject_name]
+                subj_code = selected_subject['Subject Code']
+                # In subjects collection, 'Units' is the total.
+                # We'll put it all in 'lec' and 0 in 'lab' as a default.
+                lec = int(selected_subject['Units'])
+                lab = 0
+
+                st.text_input("Subject Code", value=subj_code, disabled=True)
+                st.number_input("Lecture Units", value=lec, disabled=True)
+                st.number_input("Lab Units", value=lab, disabled=True)
+
+            else:
+                # Keep fields empty and editable if no subject is selected
+                st.text_input("Subject Code", value="", disabled=True, help="Select a subject to auto-fill")
+                st.number_input("Lecture Units", value=0, disabled=True)
+                st.number_input("Lab Units", value=0, disabled=True)
+
             prereq = st.text_input("Prerequisites (comma-separated)")
 
             if st.form_submit_button("Save Subject"):
-                subj_code_norm = subj_code.strip().upper()
+                if not selected_subject:
+                    st.error("❌ Please select a subject.")
+                    return
+
+                subj_code_norm = selected_subject['Subject Code'].strip().upper()
+                subj_name = selected_subject['Description']
+                final_lec = int(selected_subject['Units'])
+                final_lab = 0
 
                 program = db.curriculum.find_one({"_id": program_doc["_id"]})
                 existing_codes = {s["code"].strip().upper() for s in program.get("subjects", [])}
 
-                if not subj_code_norm:
-                    st.error("❌ Subject Code is required")
-                elif subj_code_norm in existing_codes:
-                    st.warning(f"⚠️ Subject `{subj_code}` already exists. Cannot add duplicate.")
+                if subj_code_norm in existing_codes:
+                    st.warning(f"⚠️ Subject `{subj_code_norm}` already exists in this curriculum.")
                 else:
                     db.curriculum.update_one(
                         {"_id": program_doc["_id"]},
@@ -73,9 +112,9 @@ def curriculum_manager_page(st, db):
                             "semester": semester,
                             "code": subj_code_norm,
                             "name": subj_name,
-                            "lec": lec,
-                            "lab": lab,
-                            "unit": lec + lab,
+                            "lec": final_lec,
+                            "lab": final_lab,
+                            "unit": final_lec + final_lab,
                             "preRequisites": [s.strip().upper() for s in prereq.split(",") if s.strip()]
                         }}}
                     )
