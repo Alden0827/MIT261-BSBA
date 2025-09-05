@@ -7,7 +7,7 @@ from controllers.login_controller import login_view
 from helpers.data_helper import get_students, get_grades, get_semesters, get_subjects
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError, AutoReconnect
-from config.constants import APP_TITLE, DEFAULT_PAGE_TITLE, MONGODB_URI
+from config.settings import APP_TITLE, DEFAULT_PAGE_TITLE, MONGODB_URI
 
 st.set_page_config(page_title=DEFAULT_PAGE_TITLE, layout="wide")
 

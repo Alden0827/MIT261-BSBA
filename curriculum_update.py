@@ -1,7 +1,7 @@
 # ----------------- update_curriculum.py -----------------
 from pymongo import MongoClient
 from bson import ObjectId
-from config.constants import MONGODB_URI, DB_NAME
+from config.settings import MONGODB_URI, DB_NAME
 
 # --- MongoDB connection ---
 

@@ -5,14 +5,14 @@ import pymongo
 from pymongo import MongoClient
 import time
 import bcrypt
-from config.constants import MONGODB_URI
+from config.settings import MONGODB_URI, CACHE_MAX_AGE
 
 
 pd.set_option('display.max_columns', None)
 
 client = MongoClient(MONGODB_URI)
 
-max_age = 3600  # 1 hour
+
 
 
 def load_or_query(cache_file, query_func):
@@ -20,7 +20,7 @@ def load_or_query(cache_file, query_func):
     """Load DataFrame from cache or run query function."""
     if os.path.exists(cache_file):
         file_age = time.time() - os.path.getmtime(cache_file)
-        if file_age < max_age:
+        if file_age < CACHE_MAX_AGE:
             return pd.read_pickle(cache_file)
 
     df = query_func()

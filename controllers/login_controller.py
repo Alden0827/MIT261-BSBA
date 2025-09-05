@@ -1,7 +1,7 @@
 import streamlit as st
 from helpers.data_helper import get_user, verify_password
 from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
-from config.constants import APP_TITLE
+from config.settings import APP_TITLE
 def login_view():
     """
     Displays the login form and handles user authentication with error handling.

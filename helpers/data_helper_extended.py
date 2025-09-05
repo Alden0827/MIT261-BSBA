@@ -1,11 +1,15 @@
 
+
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 # -------------------- data_helper_extended.py --------------------
 
 import os, time
 import pandas as pd
 from pymongo import MongoClient
+from config.settings import MONGODB_URI, CACHE_MAX_AGE
 
-client = MongoClient("mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net/mit261")
+client = MongoClient(MONGODB_URI)
 max_age = 3600  # 1 hour cache
 
 def load_or_query(cache_file: str, query_func) -> pd.DataFrame:
@@ -24,7 +28,7 @@ def load_or_query(cache_file: str, query_func) -> pd.DataFrame:
         os.makedirs("./cache")
     if os.path.exists(cache_file):
         file_age = time.time() - os.path.getmtime(cache_file)
-        if file_age < max_age:
+        if file_age < CACHE_MAX_AGE:
             return pd.read_pickle(cache_file)
 
     df = query_func()
@@ -48,7 +52,7 @@ def get_prospectus(studentId=None, programCode=None, curriculumYear=None, limit=
     """
     cache_key = f"prospectus_{studentId}_{programCode}_{curriculumYear}"
     def query():
-        db = client["mit261"]
+        db = client[MONGODB_DATABASE]
         col = db["prospectus"]
         filter_query = {}
         if studentId: filter_query["studentId"] = studentId
@@ -73,7 +77,7 @@ def get_faculty(facultyName=None, department=None, limit=1000) -> pd.DataFrame:
     """
     cache_key = f"faculty_{facultyName}_{department}"
     def query():
-        db = client["mit261"]
+        db = client[MONGODB_DATABASE]
         col = db["faculty"]
         filter_query = {}
         if facultyName:
@@ -100,7 +104,7 @@ def get_semester(schoolYear=None, term=None, status=None, limit=1000) -> pd.Data
     """
     cache_key = f"semester_{schoolYear}_{term}_{status}"
     def query():
-        db = client["mit261"]
+        db = client[MONGODB_DATABASE]
         col = db["semester"]
         filter_query = {}
         if schoolYear: filter_query["schoolYear"] = schoolYear
@@ -127,7 +131,7 @@ def get_class_schedule(subjectId=None, facultyId=None, semesterId=None, section=
     """
     cache_key = f"classSchedule_{subjectId}_{facultyId}_{semesterId}_{section}"
     def query():
-        db = client["mit261"]
+        db = client[MONGODB_DATABASE]
         col = db["classSchedule"]
         filter_query = {}
         if subjectId: filter_query["subjectId"] = subjectId
@@ -154,7 +158,7 @@ def get_enrollments(studentId=None, classOfferingId=None, status=None, limit=100
     """
     cache_key = f"enrollments_{studentId}_{classOfferingId}_{status}"
     def query():
-        db = client["mit261"]
+        db = client[MONGODB_DATABASE]
         col = db["enrollments"]
         filter_query = {}
         if studentId: filter_query["studentId"] = studentId
@@ -177,7 +181,7 @@ def get_student_enrollments_with_info(studentId=None, limit=1000) -> pd.DataFram
     """
     cache_key = f"student_enrollments_info_{studentId}"
     def query():
-        db = client["mit261"]
+        db = client[MONGODB_DATABASE]
         enroll_col = db["enrollments"]
         pipeline = []
         if studentId:
@@ -227,7 +231,7 @@ def get_user_accounts(role=None, linkedId=None, limit=1000) -> pd.DataFrame:
     """
     cache_key = f"userAccounts_{role}_{linkedId}"
     def query():
-        db = client["mit261"]
+        db = client[MONGODB_DATABASE]
         col = db["userAccounts"]
         filter_query = {}
         if role: filter_query["role"] = role
@@ -235,3 +239,39 @@ def get_user_accounts(role=None, linkedId=None, limit=1000) -> pd.DataFrame:
         cursor = col.find(filter_query)
         return pd.DataFrame(list(cursor))[:limit]
     return load_or_query(cache_key, query)
+
+
+if __name__ == "__main__":
+    print("🔍 Testing data_helper_extended functions...\n")
+
+    try:
+        print("Prospectus:")
+        df = get_prospectus(limit=5)
+        print(df.head(), "\n")
+
+        print("Faculty:")
+        df = get_faculty(limit=5)
+        print(df.head(), "\n")
+
+        print("Semester:")
+        df = get_semester(limit=5)
+        print(df.head(), "\n")
+
+        print("Class Schedule:")
+        df = get_class_schedule(limit=5)
+        print(df.head(), "\n")
+
+        print("Enrollments:")
+        df = get_enrollments(limit=5)
+        print(df.head(), "\n")
+
+        print("Student Enrollments with Info:")
+        df = get_student_enrollments_with_info(studentId=123, limit=5)
+        print(df.head(), "\n")
+
+        print("User Accounts:")
+        df = get_user_accounts(limit=5)
+        print(df.head(), "\n")
+
+    except Exception as e:
+        print("❌ Error while testing functions:", e)
