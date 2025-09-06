@@ -1,11 +1,15 @@
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+
 import pandas as pd
 from dotenv import load_dotenv
-import os
 import pymongo
 from pymongo import MongoClient
 import time
 import bcrypt
 from config.settings import MONGODB_URI, CACHE_MAX_AGE
+
 
 
 pd.set_option('display.max_columns', None)
@@ -21,12 +25,42 @@ def load_or_query(cache_file, query_func):
     if os.path.exists(cache_file):
         file_age = time.time() - os.path.getmtime(cache_file)
         if file_age < CACHE_MAX_AGE:
+            print('Load from cache!')
             return pd.read_pickle(cache_file)
+
 
     df = query_func()
     if not df.empty:
-        df.to_pickle(cache_file)
+        # df.to_pickle(cache_file)
+        pass
     return df
+
+
+def get_students_collection(StudentID=None, limit=100000000):
+    def query():
+        db = client["mit261"]
+        students_col = db["students"]
+
+        query_filter = {"Course": "BSBA"}
+
+        if StudentID:
+            # Use direct match if single ID, or $in if list of IDs
+            if isinstance(StudentID, list):
+                query_filter["_id"] = {"$in": StudentID}
+            else:
+                query_filter["_id"] = StudentID
+
+        cursor = students_col.find(
+            query_filter,
+            {"_id": 1, "Name": 1, "Course": 1, "YearLevel": 1}
+        )
+
+        if limit:
+            cursor = cursor.limit(limit)
+
+        return pd.DataFrame(list(cursor))
+
+    return load_or_query("students_cache_x.pkl", query)
 
 
 def get_students(StudentID=None, limit=100000000):
@@ -37,8 +71,10 @@ def get_students(StudentID=None, limit=100000000):
 
         # Get unique student IDs that have grades
         filter_ids = {}
+        # filter_ids["Course"] = 'BSBA'
         if StudentID:
             filter_ids["_id"] = StudentID
+            
 
         student_ids_with_grades = grades_col.distinct("StudentID", filter=filter_ids)
 
@@ -341,8 +377,7 @@ def get_curriculum(program_code):
 if __name__ == "__main__":
 
     
-    print( generate_password_hash("1234")) #   b'$2b$12$7gc.TcApIFGSEC3anIVHoufkm5L/vx.t0O5Vj8syaCAn7UOvW6Nyu'
-    print( generate_password_hash("12345")) #   b'$2b$12$cyfm3cRoTZRzg6SMeL3.n.B.RZDy0k77aXU.YxCKQw/OU1kdozRoi'
+    print( get_students_collection().head(1000)) #   b'$2b$12$7gc.TcApIFGSEC3anIVHoufkm5L/vx.t0O5Vj8syaCAn7UOvW6Nyu'
 
     
 

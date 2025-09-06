@@ -19,3 +19,5 @@ def grade_manager_page(st,db):
             db.enrollments.update_one({"_id": e["_id"]}, {"$set": {"grade": grade, "status": status}})
             st.success("Grade saved")
             st.rerun()
+
+            

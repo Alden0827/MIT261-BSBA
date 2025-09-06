@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from helpers.data_helper import get_student_subjects_grades, get_curriculum, get_students
+from helpers.data_helper import get_student_subjects_grades, get_curriculum, get_students, get_students_collection
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def student_view(st):
-    students = get_students()
+    # students = get_students_collection()
+    students = get_students(StudentID=500001)
     st.title("🧑‍🎓 Student Prospectus & GPA")
 
     # ---------------- ACTION BAR (TOP) ----------------

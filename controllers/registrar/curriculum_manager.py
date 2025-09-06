@@ -70,6 +70,7 @@ def curriculum_manager_page(st, db):
             # --- Auto-populate fields based on selection ---
             selected_subject = None
             if selected_subject_name:
+                # print('subject_options:',subject_options)
                 selected_subject = subject_options[selected_subject_name]
                 subj_code = selected_subject['Subject Code']
                 # In subjects collection, 'Units' is the total.

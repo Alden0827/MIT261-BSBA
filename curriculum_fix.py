@@ -1,26 +1,9 @@
-# ----------------- update_curriculum.py -----------------
-from pymongo import MongoClient
-from bson import ObjectId
-from config.settings import MONGODB_URI, DB_NAME
-
-# --- MongoDB connection ---
-
-
-
-COLLECTION_NAME = "curriculum"
-client = MongoClient(MONGODB_URI)
-db = client[DB_NAME]
-collection = db[COLLECTION_NAME]
-
-# --- Example curriculum document ---
-curriculum_id = ObjectId("68b6a4a4b4ad4b9a7a79e496")  # existing _id
-
 updated_curriculum = { 
 "programCode": "BSBA", 
 "programName": "BACHELOR OF SCIENCE IN BUSINESS ADMINISTRATION Major in Marketing Management", 
 "curriculumYear": "2025-2026", 
 "subjects": [ 
- # year 1------------------------- 
+ # ------------------------- 
 {"year": 1, "semester": "First", "code": "GE 200","name": "Understanding the Sell","lec": 3,"lab": 0,"unit": 3,"preRequisites": []},
 {"year": 1, "semester": "First", "code": "GE 203", "name": "Life and Works of Rizal", "lec": 3, "lab": 0, "unit": 3, "preRequisites": [] },
 {"year": 1, "semester": "First", "code": "GE 204", "name": "Gender and Society", "lec": 3, "lab": 0, "unit": 3, "preRequisites": [] },
@@ -39,7 +22,7 @@ updated_curriculum = {
 {"year": 1, "semester": "Second", "code": "PE 2", "name": "Physical Activities Towards Health and Fitness 2 - Excercise-based Fitness Activities", "lec": 2, "lab": 0, "unit": 2, "preRequisites": ["PE 1"] },
 {"year": 1, "semester": "Second", "code": "NSTP 2", "name": "Civic Welfare Training Services 2", "lec": 3, "lab": 0, "unit": 3, "preRequisites": ["NSTP 1"] },
 
- # year 2 ------------------------- 
+ # ------------------------- # year 2 
 {"year": 2, "semester": "First", "code": "GE 104", "name": "Purposive Communication", "lec": 3, "lab": 0, "unit": 3, "preRequisites": [] },
 {"year": 2, "semester": "First", "code": "GE 102", "name": "The Contemporary World", "lec": 3, "lab": 0, "unit": 3, "preRequisites": [] },
 {"year": 2, "semester": "First", "code": "MM 1", "name": "Marketing Management", "lec": 3, "lab": 0, "unit": 3, "preRequisites": ["Mktg 1"] },
@@ -55,7 +38,7 @@ updated_curriculum = {
 {"year": 2, "semester": "Second", "code": "MM 3", "name": "Distribution Management", "lec": 3, "lab": 0, "unit": 3, "preRequisites": ["MM 1","MM 2"] },
 {"year": 2, "semester": "Second", "code": "MM 4", "name": "Marketing Research", "lec": 3, "lab": 0, "unit": 3, "preRequisites": ["MM 1","MM 2"] },
 {"year": 2, "semester": "Second", "code": "PE 4", "name": "Physical Activities Towards Health and Fitness 4 - Sports", "lec": 2, "lab": 0, "unit": 2, "preRequisites": ["PE 3"] },
- # year 3 -------------------------
+ # year 3 
 {"year": 3, "semester": "First", "code": "Thesis 1", "name": "Methods of Business Research Writing", "lec": 3, "lab": 0, "unit": 3, "preRequisites": ["Math 201"] },
 {"year": 3, "semester": "First", "code": "BACC 5", "name": "Social Responsibility & Good Governance", "lec": 3, "lab": 0, "unit": 3, "preRequisites": [] },
 {"year": 3, "semester": "First", "code": "MM 5", "name": "Advertising", "lec": 3, "lab": 0, "unit": 3, "preRequisites": ["ELEC 1"] },
@@ -66,7 +49,7 @@ updated_curriculum = {
 {"year": 3, "semester": "Second", "code": "ELEC 2", "name": "Franchising", "lec": 3, "lab": 0, "unit": 3, "preRequisites": ["ELEC 1"] },
 {"year": 3, "semester": "Second", "code": "MM 7", "name": "Pricing Strategy", "lec": 3, "lab": 0, "unit": 3, "preRequisites": ["MM 4"] },
 {"year": 3, "semester": "Second", "code": "CBMEC 1", "name": "Operations Management (TQM)", "lec": 3, "lab": 0, "unit": 3, "preRequisites": [] },
- # year 4 -------------------------
+ # year 4 
 {"year": 4, "semester": "First", "code": "CBMEC 2", "name": "Strategic Management", "lec": 3, "lab": 0, "unit": 3, "preRequisites": ["CBMEC 1"] },
 {"year": 4, "semester": "First", "code": "BACC 7", "name": "Feasibility Study", "lec": 3, "lab": 0, "unit": 3, "preRequisites": ["ACCTG 11"] },
 {"year": 4, "semester": "First", "code": "MM 8", "name": "Professional Salesmanship", "lec": 3, "lab": 0, "unit": 3, "preRequisites": ["Mktg 1"] },
@@ -74,15 +57,3 @@ updated_curriculum = {
 {"year": 4, "semester": "First", "code": "ELEC 4", "name": "New Market Development", "lec": 3, "lab": 0, "unit": 3, "preRequisites": ["MM2"] },
 {"year": 4, "semester": "Second", "code": "MM 9", "name": "Internship / Work Integrated Learning (600 hrs)", "lec": 6, "lab": 0, "unit": 6, "preRequisites": ["Graduating"] } 
 ]}
-
-
-# --- Update existing document ---
-result = collection.update_one(
-    {"_id": curriculum_id},
-    {"$set": updated_curriculum}
-)
-
-if result.matched_count > 0:
-    print(f"✅ Curriculum with _id={curriculum_id} was updated successfully.")
-else:
-    print(f"⚠️ No document found with _id={curriculum_id}")

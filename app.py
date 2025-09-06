@@ -29,24 +29,7 @@ def main():
             <h5 style="color:white;text-align:center;">{APP_TITLE}</h5>
         </div>
     """, unsafe_allow_html=True)
-
-    # ---------------- Load data safely ----------------
-    # students, semesters, subjects = None, None, None
-
-    # try:
-        # grades = get_grades()
-    # students = get_students()
-        # semesters = get_semesters()
-        # subjects = get_subjects()
-    # except (ServerSelectionTimeoutError, AutoReconnect) as e:
-    #     st.error("❌ Could not connect to MongoDB. Please check your connection.")
-    #     st.code(str(e))
-    #     st.stop()
-    # except Exception as e:
-    #     st.error("⚠️ Unexpected error while loading data.")
-    #     st.code(str(e))
-    #     st.stop()
-
+    
     # ---------------- Sidebar Navigation ----------------
     menu_options = {
         "admin": ["Dashboard", "Student Evaludation", "Faculty", "Registrar"],
