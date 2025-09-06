@@ -12,6 +12,7 @@ def registrar_view(st, db):
         [
             "📊 Dashboard",
             "📚 Curriculum Manager",
+            "📚 Prospectus",
             "🏫 Subjects",
             "🧑‍ Student Records",
             "🗓 Semester Control",
@@ -33,6 +34,13 @@ def registrar_view(st, db):
     elif menu == "📚 Curriculum Manager":
         from .registrar.curriculum_manager import curriculum_manager_page 
         curriculum_manager_page(st,db)
+
+    # ---------------------------
+    # 1️⃣ Prospectus Manager
+    # ---------------------------
+    elif menu == "📚 Prospectus":
+        from .registrar.prospectus_manager import prospectus_page 
+        prospectus_page(st)
 
     # ---------------------------
     # 🏫 Subjects

@@ -41,7 +41,8 @@ def main():
     user_role = st.session_state["user_role"]
     if user_role in menu_options:
         menu = st.sidebar.radio(
-            "Navigation",
+            f"Welcome: {st.session_state['fullname']}",
+
             menu_options[user_role],
             key="sidebar_menu"
         )

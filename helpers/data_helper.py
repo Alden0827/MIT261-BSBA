@@ -377,7 +377,9 @@ def get_curriculum(program_code):
 if __name__ == "__main__":
 
     
-    print( get_students_collection().head(1000)) #   b'$2b$12$7gc.TcApIFGSEC3anIVHoufkm5L/vx.t0O5Vj8syaCAn7UOvW6Nyu'
+    print( get_students_collection().head(1)) #   b'$2b$12$7gc.TcApIFGSEC3anIVHoufkm5L/vx.t0O5Vj8syaCAn7UOvW6Nyu'
+
+    print(get_students().head(1))
 
     
 

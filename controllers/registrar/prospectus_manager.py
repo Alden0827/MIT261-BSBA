@@ -9,14 +9,8 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 import matplotlib.pyplot as plt
 import numpy as np
 
-def student_view(st):
-    # students = get_students_collection()
-
-    StudentID = st.session_state['uid']
-
-
-    students = get_students(StudentID=StudentID)
-
+def prospectus_page(st):
+    students = get_students_collection()
     st.title("🧑‍🎓 Student Prospectus & GPA")
 
     # ---------------- ACTION BAR (TOP) ----------------
@@ -138,21 +132,38 @@ def student_view(st):
         gpa_trend = pd.DataFrame()
         chart_buf = None
 
+    # from io import BytesIO
+    # import pandas as pd
+    # from reportlab.lib import colors
+    # from reportlab.lib.pagesizes import A4
+    # from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+    # from reportlab.lib.styles import getSampleStyleSheet
 
     # ---------------- PDF GENERATION ----------------
     def create_prospectus_pdf(student_row, prospectus_df, gpa, gpa_trend, chart_buf):
         buf = BytesIO()
-        doc = SimpleDocTemplate(buf, pagesize=A4, rightMargin=30, leftMargin=30, topMargin=36, bottomMargin=30)
+        doc = SimpleDocTemplate(
+            buf,
+            pagesize=A4,
+            rightMargin=30,
+            leftMargin=30,
+            topMargin=36,
+            bottomMargin=30,
+        )
         styles = getSampleStyleSheet()
         story = []
 
-        # Header
+        # Compute usable width (page width minus margins)
+        page_width, _ = A4
+        usable_width = page_width - doc.leftMargin - doc.rightMargin
+
+        # ---------------- Header ----------------
         story.append(Paragraph(f"Student Prospectus — {student_row['Name']}", styles["Title"]))
         story.append(Paragraph(f"Course: {student_row['Course']} &nbsp;&nbsp; Year Level: {student_row['YearLevel']}", styles["Normal"]))
         story.append(Paragraph(f"Student ID: {student_row['_id']}", styles["Normal"]))
         story.append(Spacer(1, 12))
 
-        # Summary
+        # ---------------- Summary ----------------
         story.append(Paragraph("Prospectus Summary", styles["Heading2"]))
         total_subjects = len(prospectus_df)
         passed_subjects = (prospectus_df['Status'] == 'Pass').sum()
@@ -166,7 +177,7 @@ def student_view(st):
             ["Failed", failed_subjects],
             ["Not Yet Taken", not_taken],
         ]
-        t_sum = Table(sum_data, hAlign="LEFT", colWidths=[180, 200])
+        t_sum = Table(sum_data, hAlign="LEFT", colWidths=[usable_width * 0.5, usable_width * 0.5])
         t_sum.setStyle(TableStyle([
             ("GRID", (0, 0), (-1, -1), 0.3, colors.grey),
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#eef2ff")),
@@ -175,7 +186,7 @@ def student_view(st):
         story.append(t_sum)
         story.append(Spacer(1, 14))
 
-        # Per-Semester Tables
+        # ---------------- Per-Semester Tables ----------------
         for (year, sem), group in prospectus_df.groupby(["year", "semester"]):
             story.append(Paragraph(f"Year {year} / {sem} Semester", styles["Heading2"]))
 
@@ -184,7 +195,15 @@ def student_view(st):
                 grade_str = f"{r['Grade']:.2f}" if pd.notna(r['Grade']) else "—"
                 data.append([r["Subject Code"], r["Description"], r["unit"], grade_str, r["Status"]])
 
-            tbl = Table(data, hAlign="LEFT", colWidths=[70, 220, 40, 50, 70])
+            col_widths = [
+                usable_width * 0.15,  # Code
+                usable_width * 0.45,  # Description
+                usable_width * 0.10,  # Units
+                usable_width * 0.15,  # Grade
+                usable_width * 0.15,  # Status
+            ]
+
+            tbl = Table(data, hAlign="LEFT", colWidths=col_widths)
             tbl.setStyle(TableStyle([
                 ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#26364a")),
                 ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
@@ -195,14 +214,17 @@ def student_view(st):
             story.append(tbl)
             story.append(Spacer(1, 16))
 
-        # GPA Trend
+        # ---------------- GPA Trend ----------------
         if chart_buf:
             story.append(Paragraph("GPA Trend Chart", styles["Heading2"]))
-            story.append(Image(chart_buf, width=400, height=180))
+            # auto-scale chart to width
+            story.append(Image(chart_buf, width=usable_width, height=usable_width * 0.45))
 
+        # Build PDF
         doc.build(story)
         buf.seek(0)
         return buf.read()
+
 
     # --- Download Button ---
     pdf_buffer = create_prospectus_pdf(student_row, prospectus_df, gpa, gpa_trend, chart_buf)
