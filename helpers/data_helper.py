@@ -311,6 +311,30 @@ def generate_password_hash(password: str) -> bytes:
     hashed = bcrypt.hashpw(password_bytes, salt)
     return hashed
 
+
+def get_curriculum(program_code):
+    """
+    Returns the curriculum for a given program code.
+    """
+    def query():
+        db = client["mit261"]
+        curriculum_col = db["curriculum"]
+
+        program_doc = curriculum_col.find_one({"programCode": program_code})
+
+        if program_doc and "subjects" in program_doc:
+            df = pd.DataFrame(program_doc["subjects"])
+            # Rename columns to be consistent
+            df.rename(columns={"code": "Subject Code", "name": "Description"}, inplace=True)
+            return df
+        else:
+            return pd.DataFrame()
+
+    # Define a cache key based on the program code
+    cache_key = f"curriculum_{program_code}.pkl"
+    return load_or_query(cache_key, query)
+
+
 # ===============================
 # TEST RUN
 # ===============================
