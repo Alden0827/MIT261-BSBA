@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def student_view(st):
-    # students = get_students_collection()
-    students = get_students(StudentID=500001)
+    students = get_students_collection()
+    # students = get_students(StudentID=500001)
     st.title("🧑‍🎓 Student Prospectus & GPA")
 
     # ---------------- ACTION BAR (TOP) ----------------
