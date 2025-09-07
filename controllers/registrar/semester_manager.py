@@ -1,56 +1,41 @@
 import pandas as pd
 import streamlit as st
-from bson.objectid import ObjectId
 
 # ----------------- Dialogs -----------------
 @st.dialog("Add Semester")
 def add_semester_dialog(db):
     st.write("### New Semester")
-    sy = st.text_input("School Year")
-    term = st.selectbox("Term", ["1st Semester", "2nd Semester", "Summer"])
-    status = st.selectbox("Status", ["OPEN", "CLOSED", "ONGOING", "COMPLETED"])
+    sy = st.number_input("School Year", step=1, format="%d")
+    sem = st.selectbox("Semester", ["FirstSem", "SecondSem", "Summer"])
     if st.button("Save Semester"):
-        db.semester.insert_one({"schoolYear": sy, "term": term, "status": status})
+        db.semesters.insert_one({
+            "SchoolYear": int(sy),
+            "Semester": sem
+        })
         st.success("Semester added")
         st.rerun()
 
 @st.dialog("Edit Semester")
 def edit_semester_dialog(db, sem):
     st.write("### Edit Semester")
-    new_sy = st.text_input("School Year", sem["schoolYear"])
-    new_term = st.selectbox(
-        "Term", ["1st Semester", "2nd Semester", "Summer"],
-        index=["1st Semester", "2nd Semester", "Summer"].index(sem["term"])
-    )
-    new_status = st.selectbox(
-        "Status", ["OPEN", "CLOSED", "ONGOING", "COMPLETED"],
-        index=["OPEN", "CLOSED", "ONGOING", "COMPLETED"].index(sem["status"])
+    new_sy = st.number_input("School Year", value=sem["SchoolYear"], step=1, format="%d")
+    new_sem = st.selectbox(
+        "Semester", ["FirstSem", "SecondSem", "Summer"],
+        index=["FirstSem", "SecondSem", "Summer"].index(sem["Semester"])
     )
     if st.button("Update"):
-        db.semester.update_one(
+        db.semesters.update_one(
             {"_id": sem["_id"]},
-            {"$set": {"schoolYear": new_sy, "term": new_term, "status": new_status}}
+            {"$set": {"SchoolYear": int(new_sy), "Semester": new_sem}}
         )
         st.success("Semester updated")
         st.rerun()
 
-@st.dialog("Change Status")
-def change_status_dialog(db, sem):
-    st.write(f"### Change Status for {sem['schoolYear']} - {sem['term']}")
-    new_status = st.selectbox(
-        "New Status", ["OPEN", "CLOSED", "ONGOING", "COMPLETED"],
-        index=["OPEN", "CLOSED", "ONGOING", "COMPLETED"].index(sem["status"])
-    )
-    if st.button("Confirm Update"):
-        db.semester.update_one({"_id": sem["_id"]}, {"$set": {"status": new_status}})
-        st.success("Semester status changed")
-        st.rerun()
-
 @st.dialog("Delete Semester")
 def delete_semester_dialog(db, sem):
-    st.write(f"⚠️ Are you sure you want to delete **{sem['schoolYear']} - {sem['term']}**?")
+    st.write(f"⚠️ Are you sure you want to delete **{sem['SchoolYear']} - {sem['Semester']}**?")
     if st.button("Yes, Delete"):
-        db.semester.delete_one({"_id": sem["_id"]})
+        db.semesters.delete_one({"_id": sem["_id"]})
         st.success("Semester deleted")
         st.rerun()
 
@@ -58,31 +43,48 @@ def delete_semester_dialog(db, sem):
 def semester_manager_page(st, db):
     st.subheader("Semester Control")
 
-    semesters = list(db.semester.find())
+    if st.button("➕ Add Semester"):
+        add_semester_dialog(db)
+
+
+    semesters = list(db.semesters.find())
     if semesters:
-        df = pd.DataFrame(semesters)[["_id", "schoolYear", "term", "status"]]
+        # Only keep the fields in your schema
+        df = pd.DataFrame(semesters)[["_id", "SchoolYear", "Semester"]]
         
         st.write("### Semester List")
 
         for i, row in df.iterrows():
-            col1, col2, col3, col4, col5, col6 = st.columns([2, 2, 2, 2, 2, 4])
-            col1.write(row["schoolYear"])
-            col2.write(row["term"])
-            col3.write(row["status"])
+            col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
+            col1.write(row["SchoolYear"])
+            col2.write(row["Semester"])
 
-            if col4.button("✏️ Edit", key=f"edit_{row['_id']}"):
-                sem = db.semester.find_one({"_id": ObjectId(row["_id"])})
+            if col3.button("✏️ Edit", key=f"edit_{row['_id']}"):
+                sem = db.semesters.find_one({"_id": row["_id"]})
                 edit_semester_dialog(db, sem)
 
-            if col5.button("🗑️ Delete", key=f"delete_{row['_id']}"):
-                sem = db.semester.find_one({"_id": ObjectId(row["_id"])})
+            if col4.button("🗑️ Delete", key=f"delete_{row['_id']}"):
+                sem = db.semesters.find_one({"_id": row["_id"]})
                 delete_semester_dialog(db, sem)
-
-            if col6.button("🔄 Change Status", key=f"status_{row['_id']}"):
-                sem = db.semester.find_one({"_id": ObjectId(row["_id"])})
-                change_status_dialog(db, sem)
     else:
         st.info("No semesters found.")
 
-    if st.button("➕ Add Semester"):
-        add_semester_dialog(db)
+
+
+# sample semesters collection
+# {
+#   "_id": 16,
+#   "Semester": "FirstSem",
+#   "SchoolYear": 2025
+# },
+
+# {
+#   "_id": 17,
+#   "Semester": "SecondSem",
+#   "SchoolYear": 2025
+# },
+# {
+#   "_id": 18,
+#   "Semester": "Summer",
+#   "SchoolYear": 2025
+# }
