@@ -13,7 +13,7 @@ def student_view(st):
     # students = get_students_collection()
 
     StudentID = st.session_state['uid']
-
+    print(f"StudentID in student_view: {StudentID}")
 
     students = get_students(StudentID=StudentID)
 

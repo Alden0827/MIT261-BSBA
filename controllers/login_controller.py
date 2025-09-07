@@ -31,14 +31,14 @@ def login_view():
 
         try:
             user = get_user(username)  # DB query
-            print(user)
+            print('user_df:', user)
             if user and verify_password(password, user["passwordHash"]):
                 st.session_state["logged_in"] = True
                 st.session_state["user_role"] = user["role"]
                 st.session_state["username"] = user["username"]
                 st.session_state["fullname"] = user["fullName"]
                 st.session_state["uid"] = user["UID"]
-
+                print('st.session_state:',st.session_state)
                 st.success("Logged in successfully!")
                 st.rerun()
             else:

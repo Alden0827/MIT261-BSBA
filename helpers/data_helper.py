@@ -73,10 +73,11 @@ def get_students(StudentID=None, limit=100000000):
         filter_ids = {}
         # filter_ids["Course"] = 'BSBA'
         if StudentID:
-            filter_ids["_id"] = StudentID
+            filter_ids["StudentID"] = StudentID
             
 
         student_ids_with_grades = grades_col.distinct("StudentID", filter=filter_ids)
+        print(f"filter_ids:{filter_ids}")
 
         if not student_ids_with_grades:
             return pd.DataFrame(columns=["_id", "Name", "Course", "YearLevel"])
@@ -377,9 +378,10 @@ def get_curriculum(program_code):
 if __name__ == "__main__":
 
     
-    print( get_students_collection().head(1)) #   b'$2b$12$7gc.TcApIFGSEC3anIVHoufkm5L/vx.t0O5Vj8syaCAn7UOvW6Nyu'
+    # print( get_students_collection().head(1)) #   b'$2b$12$7gc.TcApIFGSEC3anIVHoufkm5L/vx.t0O5Vj8syaCAn7UOvW6Nyu'
 
-    print(get_students().head(1))
+    print(get_students(StudentID=500001))
+    # print(get_students())
 
     
 
