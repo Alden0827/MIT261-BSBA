@@ -1,0 +1,150 @@
+
+uri = "mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net/mit261"
+
+create a streamlit application that will generate the following report
+the report should contains a dropdown to select report, them the report will appear after selection.
+in reports use tables and charts 
+
+
+Reports:
+
+A. Student Performance Analytics
+
+Top Performers – Identify the top 10 students with the highest average grades per semester and per school year, per course and per year level; sort results in descending order.
+Failing Students – List students who failed more than 30% of their enrolled subjects; sort results in descending order.
+Students with Grade Improvement – Detect students whose grades improved over time.
+Distribution of Grades – Create a histogram of grades (60–100) and determine the most common range (e.g., 60–69, 70–79, 80–89, 90–100).
+
+B. Subject and Teacher Analytics
+
+Hardest Subject – Find the subjects with the largest failure rate. For each subject, calculate the percentage of failure.
+Easiest Subjects – Subjects with the highest proportion of grades ≥ 90.
+Average Grades per Teacher – Average grades per teacher across all semesters.
+Teachers with High Failures – Teachers with highest number of failures per semester.
+
+C. Course and Curriculum Insights
+
+Grade Trend per Course – Is average grade increasing or decreasing by year for BSCS, BSEE, and BSIT?
+Subject Load Intensity – Average units taken per student per semester, grouped by course.
+General Education vs. Major Subjects Performance – Compare student performance in GE vs. Major subjects.
+
+D. Semester and Academic Year Analysis
+
+Semester with Lowest Average Grade – Find which semester had the lowest GPA across all students.
+Best Performing Semester – Highest overall GPA.
+Grade Deviation Across Semesters – Identify subjects where grade variance is high across semesters.
+
+E. Student Demographics and Behavior
+
+Year Level Distribution – How many students in each year level?
+Student Count per Course – Number of BSCS, BSEE, and BSIT enrolled students.
+Performance by Year Level – Average grades per year level.
+
+collections:
+
+userAccounts
+{
+  "_id": {
+    "$oid": "68b664688519ad27d3877a86"
+  },
+  "username": "registrar",
+  "role": "registrar",
+  "linkedId": null,
+  "passwordHash": {
+    "$binary": {
+      "base64": "JDJiJDEyJEpGWmRNUkR1cGJScExhVUI2czBpRnVlaC5IMC9LZ0pJUzJzYkNrN0NWWkU0WUxqckQ1bG9L",
+      "subType": "00"
+    }
+  },
+  "fullName": "",
+  "UID": 0
+}
+
+subjects
+{
+  "_id": "IT101",
+  "Description": "Introduction to Information Technology",
+  "Units": 3,
+  "Teacher": "Prof. Jeorge Ortega"
+}
+students
+{
+  "_id": 1,
+  "Name": "Lejeune, Niel Alfred F.",
+  "Course": "Information Technology",
+  "YearLevel": 1
+}
+semesters
+{
+  "_id": 1,
+  "Semester": "FirstSem",
+  "SchoolYear": 2020
+}
+grades
+{
+  "_id": 6,
+  "StudentID": 1,
+  "SubjectCodes": [
+    "GE040",
+    "IT405",
+    "EE105",
+    "GE008",
+    "EE302"
+  ],
+  "Grades": [
+    78,
+    82,
+    93,
+    67,
+    93
+  ],
+  "Teachers": [
+    "Prof. Brendalyn Samillano",
+    "Prof. Jake Ligoan",
+    "Prof. Michelle Velasco",
+    "Prof. Mico Dela Rosa",
+    "Prof. Sandra Reyes"
+  ],
+  "SemesterID": 6
+}
+curriculum
+{
+  "_id": {
+    "$oid": "68b6a4a4b4ad4b9a7a79e496"
+  },
+  "programCode": "BSBA",
+  "programName": "BACHELOR OF SCIENCE IN BUSINESS ADMINISTRATION",
+  "curriculumYear": "2025-2026",
+  "subjects": [
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 200",
+      "name": "Understanding the Sell",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 203",
+      "name": "Life and Works of Rizal",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 204",
+      "name": "Gender and Society",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    }
+  ]
+}
