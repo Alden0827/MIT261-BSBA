@@ -3,12 +3,14 @@ import pandas as pd
 import report_helper as r
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
+from streamlit_echarts import st_echarts
+import pandas as pd
 
 # ------------------------------
 # Streamlit App
 # ------------------------------
 st.set_page_config(page_title=" Analytics Reports", layout="wide")
-st.title("📊 Student Analytics Reports")
+st.title("📊 Analytics")
 
 report = st.selectbox(
     "Select a Report",
@@ -80,12 +82,6 @@ if report == "Top Performers":
             st.info("No records found for the selected Semester and School Year.")
     else:
         st.info("No student records found.")
-
-
-from streamlit_echarts import st_echarts
-
-from streamlit_echarts import st_echarts
-import pandas as pd
 
 if report == "Failing Students":
     # --- Fetch all failing students (unfiltered) for dropdowns ---
@@ -327,14 +323,138 @@ elif report == "Distribution of Grades":
 
 
 elif report == "Hardest Subject":
-    df = r.get_hardest_subject()
+    # --- Dropdown filters ---
+    from report_helper import db
+    from streamlit_echarts import st_echarts  # import echarts component
+
+    col1, col2 = st.columns([2, 2])
+
+    print('> fetching school_year and courses')
+    courses = sorted(r.get_course_options())
+    school_years = sorted(r.get_Schoolyear_options())
+
+    with col1:
+        course_selected = st.selectbox("Course", ["All"] + courses)
+    with col2:
+        sy_selected = st.selectbox("School Year", ["All"] + school_years)
+
+    # --- Apply filters ---
+    course_filter = None if course_selected == "All" else course_selected
+    sy_filter = None if sy_selected == "All" else sy_selected
+
+    print('> fetching Hardest courses')
+    df = r.get_hardest_subject(course=course_filter, school_year=sy_filter)
+
+    print('> displaying results')
     st.subheader("📉 Hardest Subjects")
     st.dataframe(df)
 
+    # --- Add ECharts Bar Chart ---
+    if not df.empty:
+        df = df.head(10).copy()
+
+        x_labels = df["Description"].replace("", pd.NA).fillna(df["Subject"]).tolist()
+        y_values = df["Failure Rate"].astype(float).round(2).tolist()
+
+        def get_color(value):
+            if value < 20:
+                return "#5cb85c"  # green
+            elif value < 50:
+                return "#f0ad4e"  # orange
+            else:
+                return "#d9534f"  # red
+
+        options = {
+            "title": {"text": "Top 10 Hardest Subjects (Failure Rate)", "left": "center"},
+            "tooltip": {"trigger": "axis"},
+            "xAxis": {
+                "type": "category",
+                "data": x_labels,
+                "axisLabel": {"rotate": 30}
+            },
+            "yAxis": {"type": "value", "name": "Failure Rate (%)"},
+            "series": [
+                {
+                    "data": [
+                        {"value": v, "itemStyle": {"color": get_color(v)}}
+                        for v in y_values
+                    ],
+                    "type": "bar",
+                    "label": {"show": True, "position": "top"}
+                }
+            ]
+        }
+        st_echarts(options=options, height="500px")
+
+
+
+
 elif report == "Easiest Subjects":
-    df = r.get_easiest_subjects()
+    # --- Dropdown filters ---
+    from report_helper import db
+    from streamlit_echarts import st_echarts  # import echarts component
+
+    col1, col2 = st.columns([2, 2])
+
+    print('> fetching school_year and courses')
+    courses = sorted(r.get_course_options())
+    school_years = sorted(r.get_Schoolyear_options())
+
+    with col1:
+        course_selected = st.selectbox("Course", ["All"] + courses)
+    with col2:
+        sy_selected = st.selectbox("School Year", ["All"] + school_years)
+
+    # --- Apply filters ---
+    course_filter = None if course_selected == "All" else course_selected
+    sy_filter = None if sy_selected == "All" else sy_selected
+
+    print('> fetching Easiest subjects')
+    df = r.get_easiest_subjects(course=course_filter, school_year=sy_filter)
+
+    print('> displaying results')
     st.subheader("📈 Easiest Subjects")
     st.dataframe(df)
+
+    # --- Add ECharts Bar Chart ---
+    if not df.empty:
+        df = df.head(10).copy()
+
+        # fallback to Subject when Description missing or empty
+        x_labels = df["Description"].replace("", pd.NA).fillna(df["Subject"]).tolist()
+        y_values = df["High Rate"].astype(float).round(2).tolist()
+
+        def get_color(value):
+            # value is percent 0..100
+            if value >= 40:
+                return "#5cb85c"  # green
+            elif value >=30:
+                return "#f0ad4e"  # orange
+            else:
+                return "#d9534f"  # red
+
+        options = {
+            "title": {"text": "Top 10 Easiest Subjects (High Grades >=90)", "left": "center"},
+            "tooltip": {"trigger": "axis", "formatter": "{b}: {c}%"},
+            "xAxis": {
+                "type": "category",
+                "data": x_labels,
+                "axisLabel": {"rotate": 30, "interval": 0}
+            },
+            "yAxis": {"type": "value", "name": "High Grade Rate (%)"},
+            "series": [
+                {
+                    "data": [
+                        {"value": v, "itemStyle": {"color": get_color(v)}}
+                        for v in y_values
+                    ],
+                    "type": "bar",
+                    "label": {"show": True, "position": "top", "formatter": "{c}%"}
+                }
+            ]
+        }
+        st_echarts(options=options, height="500px")
+
 
 elif report == "Average Grades per Teacher":
     df = r.get_avg_grades_per_teacher()
