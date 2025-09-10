@@ -9,7 +9,6 @@ import hashlib
 import pickle
 import time
 from functools import wraps
-import streamlit as st
 
 # ------------------------------
 # MongoDB Connection
@@ -29,8 +28,8 @@ semesters_col = db["semesters"]
 # ------------------------------
 client = MongoClient(
     uri,
-    serverSelectionTimeoutMS=10000,  # 5 seconds for server selection
-    connectTimeoutMS=10000,          # 5 seconds to establish connection
+    serverSelectionTimeoutMS=5000,  # 5 seconds for server selection
+    connectTimeoutMS=5000,          # 5 seconds to establish connection
     socketTimeoutMS=10000           # 10 seconds for queries
 )
 
@@ -57,40 +56,48 @@ def avg(lst):
 # ------------------------------
 # Cache Decorator
 # ------------------------------
-def cache_result(ttl=600000000):  # default no expiration
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            ttl_minutes = kwargs.pop('ttl', ttl)
-            args_tuple = tuple(arg for arg in args)
-            kwargs_tuple = tuple(sorted(kwargs.items()))
-            cache_key = hashlib.md5(pickle.dumps((args_tuple, kwargs_tuple))).hexdigest()
-            cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
-
-            if os.path.exists(cache_name):
-                file_mod_time = os.path.getmtime(cache_name)
-                if (time.time() - file_mod_time) / 60 > ttl_minutes:
-                    os.remove(cache_name)
-                    result = func(*args, **kwargs)
-                else:
-                    with open(cache_name, "rb") as f:
-                        return pickle.load(f)
-            else:
+def cache_result(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        
+        # ttl_minutes = kwargs.pop('ttl', 60) # Default TTL of 60 minutes
+        ttl_minutes = kwargs.pop('ttl', 600000000) # no expiration
+        
+        # Create a unique key from function arguments
+        args_tuple = tuple(arg for arg in args)
+        kwargs_tuple = tuple(sorted(kwargs.items()))
+        
+        # Use a hash to create a stable, short key
+        cache_key = hashlib.md5(pickle.dumps((args_tuple, kwargs_tuple))).hexdigest()
+        
+        cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
+        
+        if os.path.exists(cache_name):
+            # Get the creation time of the file
+            file_mod_time = os.path.getmtime(cache_name)
+            
+            # Check if the cache has expired
+            if (time.time() - file_mod_time) / 60 > ttl_minutes:
+                print(f'{cache_name} - Cache has expired, loading fresh data!')
+                os.remove(cache_name)  # Optional: remove the old cache file
                 result = func(*args, **kwargs)
+            else:
+                print(f'{cache_name} - Read from cache!')
+                return pd.read_pickle(cache_name)
+        else:
+            result = func(*args, **kwargs)
 
-            with open(cache_name, "wb") as f:
-                pickle.dump(result, f)
-            return result
-        return wrapper
-    return decorator
-
-
+        if isinstance(result, pd.DataFrame):
+            print(f'{cache_name} - load fresh data!')
+            result.to_pickle(cache_name)
+            
+        return result
+    return wrapper
 # ------------------------------
 # Report Functions
 # ------------------------------
 # A. Student Performance Analytics
-# @st.cache_data(ttl=None)
-@cache_result()
+@cache_result
 def get_top_performers(school_year=None, semester=None):
     data = []
     for g in grades_col.find():
@@ -118,7 +125,7 @@ def get_top_performers(school_year=None, semester=None):
     return df.sort_values("Average", ascending=False).head(10)
 
 
-@cache_result()
+@cache_result
 def get_failing_students(school_year=None, semester=None):
     data = []
     for g in grades_col.find():
@@ -152,7 +159,7 @@ def get_failing_students(school_year=None, semester=None):
         return df
     return df.sort_values("Failures", ascending=False)
 
-@cache_result()
+@cache_result
 def get_students_with_improvement(selected_semester="All", selected_sy="All"):
     history = defaultdict(list)
     
@@ -189,7 +196,7 @@ def get_students_with_improvement(selected_semester="All", selected_sy="All"):
 
 
 
-@cache_result()
+@cache_result
 def get_distribution_of_grades(selected_semester="All", selected_sy="All"):
     data = []
     for g in grades_col.find():
@@ -214,7 +221,7 @@ def get_distribution_of_grades(selected_semester="All", selected_sy="All"):
 
 
 # B. Subject and Teacher Analytics
-@cache_result()
+@cache_result
 def get_hardest_subject(course=None, school_year=None):
     failures = defaultdict(lambda: [0, 0])  # fails, total
 
@@ -258,7 +265,7 @@ def get_hardest_subject(course=None, school_year=None):
     return df.sort_values("Failure Rate", ascending=False).reset_index(drop=True)
 
 
-@cache_result()
+@cache_result
 def get_easiest_subjects(course=None, school_year=None):
     """
     Returns DataFrame with:
@@ -303,61 +310,33 @@ def get_easiest_subjects(course=None, school_year=None):
         })
 
     df = pd.DataFrame(data)
-    print("Teachers with High Failures:")
-    print(df)
     # ensure numeric dtype for plotting
     df["High Rate"] = pd.to_numeric(df["High Rate"], errors="coerce").astype(float)
     return df.sort_values("High Rate", ascending=False).reset_index(drop=True)
 
-@cache_result()
-def get_avg_grades_per_teacher(school_year=None, semester=None):
+@cache_result
+def get_avg_grades_per_teacher():
     teacher_grades = defaultdict(list)
-    
-    query = {}
-    if school_year:
-        query["SchoolYear"] = school_year
-    if semester:
-        query["Semester"] = semester
-
-    for g in grades_col.find(query):
-        sem = g.get("Semester")
-        year = g.get("SchoolYear")
+    for g in grades_col.find():
         for teacher, grade in zip(g["Teachers"], g["Grades"]):
             teacher_grades[teacher].append(grade)
-
-    data = []
-    for teacher, grades in teacher_grades.items():
-        avg_grade = sum(grades)/len(grades) if grades else 0
-        data.append({
-            "Teacher": teacher,
-            "Average Grade": avg_grade,
-            "Semester": semester if semester else "All",
-            "SchoolYear": school_year if school_year else "All"
-        })
-
+    data = [{"Teacher": t, "Average Grade": avg(grades)} for t, grades in teacher_grades.items()]
     return pd.DataFrame(data).sort_values("Average Grade", ascending=False)
 
-@cache_result()
+@cache_result
 def get_teachers_with_high_failures():
-    teacher_fails = defaultdict(lambda: [0, 0])  # fails, total
+    teacher_fails = defaultdict(lambda: [0,0])  # fails, total
     for g in grades_col.find():
         for teacher, grade in zip(g["Teachers"], g["Grades"]):
             teacher_fails[teacher][1] += 1
             if grade < 75:
                 teacher_fails[teacher][0] += 1
-    data = [
-        {
-            "Teacher": t,
-            "Failures": f,
-            "Total": t_count,
-            "Failure Rate": round((f / t_count if t_count > 0 else 0)*100,2),
-        }
-        for t, (f, t_count) in teacher_fails.items()
-    ]
-    return pd.DataFrame(data).sort_values("Failure Rate", ascending=False)
+    data = [{"Teacher": t, "Failures": f, "Total": t_count, "Failure Rate": f"{f/t_count:.0%}"} 
+            for t, (f,t_count) in teacher_fails.items()]
+    return pd.DataFrame(data).sort_values("Failures", ascending=False)
 
 # C. Course and Curriculum Insights
-@cache_result()
+@cache_result
 def get_grade_trend_per_course():
     data = []
     for g in grades_col.find():
@@ -369,17 +348,10 @@ def get_grade_trend_per_course():
                 "SchoolYear": sem["SchoolYear"],
                 "Average": avg(g["Grades"])
             })
-
     df = pd.DataFrame(data)
+    return df.groupby(["Course","SchoolYear"])["Average"].mean().reset_index()
 
-    # --- Exclude zero averages ---
-    df = df[df["Average"] != 0]
-
-    # Group by course & school year and take the mean
-    return df.groupby(["Course", "SchoolYear"])["Average"].mean().reset_index()
-
-
-@cache_result()
+@cache_result
 def get_subject_load_intensity():
     data = []
     for g in grades_col.find():
@@ -389,7 +361,7 @@ def get_subject_load_intensity():
     df = pd.DataFrame(data)
     return df.groupby("Course")["Load"].mean().reset_index()
 
-@cache_result()
+@cache_result
 def get_ge_vs_major():
     data = []
     for g in grades_col.find():
@@ -400,7 +372,7 @@ def get_ge_vs_major():
     return df.groupby("Type")["Grade"].mean().reset_index()
 
 # D. Semester and Academic Year Analysis
-@cache_result()
+@cache_result
 def get_lowest_gpa_semester():
     data = []
     for g in grades_col.find():
@@ -410,12 +382,12 @@ def get_lowest_gpa_semester():
     df = pd.DataFrame(data)
     return df.groupby(["Semester","SchoolYear"])["Avg"].mean().reset_index().sort_values("Avg").head(1)
 
-@cache_result()
+@cache_result
 def get_best_gpa_semester():
     df = get_lowest_gpa_semester()
     return df.sort_values("Avg", ascending=False).head(1)
 
-@cache_result()
+@cache_result
 def get_grade_deviation_across_semesters():
     data = []
     for g in grades_col.find():
@@ -427,17 +399,17 @@ def get_grade_deviation_across_semesters():
     return df.groupby("Subject")["Grade"].std().reset_index().rename(columns={"Grade":"StdDev"}).sort_values("StdDev", ascending=False)
 
 # E. Student Demographics
-@cache_result()
+@cache_result
 def get_year_level_distribution():
     df = pd.DataFrame(list(students_col.find()))
     return df["YearLevel"].value_counts().reset_index().rename(columns={"index":"YearLevel","YearLevel":"Count"})
 
-@cache_result()
+@cache_result
 def get_student_count_per_course():
     df = pd.DataFrame(list(students_col.find()))
     return df["Course"].value_counts().reset_index().rename(columns={"index":"Course","Course":"Count"})
 
-@cache_result()
+@cache_result
 def get_performance_by_year_level():
     data = []
     for g in grades_col.find():
@@ -447,24 +419,19 @@ def get_performance_by_year_level():
     df = pd.DataFrame(data)
     return df.groupby("YearLevel")["Average"].mean().reset_index()
 
-@cache_result()
+@cache_result
 def get_Schoolyear_options():
     print('Loading school_year options')
-    return db.semesters.distinct("SchoolYear")
+    return db.students.distinct("SchoolYear")
 
-@cache_result()
+@cache_result
 def get_course_options():
-    print('Loading course options:')
+    print('Loading course options')
     return db.students.distinct("Course")
-
-@cache_result()
-def get_semester_options():
-    print('Loading semester options')
-    return db.semesters.distinct("Semester")
 
 
 if __name__ == "__main__":
-    # from app import st
-    data  = get_Schoolyear_options()
+    data  = get_failing_students()
+    data.to_excel("asdad.xlsx")
     print(data)
 
