@@ -35,9 +35,9 @@ report = st.selectbox(
         # "Teachers with High Failures",
         # "Grade Trend per Course",
         # "Subject Load Intensity",
-        "GE vs Major Subjects Performance",
-        "Semester with Lowest GPA",
-        "Best Performing Semester",
+        # "GE vs Major Subjects Performance",
+        # "Semester with Lowest GPA",
+        # "Best Performing Semester",
         "Grade Deviation Across Semesters",
         "Year Level Distribution",
         "Student Count per Course",
@@ -977,26 +977,308 @@ elif report == "Subject Load Intensity":
         st_echarts(options=options, height="500px")
     else:
         st.info("No course load data found.")
+
+
 elif report == "GE vs Major Subjects Performance":
     df = r.get_ge_vs_major()
-    
-    st.subheader("📖 GE vs Major Subject Performance")
-    st.bar_chart(df.set_index("Type"))
+
+    st.subheader("📊 General Education vs Major Subjects Performance Over Time")
+    st.markdown(
+        """
+        This chart compares the **average performance of students** in 
+        **General Education (GE)** subjects and **Major** subjects 
+        across different school years.  
+        
+        It helps identify performance trends and differences between subject types.
+        """
+    )
+    st.dataframe(df)
+
+    years = sorted(df["SchoolYear"].unique().tolist())
+    ge_vals = df[df["Type"] == "GE"].sort_values("SchoolYear")["Average"].tolist()
+    major_vals = df[df["Type"] == "Major"].sort_values("SchoolYear")["Average"].tolist()
+
+    # Compute dynamic min/max with margins
+    ymin = df["Average"].min()
+    ymax = df["Average"].max()
+    margin = 1  # adjust margin as needed
+
+    option = {
+        "tooltip": {"trigger": "axis"},
+        "legend": {"data": ["GE", "Major"]},
+        "xAxis": {
+            "type": "category",
+            "data": years,
+            "name": "School Year"
+        },
+        "yAxis": {
+            "type": "value",
+            "name": "Average Grade",
+            "min": float(ymin - margin),
+            "max": float(ymax + margin),
+        },
+        "series": [
+            {
+                "name": "GE",
+                "type": "bar",
+                "data": ge_vals,
+                "barGap": 0,
+                "label": {
+                    "show": True,
+                    "position": "top",
+                    "formatter": "{c:.2f}"  # ✅ Correct property
+                }
+            },
+            {
+                "name": "Major",
+                "type": "bar",
+                "data": major_vals,
+                "label": {
+                    "show": True,
+                    "position": "top",
+                    "formatter": "{c:.2f}"  # ✅ Correct property
+                }
+            },
+        ],
+    }
+
+    st_echarts(options=option, height="500px")
+
 
 elif report == "Semester with Lowest GPA":
-    df = r.get_lowest_gpa_semester()
+    header, subjects_df = r.get_lowest_gpa_semester()
+
     st.subheader("⬇️ Semester with Lowest GPA")
-    st.dataframe(df)
+    st.markdown(
+        """
+        This table shows the **semester and school year where students recorded 
+        the lowest overall GPA** across all terms.
+        """
+    )
+    st.dataframe(header)   # Semester info
+
+    st.subheader("📘 GPA per Subject in this Semester")
+    st.markdown(
+        """
+        This table lists the **average GPA of each subject** taken during the 
+        lowest-performing semester, along with the number of enrolled students.
+        """
+    )
+    st.dataframe(subjects_df)  # Subject GPAs
+
+    # Compute dynamic min/max
+    ymin = subjects_df["GPA"].min()
+    ymax = subjects_df["GPA"].max()
+    margin = 1  # give space
+
+    # Function to map GPA → color (green → yellow → red)
+    def get_color(val, vmin, vmax):
+        ratio = (val - vmin) / (vmax - vmin) if vmax > vmin else 0.5
+        if ratio <= 0.5:  # green → yellow
+            return f"rgb({int(255 * (ratio*2))},255,0)"
+        else:  # yellow → red
+            return f"rgb(255,{int(255 * (2 - ratio*2))},0)"
+
+    gpas = subjects_df["GPA"].tolist()
+    colors = [get_color(v, ymin, ymax) for v in gpas]
+
+    option = {
+        "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+        "xAxis": {
+            "type": "value",
+            "name": "GPA",
+            "min": float(ymin - margin),
+            "max": float(ymax + margin),
+        },
+        "yAxis": {
+            "type": "category",
+            "data": subjects_df["SubjectCode"].tolist(),
+            "name": "Subject"
+        },
+        "series": [
+            {
+                "name": "GPA",
+                "type": "bar",
+                "data": [
+                    {"value": round(v, 2), "itemStyle": {"color": c}}
+                    for v, c in zip(gpas, colors)
+                ],
+                "label": {
+                    "show": True,
+                    "position": "right",
+                    "formatter": "{c}"
+                },
+            }
+        ]
+    }
+
+    st.subheader("📊 GPA Distribution per Subject")
+    st.markdown(
+        """
+        The chart below shows the **GPA distribution of subjects** within the 
+        lowest-performing semester.  
+
+        - **Green bars** → subjects with relatively higher GPA  
+        - **Yellow bars** → mid-range GPA  
+        - **Red bars** → subjects with the lowest GPA  
+
+        This helps quickly identify which subjects contributed most to the 
+        overall semester decline.
+        """
+    )
+    st_echarts(options=option, height="500px")
 
 elif report == "Best Performing Semester":
-    df = r.get_best_gpa_semester()
-    st.subheader("⬆️ Best Performing Semester")
-    st.dataframe(df)
+    header, subjects_df = r.get_best_gpa_semester()
+
+    st.subheader("🏆 Best Performing Semester")
+    st.markdown(
+        """
+        This table shows the **semester and school year where students recorded 
+        the highest overall GPA** across all terms.
+        """
+    )
+    st.dataframe(header)   # Semester info
+
+    st.subheader("📘 GPA per Subject in this Semester")
+    st.markdown(
+        """
+        This table lists the **average GPA of each subject** taken during the 
+        best-performing semester, along with the number of enrolled students.
+        """
+    )
+    st.dataframe(subjects_df)  # Subject GPAs
+
+    # Compute dynamic min/max
+    ymin = subjects_df["GPA"].min()
+    ymax = subjects_df["GPA"].max()
+    margin = 1
+
+    # Function to map GPA → color (red → yellow → green)
+    def get_color(val, vmin, vmax):
+        ratio = (val - vmin) / (vmax - vmin) if vmax > vmin else 0.5
+        if ratio <= 0.5:  # red → yellow
+            return f"rgb(255,{int(255 * (ratio * 2))},0)"
+        else:  # yellow → green
+            return f"rgb({int(255 * (2 - ratio * 2))},255,0)"
+
+    gpas = subjects_df["GPA"].tolist()
+    colors = [get_color(v, ymin, ymax) for v in gpas]
+
+    option = {
+        "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+        "xAxis": {
+            "type": "value",
+            "name": "GPA",
+            "min": float(ymin - margin),
+            "max": float(ymax + margin),
+        },
+        "yAxis": {
+            "type": "category",
+            # Reverse order so highest GPA is at top
+            "data": subjects_df["SubjectCode"].tolist()[::-1],
+            "name": "Subject"
+        },
+        "series": [
+            {
+                "name": "GPA",
+                "type": "bar",
+                "data": [
+                    {"value": round(v, 2), "itemStyle": {"color": c}}
+                    for v, c in zip(subjects_df["GPA"].tolist()[::-1], colors[::-1])
+                ],
+                "label": {"show": True, "position": "right", "formatter": "{c}"}
+            }
+        ]
+    }
+
+
+    st.subheader("📊 GPA Distribution per Subject")
+    st.markdown(
+        """
+        The chart below shows the **GPA distribution of subjects** within the 
+        best-performing semester.  
+
+        - **Green bars** → subjects with the highest GPA  
+        - **Yellow bars** → mid-range GPA  
+        - **Red bars** → subjects with the lowest GPA  
+
+        This helps quickly identify which subjects excelled most in the 
+        semester.
+        """
+    )
+    st_echarts(options=option, height="500px")
 
 elif report == "Grade Deviation Across Semesters":
     df = r.get_grade_deviation_across_semesters()
+
     st.subheader("📊 Grade Variance Across Semesters")
+    st.markdown(
+        """
+        This table lists each **subject**, its **average grade (Mean)**, 
+        the **grade variance (StdDev)** across semesters, 
+        and the **number of enrolled students (Count)**.
+        """
+    )
     st.dataframe(df)
+
+    st.subheader("📈 Scatter Plot: GPA Stability vs Difficulty")
+    st.markdown(
+        """
+        - **X-axis:** Average GPA (difficulty)  
+        - **Y-axis:** StdDev (variance)  
+        - **Bubble size:** Number of students (larger = more students)  
+        - **Color:** red = high GPA, green = low GPA
+        """
+    )
+
+    # Dynamic color mapping
+    gmin, gmax = df["Mean"].min(), df["Mean"].max()
+
+    def get_color(gpa):
+        ratio = (gpa - gmin) / (gmax - gmin) if gmax > gmin else 0.5
+        if ratio <= 0.5:
+            return f"rgb({int(255 * (ratio * 2))},255,0)"
+        else:
+            return f"rgb(255,{int(255 * (2 - ratio*2))},0)"
+
+    # Precompute data for ECharts
+    scatter_data = []
+    for _, row in df.iterrows():
+        scatter_data.append({
+            "value": [round(row["Mean"], 2), round(row["StdDev"], 2), max(20, row["Count"] ** 0.5)],
+            "name": row["Subject"],
+            "itemStyle": {"color": get_color(row["Mean"])}
+        })
+
+    xmin, xmax = df["Mean"].min(), df["Mean"].max()
+    ymin, ymax = df["StdDev"].min(), df["StdDev"].max()
+    margin = 1
+
+    option = {
+        "tooltip": {
+            "trigger": "item",
+            "formatter": "{b}<br/>Avg GPA: {c[0]}<br/>StdDev: {c[1]}<br/>Bubble size: {c[2]}"
+        },
+        "xAxis": {
+            "name": "Average GPA",
+            "min": float(xmin - margin),
+            "max": float(xmax + margin)
+        },
+        "yAxis": {
+            "name": "Grade Variance (StdDev)",
+            "min": float(ymin - margin),
+            "max": float(ymax + margin)
+        },
+        "series": [{
+            "type": "scatter",
+            "data": scatter_data,
+            "emphasis": {"label": {"show": True, "formatter": "{b}", "position": "top"}}
+        }]
+    }
+
+    st_echarts(options=option, height="500px")
+
 
 elif report == "Year Level Distribution":
     df = r.get_year_level_distribution()
