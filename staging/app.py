@@ -1,31 +1,40 @@
+
+
 import streamlit as st
 import pandas as pd
-import report_helper as r
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 from streamlit_echarts import st_echarts, JsCode
 import pandas as pd
+import report_helper as r
 from report_helper import db
 from report_helper import get_Schoolyear_options, get_course_options
+
+
 # ------------------------------
 # Streamlit App
 # ------------------------------
+
+print('stage: 1')
+
 st.set_page_config(page_title=" Analytics Reports", layout="wide")
 st.title("📊 Analytics & Visualization")
+print('stage: 2')
 
 report = st.selectbox(
     "Select a Report",
     [
-        "Top Performers",
-        "Failing Students",
-        "Students with Grade Improvement",
-        "Distribution of Grades",
-        "Hardest Subject",
-        "Easiest Subjects",
-        "Average Grades per Teacher",
-        "Teachers with High Failures",
-        "Grade Trend per Course",
-        "Subject Load Intensity",
+        "-- Select Report --",
+        # "Top Performers",
+        # "Failing Students",
+        # "Students with Grade Improvement",
+        # "Distribution of Grades",
+        # "Hardest Subject",
+        # "Easiest Subjects",
+        # "Average Grades per Teacher",
+        # "Teachers with High Failures",
+        # "Grade Trend per Course",
+        # "Subject Load Intensity",
         "GE vs Major Subjects Performance",
         "Semester with Lowest GPA",
         "Best Performing Semester",
@@ -41,55 +50,59 @@ report = st.selectbox(
 # Report Logic
 # ------------------------------
 if report == "Top Performers":
-    # --- Fetch all possible values for dropdowns ---
-    all_data = r.get_top_performers()
-    if not all_data.empty:
-        col_a, col_b = st.columns([2, 2])
-        with col_a:
-            sem_selected = st.selectbox("Semester", sorted(all_data["Semester"].unique()))
-        with col_b:
-            sy_selected = st.selectbox("School Year", sorted(all_data["SchoolYear"].unique()))
+    print('Loading ', report)
 
-        # 🔹 Auto filter (no Go button)
-        df_top = r.get_top_performers(school_year=sy_selected, semester=sem_selected)
+    # --- Let user select filters first ---
+    col_a, col_b = st.columns([2, 2])
+    with col_a:
+        sem_selected = st.selectbox("Semester", r.get_semester_options())  # helper or query
+    with col_b:
+        sy_selected = st.selectbox("School Year", r.get_Schoolyear_options())  # helper or query
+
+    # --- Fetch data with parameters (ONE CALL ONLY) ---
+    all_data = r.get_top_performers(school_year=sy_selected, semester=sem_selected)
+
+    print('displaying ', report)
+    print('data:', all_data)
+
+    if not all_data.empty:
+        df_top = all_data.sort_values("Average", ascending=False).head(10)
 
         st.subheader("🏆 Top 10 Performers")
         '''
         The table below presents the Top 10 Performers for the selected semester and school year. 
         It provides detailed information on each student’s average grade, giving a clear picture of the highest achievers during the period.
         '''
-        if not df_top.empty:
-            print(df_top)
-            st.dataframe(df_top)
-            '''
+        st.dataframe(df_top)
+
+        '''
         The horizontal bar chart highlights the top 10 students and their corresponding average grades, 
         making it easy to compare performance at a glance. Alongside, the pie chart shows the distribution 
         of these top performers by course, allowing a quick understanding of which programs or 
         courses have produced the most high-achieving students. 
         Together, these visualizations provide both individual 
         recognition and an overview of academic excellence across courses.
-            '''
+        '''
 
-            col1, col2 = st.columns(2)
-            with col1:
-                fig, ax = plt.subplots()
-                ax.barh(df_top["Student"], df_top["Average"])
-                ax.set_xlabel("Average Grade")
-                ax.set_ylabel("Student")
-                ax.set_title("Top 10 Performers")
-                plt.gca().invert_yaxis()
-                st.pyplot(fig)
+        col1, col2 = st.columns(2)
+        with col1:
+            fig, ax = plt.subplots()
+            ax.barh(df_top["Student"], df_top["Average"])
+            ax.set_xlabel("Average Grade")
+            ax.set_ylabel("Student")
+            ax.set_title("Top 10 Performers")
+            plt.gca().invert_yaxis()
+            st.pyplot(fig)
 
-            with col2:
-                course_avg = df_top.groupby("Course")["Average"].mean()
-                fig2, ax2 = plt.subplots()
-                ax2.pie(course_avg, labels=course_avg.index, autopct="%1.1f%%", startangle=90)
-                ax2.set_title("Top Performers by Course")
-                st.pyplot(fig2)
-        else:
-            st.info("No records found for the selected Semester and School Year.")
+        with col2:
+            course_avg = df_top.groupby("Course")["Average"].mean()
+            fig2, ax2 = plt.subplots()
+            ax2.pie(course_avg, labels=course_avg.index, autopct="%1.1f%%", startangle=90)
+            ax2.set_title("Top Performers by Course")
+            st.pyplot(fig2)
+
     else:
-        st.info("No student records found.")
+        st.info("No records found for the selected Semester and School Year.")
 
 if report == "Failing Students":
     # --- Fetch all failing students (unfiltered) for dropdowns ---
@@ -347,7 +360,7 @@ elif report == "Students with Grade Improvement":
         # Ensure min != max
         val_min = float(min(improvements))
         val_max = float(max(improvements))
-        print('val_min:',val_min)
+        
         if val_min == val_max:  
             # avoid flat range → spread artificially
             val_min = val_min - 1
@@ -496,7 +509,6 @@ elif report == "Hardest Subject":
 
     col1, col2 = st.columns([2, 2])
 
-    print('> fetching school_year and courses')
     courses = sorted(get_course_options())
     school_years = sorted(get_Schoolyear_options())
 
@@ -509,61 +521,67 @@ elif report == "Hardest Subject":
     course_filter = None if course_selected == "All" else course_selected
     sy_filter = None if sy_selected == "All" else sy_selected
 
-    print('> fetching Hardest courses')
+    print("Selected course:", course_selected)
+    print("Selected school year:", sy_selected)
+
     df = r.get_hardest_subject(course=course_filter, school_year=sy_filter)
 
-    print('> displaying results')
-    st.subheader("📉 Hardest Subjects")
-    '''
-    The table lists subjects with the highest failure rates based on the selected course and school year. 
-    It allows educators to identify which subjects consistently challenge students 
-    and may require additional support, curriculum review, or targeted interventions.
-    '''
-    st.dataframe(df)
-
-    # --- Add ECharts Bar Chart ---
     if not df.empty:
-        df = df.head(10).copy()
 
-        x_labels = df["Description"].replace("", pd.NA).fillna(df["Subject"]).tolist()
-        y_values = df["Failure Rate"].astype(float).round(2).tolist()
+        st.subheader("📉 Hardest Subjects")
 
-        def get_color(value):
-            if value < 20:
-                return "#5cb85c"  # green
-            elif value < 50:
-                return "#f0ad4e"  # orange
-            else:
-                return "#d9534f"  # red
+        # --- Add ECharts Bar Chart ---
+        if not df.empty:
 
-        options = {
-            "title": {"text": "Top 10 Hardest Subjects (Failure Rate)", "left": "center"},
-            "tooltip": {"trigger": "axis"},
-            "xAxis": {
-                "type": "category",
-                "data": x_labels,
-                "axisLabel": {"rotate": 30}
-            },
-            "yAxis": {"type": "value", "name": "Failure Rate (%)"},
-            "series": [
-                {
-                    "data": [
-                        {"value": v, "itemStyle": {"color": get_color(v)}}
-                        for v in y_values
-                    ],
-                    "type": "bar",
-                    "label": {"show": True, "position": "top"}
-                }
-            ]
-        }
-        '''
-        The bar chart visualizes the top 10 hardest subjects by failure rate. 
-        Bars are color-coded for clarity: green indicates low failure rates, 
-        orange represents moderate difficulty, and red highlights the most challenging subjects. 
-        The chart allows for quick comparison between subjects, making it easy to pinpoint 
-        areas where students struggle the most and prioritize academic support.
-        '''
-        st_echarts(options=options, height="500px")
+            '''
+            The table lists subjects with the highest failure rates based on the selected course and school year. 
+            It allows educators to identify which subjects consistently challenge students 
+            and may require additional support, curriculum review, or targeted interventions.
+            '''
+            st.dataframe(df)
+
+
+            df = df.head(10).copy()
+
+            x_labels = df["Description"].replace("", pd.NA).fillna(df["Subject"]).tolist()
+            y_values = df["Failure Rate"].astype(float).round(2).tolist()
+
+            def get_color(value):
+                if value < 20:
+                    return "#5cb85c"  # green
+                elif value < 50:
+                    return "#f0ad4e"  # orange
+                else:
+                    return "#d9534f"  # red
+
+            options = {
+                "title": {"text": "Top 10 Hardest Subjects (Failure Rate)", "left": "center"},
+                "tooltip": {"trigger": "axis"},
+                "xAxis": {
+                    "type": "category",
+                    "data": x_labels,
+                    "axisLabel": {"rotate": 30}
+                },
+                "yAxis": {"type": "value", "name": "Failure Rate (%)"},
+                "series": [
+                    {
+                        "data": [
+                            {"value": v, "itemStyle": {"color": get_color(v)}}
+                            for v in y_values
+                        ],
+                        "type": "bar",
+                        "label": {"show": True, "position": "top"}
+                    }
+                ]
+            }
+            '''
+            The bar chart visualizes the top 10 hardest subjects by failure rate. 
+            Bars are color-coded for clarity: green indicates low failure rates, 
+            orange represents moderate difficulty, and red highlights the most challenging subjects. 
+            The chart allows for quick comparison between subjects, making it easy to pinpoint 
+            areas where students struggle the most and prioritize academic support.
+            '''
+            st_echarts(options=options, height="500px")
 
 
 
@@ -574,7 +592,6 @@ elif report == "Easiest Subjects":
 
     col1, col2 = st.columns([2, 2])
 
-    print('> fetching school_year and courses')
     courses = sorted(get_course_options())
     school_years = sorted(get_Schoolyear_options())
 
@@ -587,70 +604,70 @@ elif report == "Easiest Subjects":
     course_filter = None if course_selected == "All" else course_selected
     sy_filter = None if sy_selected == "All" else sy_selected
 
-    print('> fetching Easiest subjects')
     df = r.get_easiest_subjects(course=course_filter, school_year=sy_filter)
 
-    print('> displaying results')
-    st.subheader("📈 Easiest Subjects")
-    '''
-    The table lists subjects where students achieve the highest grades, 
-    based on the selected course and school year. This provides a clear 
-    view of subjects in which students excel, helping educators recognize 
-    areas of strength and effective teaching practices.
-    '''
-    st.dataframe(df)
-
-    # --- Add ECharts Bar Chart ---
     if not df.empty:
-        df = df.head(10).copy()
 
-        # fallback to Subject when Description missing or empty
-        x_labels = df["Description"].replace("", pd.NA).fillna(df["Subject"]).tolist()
-        y_values = df["High Rate"].astype(float).round(2).tolist()
-
-        def get_color(value):
-            # value is percent 0..100
-            if value >= 40:
-                return "#5cb85c"  # green
-            elif value >=30:
-                return "#f0ad4e"  # orange
-            else:
-                return "#d9534f"  # red
-
-        options = {
-            "title": {"text": "Top 10 Easiest Subjects (High Grades >=90)", "left": "center"},
-            "tooltip": {"trigger": "axis", "formatter": "{b}: {c}%"},
-            "xAxis": {
-                "type": "category",
-                "data": x_labels,
-                "axisLabel": {"rotate": 30, "interval": 0}
-            },
-            "yAxis": {
-                "type": "value", 
-                "name": "High Grade Rate (%)",
-                "min" : min(y_values)-1,
-                "max" : max(y_values)+1,
-            },
-            "series": [
-                {
-                    "data": [
-                        {"value": v, "itemStyle": {"color": get_color(v)}}
-                        for v in y_values
-                    ],
-                    "type": "bar",
-                    "label": {"show": True, "position": "top", "formatter": "{c}%"}
-                }
-            ]
-        }
-
+        st.subheader("📈 Easiest Subjects")
         '''
-        The bar chart visualizes the top 10 easiest subjects by high-grade rate (grades ≥ 90%). 
-        Bars are color-coded: green represents subjects with the highest success rates, orange for 
-        moderate success, and red for lower high-grade rates. This chart allows for quick comparison of 
-        subjects where students consistently perform well, 
-        helping in curriculum evaluation and identifying exemplary teaching outcomes.
+        The table lists subjects where students achieve the highest grades, 
+        based on the selected course and school year. This provides a clear 
+        view of subjects in which students excel, helping educators recognize 
+        areas of strength and effective teaching practices.
         '''
-        st_echarts(options=options, height="500px")
+        st.dataframe(df)
+
+        # --- Add ECharts Bar Chart ---
+        if not df.empty:
+            df = df.head(10).copy()
+
+            # fallback to Subject when Description missing or empty
+            x_labels = df["Description"].replace("", pd.NA).fillna(df["Subject"]).tolist()
+            y_values = df["High Rate"].astype(float).round(2).tolist()
+
+            def get_color(value):
+                # value is percent 0..100
+                if value >= 40:
+                    return "#5cb85c"  # green
+                elif value >=30:
+                    return "#f0ad4e"  # orange
+                else:
+                    return "#d9534f"  # red
+
+            options = {
+                "title": {"text": "Top 10 Easiest Subjects (High Grades >=90)", "left": "center"},
+                "tooltip": {"trigger": "axis", "formatter": "{b}: {c}%"},
+                "xAxis": {
+                    "type": "category",
+                    "data": x_labels,
+                    "axisLabel": {"rotate": 30, "interval": 0}
+                },
+                "yAxis": {
+                    "type": "value", 
+                    "name": "High Grade Rate (%)",
+                    "min" : min(y_values)-1,
+                    "max" : max(y_values)+1,
+                },
+                "series": [
+                    {
+                        "data": [
+                            {"value": v, "itemStyle": {"color": get_color(v)}}
+                            for v in y_values
+                        ],
+                        "type": "bar",
+                        "label": {"show": True, "position": "top", "formatter": "{c}%"}
+                    }
+                ]
+            }
+
+            '''
+            The bar chart visualizes the top 10 easiest subjects by high-grade rate (grades ≥ 90%). 
+            Bars are color-coded: green represents subjects with the highest success rates, orange for 
+            moderate success, and red for lower high-grade rates. This chart allows for quick comparison of 
+            subjects where students consistently perform well, 
+            helping in curriculum evaluation and identifying exemplary teaching outcomes.
+            '''
+            st_echarts(options=options, height="500px")
 
 elif report == "Average Grades per Teacher":
 
@@ -673,7 +690,6 @@ elif report == "Average Grades per Teacher":
     # Fetch filtered data
     # -------------------------
     df = r.get_avg_grades_per_teacher(school_year=year_filter, semester=semester_filter)
-    print(report,df,df.columns)
     '''
         The table below lists the computed average grades per teacher, allowing for an easy comparison of a
         cademic performance across faculty members. This provides a straightforward numerical 
@@ -748,78 +764,103 @@ elif report == "Average Grades per Teacher":
 
 
 elif report == "Teachers with High Failures":
-    df = r.get_teachers_with_high_failures()
+
+    # -------------------------
+    # Streamlit Filters
+    # -------------------------
+    school_years = ["All"] + r.get_Schoolyear_options()
+    semesters = ["All"] + r.get_semester_options()
+
+    selected_year = st.selectbox("Select School Year", school_years)
+    selected_semester = st.selectbox("Select Semester", semesters)
+
+    # Convert "All" to None for the helper function
+    year_filter = None if selected_year == "All" else selected_year
+    semester_filter = None if selected_semester == "All" else selected_semester
+
+    # -------------------------
+    # Apply filters
+    # -------------------------
+    all_data = r.get_teachers_with_high_failures(school_year=year_filter, semester=semester_filter)
+    df = all_data.copy()
+    # if sy_selected != "All":
+    #     df = df[df["SchoolYear"] == sy_selected]
+    # if sem_selected != "All":
+    #     df = df[df["Semester"] == sem_selected]
+
     st.subheader("❌ Teachers with Most Failures")
-    '''
+    st.markdown("""
     The table displays teachers with the highest student failure rates, helping administrators 
     and educators identify instructors whose classes may need additional support or intervention. 
     It provides a clear view of individual teacher performance in terms of student outcomes.
-    '''
+    """)
+
     st.dataframe(df)
 
-    # -------------------------
-    # Find min & max failure rates
-    # -------------------------
-    min_rate = df["Failure Rate"].min()
-    max_rate = df["Failure Rate"].max()
+    if not df.empty:
+        # -------------------------
+        # Min & max failure rates
+        # -------------------------
+        min_rate = df["Failure Rate"].min()
+        max_rate = df["Failure Rate"].max()
 
-    # -------------------------
-    # ECharts visualization
-    # -------------------------
-    options = {
-        "title": {"text": "Failure Rate per Teacher"},
-        "tooltip": {
-            "trigger": "axis",
-            "valueFormatter": "function (params) { return params[0].name + ': ' + (params[0].value * 100).toFixed(2) + '%'; }"
-        },
-        "xAxis": {
-            "type": "category",
-            "data": df["Teacher"].tolist(),
-            "axisLabel": {"rotate": 45}
-        },
-        "yAxis": {
-            "type": "value",
-            "name": "Failure Rate (%)",
-            "min": float(min_rate),
-            "max": float(max_rate),
-            "axisLabel": {
-                # ✅ convert decimal → percentage
-                "valueFormatter": "function (value) { return (value * 100).toFixed(0) + '%'; }"
-            }
-        },
-        "visualMap": {
-            "type": "continuous",
-            "min": float(min_rate),
-            "max": float(max_rate),
-            "inRange": {
-                "color": ["green", "yellow", "red"]  # gradient red → yellow → green
+        # -------------------------
+        # ECharts visualization
+        # -------------------------
+        options = {
+            "title": {"text": "Failure Rate per Teacher"},
+            "tooltip": {
+                "trigger": "axis",
+                "valueFormatter": "function (p) { return (p.value * 100).toFixed(2) + '%'; }"
             },
-            "calculable": True,
-            "orient": "horizontal",
-            "left": "center",
-            "bottom": 10
-        },
-        "series": [
-            {
-                "data": [round(v, 3) for v in df["Failure Rate"].tolist()],
-                "type": "bar",
-                "label": {
-                    "show": True,
-                    "position": "top",
-                    # ✅ decimal → percent on top of each bar
-                    "valueFormatter": "function (p) { return (p.value * 100).toFixed(1) + '%'; }"
+            "xAxis": {
+                "type": "category",
+                "data": df["Teacher"].tolist(),
+                "axisLabel": {"rotate": 45}
+            },
+            "yAxis": {
+                "type": "value",
+                "name": "Failure Rate (%)",
+                "min": float(min_rate),
+                "max": float(max_rate),
+                "axisLabel": {
+                    "valueFormatter": "function (value) { return (value * 100).toFixed(0) + '%'; }"
                 }
-            }
-        ]
-    }
-    '''
-    The bar chart visualizes the failure rate per teacher. Each bar is color-coded with a 
-    gradient from red (high failure rate) to green (low failure rate), making it easy to quickly 
-    spot teachers whose students are struggling the most. The X-axis lists teachers, and the Y-axis 
-    shows their corresponding failure rates in percentages. This visual emphasizes performance 
-    differences among teachers and highlights areas requiring attention or improvement.
-    '''
-    st_echarts(options=options, height="500px")
+            },
+            "visualMap": {
+                "type": "continuous",
+                "min": float(min_rate),
+                "max": float(max_rate),
+                "inRange": {"color": ["green", "yellow", "red"]},
+                "calculable": True,
+                "orient": "horizontal",
+                "left": "center",
+                "bottom": 10
+            },
+            "series": [
+                {
+                    "data": [round(v, 3) for v in df["Failure Rate"].tolist()],
+                    "type": "bar",
+                    "label": {
+                        "show": True,
+                        "position": "top",
+                        "valueFormatter": "function (p) { return (p.value * 100).toFixed(1) + '%'; }"
+                    }
+                }
+            ]
+        }
+
+        st.markdown("""
+        The bar chart visualizes the failure rate per teacher. Each bar is color-coded with a 
+        gradient from red (high failure rate) to green (low failure rate), making it easy to quickly 
+        spot teachers whose students are struggling the most. The X-axis lists teachers, and the Y-axis 
+        shows their corresponding failure rates in percentages. This visual emphasizes performance 
+        differences among teachers and highlights areas requiring attention or improvement.
+        """)
+        st_echarts(options=options, height="500px")
+    else:
+        st.info("No records found for the selected filters.")
+
 
 elif report == "Grade Trend per Course":
     df = r.get_grade_trend_per_course()
@@ -938,7 +979,7 @@ elif report == "Subject Load Intensity":
         st.info("No course load data found.")
 elif report == "GE vs Major Subjects Performance":
     df = r.get_ge_vs_major()
-    print(report,df)
+    
     st.subheader("📖 GE vs Major Subject Performance")
     st.bar_chart(df.set_index("Type"))
 

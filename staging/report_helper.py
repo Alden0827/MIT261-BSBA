@@ -9,13 +9,25 @@ import hashlib
 import pickle
 import time
 from functools import wraps
-import streamlit as st
+import statistics
 
+print('Connecting to db..')
 # ------------------------------
 # MongoDB Connection
 # ------------------------------
 uri = "mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net/mit261"
-client = MongoClient(uri)
+# client = MongoClient(uri)
+
+# ------------------------------
+# Mongodb timeout
+# ------------------------------
+client = MongoClient(
+    uri,
+    # serverSelectionTimeoutMS=30000,  # 5 seconds for server selection
+    # connectTimeoutMS=30000,          # 5 seconds to establish connection
+    # socketTimeoutMS=30000           # 10 seconds for queries
+)
+
 db = client["mit261"]
 
 students_col = db["students"]
@@ -23,33 +35,20 @@ grades_col = db["grades"]
 subjects_col = db["subjects"]
 semesters_col = db["semesters"]
 
+print('Connected to db..')
 
-# ------------------------------
-# Mongodb timeout
-# ------------------------------
-client = MongoClient(
-    uri,
-    serverSelectionTimeoutMS=10000,  # 5 seconds for server selection
-    connectTimeoutMS=10000,          # 5 seconds to establish connection
-    socketTimeoutMS=10000           # 10 seconds for queries
-)
 
 # # test connection
-# try:
-#     client.admin.command("ping")
-#     print("✅ Connected successfully")
-# except Exception as e:
-#     print("❌ Connection failed:", e)
+try:
+    client.admin.command("ping")
+    print("✅ Connected successfully")
+except Exception as e:
+    print("❌ Connection failed:", e)
 
 # ------------------------------
 # Helper Functions
 # ------------------------------
-def load_all_data():
-    students = {s["_id"]: s for s in students_col.find()} # {'Course':'BSBA'}
-    semesters = {s["_id"]: s for s in semesters_col.find()}
-    return students, semesters
-
-students, semesters = load_all_data()
+print("Initializing load_all_data!")
 
 def avg(lst):
     return sum(lst) / len(lst) if lst else 0
@@ -61,6 +60,9 @@ def cache_result(ttl=600000000):  # default no expiration
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            print(f'-----------------------------------------------')
+            print(f'Func: {func.__name__}', end = '')
+
             ttl_minutes = kwargs.pop('ttl', ttl)
             args_tuple = tuple(arg for arg in args)
             kwargs_tuple = tuple(sorted(kwargs.items()))
@@ -74,17 +76,75 @@ def cache_result(ttl=600000000):  # default no expiration
                     result = func(*args, **kwargs)
                 else:
                     with open(cache_name, "rb") as f:
-                        return pickle.load(f)
+                        result = pickle.load(f)
+                        print(' - from cache')
+                        print(result.head(5))
+                        return result 
             else:
                 result = func(*args, **kwargs)
 
             with open(cache_name, "wb") as f:
                 pickle.dump(result, f)
+
+            print(' - fresh')
+            print(result.head(5))
+
+            return result
+        return wrapper
+    return decorator
+
+def cache_meta(ttl=600000000):  # default no expiration
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            print(f'-----------------------------------------------')
+            print(f'Func: {func.__name__}', end = '')
+
+            ttl_minutes = kwargs.pop('ttl', ttl)
+            args_tuple = tuple(arg for arg in args)
+            kwargs_tuple = tuple(sorted(kwargs.items()))
+            cache_key = hashlib.md5(pickle.dumps((args_tuple, kwargs_tuple))).hexdigest()
+            cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
+
+            if os.path.exists(cache_name):
+                file_mod_time = os.path.getmtime(cache_name)
+                if (time.time() - file_mod_time) / 60 > ttl_minutes:
+                    os.remove(cache_name)
+                    result = func(*args, **kwargs)
+                else:
+                    with open(cache_name, "rb") as f:
+                        result = pickle.load(f)
+                        print(' - from cache')
+                        return result 
+            else:
+                result = func(*args, **kwargs)
+
+            with open(cache_name, "wb") as f:
+                pickle.dump(result, f)
+
+            print(' - fresh')
+
             return result
         return wrapper
     return decorator
 
 
+# @cache_meta()
+def load_all_data():
+    students = {s["_id"]: s for s in students_col.find()} # {'Course':'BSBA'}
+    semesters = {s["_id"]: s for s in semesters_col.find()}
+    # students = {s["_id"]: s for s in students_col.find({}, {"Course": 1, "Name": 1})}
+    # semesters = {s["_id"]: s for s in semesters_col.find({}, {"Semester": 1, "SchoolYear": 1})}
+
+    return students, semesters
+
+print("Loading metadata!", end = '')
+# students, semesters = load_all_data()
+print(" - Loaded!")
+# students = ['aaaa']
+# semesters = ['semesters']
+# aaa = students_col.find({}, {"Course": 1, "Name": 1})
+# print(aaa)
 # ------------------------------
 # Report Functions
 # ------------------------------
@@ -92,170 +152,393 @@ def cache_result(ttl=600000000):  # default no expiration
 # @st.cache_data(ttl=None)
 @cache_result()
 def get_top_performers(school_year=None, semester=None):
-    data = []
-    for g in grades_col.find():
-        student = students.get(g["StudentID"])
-        sem = semesters.get(g["SemesterID"])
-        if student and sem:
-            # apply filters
-            if school_year and sem["SchoolYear"] != school_year:
-                continue
-            if semester and sem["Semester"] != semester:
-                continue
+    pipeline = [
+        # Join with semesters
+        {
+            "$lookup": {
+                "from": "semesters",
+                "localField": "SemesterID",
+                "foreignField": "_id",
+                "as": "sem"
+            }
+        },
+        {"$unwind": "$sem"},  # flatten array
+        # Join with students
+        {
+            "$lookup": {
+                "from": "students",
+                "localField": "StudentID",
+                "foreignField": "_id",
+                "as": "student"
+            }
+        },
+        {"$unwind": "$student"},
+        # Apply filters
+        {
+            "$match": {
+                **({"sem.SchoolYear": school_year} if school_year else {}),
+                **({"sem.Semester": semester} if semester else {})
+            }
+        },
+        # Only include records with grades
+        {
+            "$match": {
+                "Grades.0": {"$exists": True}  # ensures Grades array is not empty
+            }
+        },
+        # Compute average grade
+        {
+            "$addFields": {
+                "Average": {"$avg": "$Grades"}
+            }
+        },
+        # Project only needed fields
+        {
+            "$project": {
+                "_id": 0,
+                "Student": "$student.Name",
+                "Course": "$student.Course",
+                "YearLevel": "$student.YearLevel",
+                "Semester": "$sem.Semester",
+                "SchoolYear": "$sem.SchoolYear",
+                "Average": 1
+            }
+        },
+        # Sort and limit
+        {"$sort": {"Average": -1}},
+        {"$limit": 10}
+    ]
 
-            data.append({
-                "Student": student["Name"],
-                "Course": student["Course"],
-                "YearLevel": student["YearLevel"],
-                "Semester": sem["Semester"],
-                "SchoolYear": sem["SchoolYear"],
-                "Average": avg(g["Grades"])
-            })
+    result = list(grades_col.aggregate(pipeline))
+    df = pd.DataFrame(result)
+    return df
 
-    df = pd.DataFrame(data)
-    if df.empty:
-        return df
-    return df.sort_values("Average", ascending=False).head(10)
+# def get_top_performers(school_year=None, semester=None):
+#     # 🔹 Preload lookup dicts (better: do this once at startup, not inside function)
+
+#     print("Preload lookup semesters")
+#     semesters = {s["_id"]: s for s in db.semesters.find()}
+
+
+#     print("Preload lookup students")
+#     # students = {s["_id"]: s for s in db.students.find().limit(20)}
+#     students = {
+#         s["_id"]: {"Name": s.get("Name"), "Course": s.get("Course")}
+#         for s in list(db.students.find({}, {"Name": 1, "Course": 1}).limit(100000))
+#     }
+
+#     print("Loading records")
+#     data = []
+#     for g in grades_col.find():
+#         student = students.get(g["StudentID"])
+#         sem = semesters.get(g["SemesterID"])
+
+#         if not student or not sem:
+#             continue
+
+#         # 🔹 Apply filters
+#         if school_year and sem.get("SchoolYear") != school_year:
+#             continue
+#         if semester and sem.get("Semester") != semester:
+#             continue
+
+#         grades = g.get("Grades", [])
+#         if not grades:  # skip if no grades
+#             continue
+
+#         data.append({
+#             "Student": student.get("Name"),
+#             "Course": student.get("Course"),
+#             "YearLevel": student.get("YearLevel"),
+#             "Semester": sem.get("Semester"),
+#             "SchoolYear": sem.get("SchoolYear"),
+#             "Average": statistics.mean(grades)
+#         })
+
+#     df = pd.DataFrame(data)
+#     if df.empty:
+#         return df
+#     return df.sort_values("Average", ascending=False).head(10)
 
 
 @cache_result()
 def get_failing_students(school_year=None, semester=None):
-    data = []
-    for g in grades_col.find():
-        student = students.get(g["StudentID"])
-        sem = semesters.get(g["SemesterID"])
-        if student and sem:
-            # 🔹 Apply filters if provided
-            if school_year and sem["SchoolYear"] != school_year:
-                continue
-            if semester and sem["Semester"] != semester:
-                continue
+    # Convert numpy types to plain Python types
+    if school_year is not None:
+        school_year = int(school_year)  # ensure BSON-safe
+    if semester is not None:
+        semester = str(semester)        # ensure BSON-safe
 
-            # 🔹 Skip if student has no grades yet
-            if not g.get("Grades") or len(g["Grades"]) == 0:
-                continue
+    pipeline = [
+        {
+            "$lookup": {
+                "from": "semesters",
+                "localField": "SemesterID",
+                "foreignField": "_id",
+                "as": "sem"
+            }
+        },
+        {"$unwind": "$sem"},
+        {
+            "$lookup": {
+                "from": "students",
+                "localField": "StudentID",
+                "foreignField": "_id",
+                "as": "student"
+            }
+        },
+        {"$unwind": "$student"},
+        {
+            "$match": {
+                **({"sem.SchoolYear": school_year} if school_year else {}),
+                **({"sem.Semester": semester} if semester else {}),
+                "Grades.0": {"$exists": True}
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "Student": "$student.Name",
+                "Course": "$student.Course",
+                "Semester": "$sem.Semester",
+                "SchoolYear": "$sem.SchoolYear",
+                "Subjects Taken": {"$size": "$Grades"},
+                "Failures": {
+                    "$size": {
+                        "$filter": {
+                            "input": "$Grades",
+                            "as": "g",
+                            "cond": {"$lt": ["$$g", 75]}
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "$addFields": {
+                "FailureRate": {
+                    "$cond": [
+                        {"$gt": ["$Subjects Taken", 0]},
+                        {"$divide": ["$Failures", "$Subjects Taken"]},
+                        0
+                    ]
+                }
+            }
+        },
+        {"$match": {"FailureRate": {"$gt": 0.3}}},
+        {"$sort": {"Failures": -1}}
+    ]
 
-            fails = sum(1 for x in g["Grades"] if x < 75)
-            if fails / len(g["Grades"]) > 0.3:  # more than 30% failing
-                data.append({
-                    "Student": student["Name"],
-                    "Course": student["Course"],
-                    "Semester": sem["Semester"],
-                    "SchoolYear": sem["SchoolYear"],
-                    "Failures": fails,
-                    "Subjects Taken": len(g["Grades"]),
-                    "Failure Rate": f"{fails/len(g['Grades']):.0%}"
-                })
+    result = list(grades_col.aggregate(pipeline))
+    df = pd.DataFrame(result)
 
-    df = pd.DataFrame(data)
-    if df.empty:
-        return df
-    return df.sort_values("Failures", ascending=False)
+    if not df.empty:
+        df["Failure Rate"] = (df["FailureRate"] * 100).round(0).astype(int).astype(str) + "%"
+        df = df.drop(columns=["FailureRate"])
+
+    return df
+
 
 @cache_result()
 def get_students_with_improvement(selected_semester="All", selected_sy="All"):
-    history = defaultdict(list)
-    
-    for g in grades_col.find():
-        sem = semesters.get(g["SemesterID"])
-        if not sem:
-            continue
-        
-        # Apply filters
-        if selected_sy != "All" and sem["SchoolYear"] != selected_sy:
-            continue
-        if selected_semester != "All" and sem["Semester"] != selected_semester:
-            continue
-        
-        # Store SemesterID and average grade
-        history[g["StudentID"]].append((g["SemesterID"], avg(g["Grades"])))
-    
-    improved = []
-    for sid, records in history.items():
-        records.sort(key=lambda x: x[0])  # Sort by SemesterID
-        if len(records) > 1 and records[-1][1] > records[0][1]:
-            student = students.get(sid)
-            if student:
-                latest_sem = semesters.get(records[-1][0])
-                improved.append({
-                    "Student": student["Name"],
-                    "Initial Avg": records[0][1],
-                    "Latest Avg": records[-1][1],
-                    "Improvement": records[-1][1] - records[0][1],
-                    "SchoolYear": latest_sem["SchoolYear"] if latest_sem else "",
-                    "Semester": latest_sem["Semester"] if latest_sem else ""
-                })
-    return pd.DataFrame(improved).sort_values("Improvement", ascending=False)
+    match_stage = {"Grades.0": {"$exists": True}}  # skip students with no grades
 
+    if selected_sy != "All":
+        match_stage["sem.SchoolYear"] = int(selected_sy)  # ensure BSON-safe int
+    if selected_semester != "All":
+        match_stage["sem.Semester"] = str(selected_semester)
+
+    pipeline = [
+        # Join with semesters
+        {
+            "$lookup": {
+                "from": "semesters",
+                "localField": "SemesterID",
+                "foreignField": "_id",
+                "as": "sem"
+            }
+        },
+        {"$unwind": "$sem"},
+        # Join with students
+        {
+            "$lookup": {
+                "from": "students",
+                "localField": "StudentID",
+                "foreignField": "_id",
+                "as": "student"
+            }
+        },
+        {"$unwind": "$student"},
+        # Apply filters
+        {"$match": match_stage},
+        # Compute average grade per (student, semester)
+        {
+            "$project": {
+                "_id": 0,
+                "StudentID": "$StudentID",
+                "Student": "$student.Name",
+                "SchoolYear": "$sem.SchoolYear",
+                "Semester": "$sem.Semester",
+                "AvgGrade": {"$avg": "$Grades"}
+            }
+        },
+        # Group all semesters for each student
+        {
+            "$group": {
+                "_id": "$StudentID",
+                "Student": {"$first": "$Student"},
+                "history": {
+                    "$push": {
+                        "SchoolYear": "$SchoolYear",
+                        "Semester": "$Semester",
+                        "AvgGrade": "$AvgGrade"
+                    }
+                }
+            }
+        }
+    ]
+
+    results = list(grades_col.aggregate(pipeline))
+
+    # Now handle improvement logic in Python (small dataset)
+    improved = []
+    for r in results:
+        history = sorted(
+            r["history"],
+            key=lambda x: (x["SchoolYear"], x["Semester"])  # sort by SY + Semester
+        )
+        if len(history) > 1 and history[-1]["AvgGrade"] > history[0]["AvgGrade"]:
+            improved.append({
+                "Student": r["Student"],
+                "Initial Avg": history[0]["AvgGrade"],
+                "Latest Avg": history[-1]["AvgGrade"],
+                "Improvement": history[-1]["AvgGrade"] - history[0]["AvgGrade"],
+                "SchoolYear": history[-1]["SchoolYear"],
+                "Semester": history[-1]["Semester"],
+            })
+
+    return pd.DataFrame(improved).sort_values("Improvement", ascending=False)
 
 
 @cache_result()
 def get_distribution_of_grades(selected_semester="All", selected_sy="All"):
-    data = []
-    for g in grades_col.find():
-        sem = semesters.get(g["SemesterID"])
-        if not sem:
-            continue
+    match_stage = {}
+    if selected_sy != "All":
+        match_stage["sem.SchoolYear"] = int(selected_sy)  # ensure safe int
+    if selected_semester != "All":
+        match_stage["sem.Semester"] = str(selected_semester)
 
-        # Apply filters
-        if selected_sy != "All" and sem["SchoolYear"] != selected_sy:
-            continue
-        if selected_semester != "All" and sem["Semester"] != selected_semester:
-            continue
+    pipeline = [
+        # Expand grades array -> one row per grade
+        {"$unwind": "$Grades"},
+        # Join with semesters
+        {
+            "$lookup": {
+                "from": "semesters",
+                "localField": "SemesterID",
+                "foreignField": "_id",
+                "as": "sem"
+            }
+        },
+        {"$unwind": "$sem"},
+        # Apply filters (if any)
+        {"$match": match_stage} if match_stage else {"$match": {}},
+        # Project only needed fields
+        {
+            "$project": {
+                "_id": 0,
+                "Grade": "$Grades",
+                "Semester": "$sem.Semester",
+                "SchoolYear": "$sem.SchoolYear"
+            }
+        }
+    ]
 
-        for grade in g["Grades"]:
-            data.append({
-                "Grade": grade,
-                "Semester": sem["Semester"],
-                "SchoolYear": sem["SchoolYear"]
-            })
-
-    return pd.DataFrame(data)  # <-- Return a DataFrame
+    result = list(grades_col.aggregate(pipeline))
+    return pd.DataFrame(result)
 
 
 # B. Subject and Teacher Analytics
 @cache_result()
 def get_hardest_subject(course=None, school_year=None):
-    failures = defaultdict(lambda: [0, 0])  # fails, total
+    match_stage = {}
+    if course:
+        match_stage["student.Course"] = course
+    if school_year:
+        match_stage["sem.SchoolYear"] = int(school_year)
 
-    for g in grades_col.find():
-        student = students.get(g["StudentID"])
-        sem = semesters.get(g["SemesterID"])
+    pipeline = [
+        # Join with semesters
+        {
+            "$lookup": {
+                "from": "semesters",
+                "localField": "SemesterID",
+                "foreignField": "_id",
+                "as": "sem"
+            }
+        },
+        {"$unwind": "$sem"},
+        # Join with students
+        {
+            "$lookup": {
+                "from": "students",
+                "localField": "StudentID",
+                "foreignField": "_id",
+                "as": "student"
+            }
+        },
+        {"$unwind": "$student"},
+        # Apply filters only if present
+        *( [{"$match": match_stage}] if match_stage else [] ),
+        # Unwind grades + subjects
+        {"$unwind": {"path": "$Grades", "includeArrayIndex": "idx"}},
+        {"$unwind": {"path": "$SubjectCodes", "includeArrayIndex": "idx2"}},
+        {"$match": {"$expr": {"$eq": ["$idx", "$idx2"]}}},
+        # Count fails + totals per subject
+        {
+            "$group": {
+                "_id": "$SubjectCodes",
+                "Fails": {"$sum": {"$cond": [{"$lt": ["$Grades", 75]}, 1, 0]}},
+                "Total": {"$sum": 1}
+            }
+        },
+        # Join with subjects
+        {
+            "$lookup": {
+                "from": "subjects",
+                "localField": "_id",
+                "foreignField": "_id",
+                "as": "subj"
+            }
+        },
+        {"$unwind": {"path": "$subj", "preserveNullAndEmptyArrays": True}},
+        # Compute failure rate
+        {
+            "$project": {
+                "Subject": "$_id",
+                "Description": "$subj.Description",
+                "Fails": 1,
+                "Total": 1,
+                "Failure Rate": {
+                    "$cond": [
+                        {"$gt": ["$Total", 0]},
+                        {"$multiply": [{"$divide": ["$Fails", "$Total"]}, 100]},
+                        0
+                    ]
+                }
+            }
+        },
+        {"$sort": {"Failure Rate": -1}}
+    ]
 
-        if not student or not sem:
-            continue
+    result = list(grades_col.aggregate(pipeline))
+    df = pd.DataFrame(result)
 
-        # --- Apply filters ---
-        if course and student.get("Course") != course:
-            continue
-        if school_year and sem.get("SchoolYear") != school_year:
-            continue
+    if df.empty:
+        return pd.DataFrame()
 
-        for subj, grade in zip(g["SubjectCodes"], g["Grades"]):
-            failures[subj][1] += 1
-            if grade < 75:
-                failures[subj][0] += 1
-
-    data = []
-    for subj, (f, t) in failures.items():
-        subj_info = subjects_col.find_one({"_id": subj})
-        failure_rate = (f / t) if t > 0 else 0
-
-        data.append({
-            "Subject": subj,
-            "Description": subj_info["Description"] if subj_info else "",
-            "Failure Rate %": f"{failure_rate:.0%}",   # display
-            "Failure Rate": float(failure_rate * 100), # numeric
-            "Fails": f,
-            "Total": t
-        })
-
-    # df = pd.DataFrame(data)
-    # df["Failure Rate"] = pd.to_numeric(df["Failure Rate"], errors="coerce")
-    # return df.sort_values("Failure Rate", ascending=False)
-    df = pd.DataFrame(data)
-    df["Failure Rate"] = pd.to_numeric(df["Failure Rate"], errors="coerce").astype(float)
-    return df.sort_values("Failure Rate", ascending=False).reset_index(drop=True)
+    df["Failure Rate %"] = df["Failure Rate"].round(0).astype(int).astype(str) + "%"
+    return df.reset_index(drop=True)
 
 
 @cache_result()
@@ -264,207 +547,536 @@ def get_easiest_subjects(course=None, school_year=None):
     Returns DataFrame with:
       - Subject
       - Description
-      - High Grades (>=90)   -> formatted string like '23%'
-      - High Rate            -> numeric percent (0-100) for plotting
-      - Students
-    Filters: course (Course name) and school_year (SchoolYear string)
+      - High Performers (>=90)
+      - High Rate (% numeric 0–100)
+      - Students (total)
+    Filters: course, school_year
     """
-    success = defaultdict(lambda: [0, 0])  # success_count, total_count
 
-    for g in grades_col.find():
-        student = students.get(g["StudentID"])
-        sem = semesters.get(g["SemesterID"])
+    # Only add filters if provided
+    match_stage = {}
+    if course:
+        match_stage["student.Course"] = course
+    if school_year:
+        match_stage["sem.SchoolYear"] = int(school_year)
 
-        if not student or not sem:
-            continue
+    pipeline = [
+        # Join semesters first
+        {"$lookup": {
+            "from": "semesters",
+            "localField": "SemesterID",
+            "foreignField": "_id",
+            "as": "sem"
+        }},
+        {"$unwind": "$sem"},
 
-        # Apply filters
-        if course and student.get("Course") != course:
-            continue
-        if school_year and sem.get("SchoolYear") != school_year:
-            continue
+        # Join students
+        {"$lookup": {
+            "from": "students",
+            "localField": "StudentID",
+            "foreignField": "_id",
+            "as": "student"
+        }},
+        {"$unwind": "$student"},
 
-        for subj, grade in zip(g["SubjectCodes"], g["Grades"]):
-            success[subj][1] += 1
-            if grade >= 90:
-                success[subj][0] += 1
+        # Apply filters only if present
+        *( [{"$match": match_stage}] if match_stage else [] ),
 
-    data = []
-    for subj, (s, t) in success.items():
-        subj_info = subjects_col.find_one({"_id": subj})
-        high_rate = (s / t) if t > 0 else 0.0
+        # Unwind grades + subjects together
+        {"$unwind": {"path": "$Grades", "includeArrayIndex": "idx"}},
+        {"$unwind": {"path": "$SubjectCodes", "includeArrayIndex": "idx2"}},
+        {"$match": {"$expr": {"$eq": ["$idx", "$idx2"]}}},
 
-        data.append({
-            "Subject": subj,
-            "Description": subj_info["Description"] if subj_info else "",
-            "High Grades (>=90)": f"{high_rate:.0%}",   # for table display
-            "High Rate": float(high_rate * 100),        # numeric percent for chart
-            "Students": t
-        })
+        # Group by subject
+        {
+            "$group": {
+                "_id": "$SubjectCodes",
+                "HighCount": {"$sum": {"$cond": [{"$gte": ["$Grades", 90]}, 1, 0]}},
+                "Total": {"$sum": 1}
+            }
+        },
 
-    df = pd.DataFrame(data)
-    print("Teachers with High Failures:")
-    print(df)
-    # ensure numeric dtype for plotting
-    df["High Rate"] = pd.to_numeric(df["High Rate"], errors="coerce").astype(float)
-    return df.sort_values("High Rate", ascending=False).reset_index(drop=True)
+        # Lookup subject info
+        {"$lookup": {
+            "from": "subjects",
+            "localField": "_id",
+            "foreignField": "_id",
+            "as": "subj"
+        }},
+        {"$unwind": {"path": "$subj", "preserveNullAndEmptyArrays": True}},
+
+        # Compute high rate
+        {"$project": {
+            "Subject": "$_id",
+            "Description": "$subj.Description",
+            "High Performers": "$HighCount",
+            "Students": "$Total",
+            "High Rate": {
+                "$cond": [
+                    {"$gt": ["$Total", 0]},
+                    {"$multiply": [{"$divide": ["$HighCount", "$Total"]}, 100]},
+                    0
+                ]
+            }
+        }},
+
+        {"$sort": {"High Rate": -1}}
+    ]
+
+    result = list(grades_col.aggregate(pipeline))
+    df = pd.DataFrame(result)
+
+    if df.empty:
+        return pd.DataFrame()
+
+    df["High Grades"] = df["High Rate"].round(0).astype(int).astype(str) + "%"
+    return df.reset_index(drop=True)
 
 @cache_result()
 def get_avg_grades_per_teacher(school_year=None, semester=None):
-    teacher_grades = defaultdict(list)
-    
-    query = {}
+    match_stage = {}
     if school_year:
-        query["SchoolYear"] = school_year
+        match_stage["sem.SchoolYear"] = int(school_year)
     if semester:
-        query["Semester"] = semester
+        match_stage["sem.Semester"] = semester
 
-    for g in grades_col.find(query):
-        sem = g.get("Semester")
-        year = g.get("SchoolYear")
-        for teacher, grade in zip(g["Teachers"], g["Grades"]):
-            teacher_grades[teacher].append(grade)
+    pipeline = [
+        # Join semesters
+        {
+            "$lookup": {
+                "from": "semesters",
+                "localField": "SemesterID",
+                "foreignField": "_id",
+                "as": "sem"
+            }
+        },
+        {"$unwind": "$sem"},
 
-    data = []
-    for teacher, grades in teacher_grades.items():
-        avg_grade = sum(grades)/len(grades) if grades else 0
-        data.append({
-            "Teacher": teacher,
-            "Average Grade": avg_grade,
-            "Semester": semester if semester else "All",
-            "SchoolYear": school_year if school_year else "All"
-        })
+        # Apply filters only if provided
+        *( [{"$match": match_stage}] if match_stage else [] ),
 
-    return pd.DataFrame(data).sort_values("Average Grade", ascending=False)
+        # Unwind teachers and grades
+        {"$unwind": {"path": "$Grades", "includeArrayIndex": "idx"}},
+        {"$unwind": {"path": "$Teachers", "includeArrayIndex": "idx2"}},
+
+        # Make sure teacher and grade indices align
+        {"$match": {"$expr": {"$eq": ["$idx", "$idx2"]}}},
+
+        # Group by teacher
+        {
+            "$group": {
+                "_id": "$Teachers",
+                "Average Grade": {"$avg": "$Grades"},
+                "Count": {"$sum": 1}
+            }
+        },
+        {"$sort": {"Average Grade": -1}}
+    ]
+
+    result = list(grades_col.aggregate(pipeline))
+    df = pd.DataFrame(result)
+
+    if df.empty:
+        return pd.DataFrame()
+
+    df = df.rename(columns={"_id": "Teacher"})
+    df["Semester"] = semester if semester else "All"
+    df["SchoolYear"] = school_year if school_year else "All"
+
+    return df.reset_index(drop=True)
 
 @cache_result()
-def get_teachers_with_high_failures():
-    teacher_fails = defaultdict(lambda: [0, 0])  # fails, total
-    for g in grades_col.find():
-        for teacher, grade in zip(g["Teachers"], g["Grades"]):
-            teacher_fails[teacher][1] += 1
-            if grade < 75:
-                teacher_fails[teacher][0] += 1
-    data = [
+def get_teachers_with_high_failures(school_year=None, semester=None):
+    match_stage = {}
+    if school_year:
+        match_stage["sem.SchoolYear"] = int(school_year)
+    if semester:
+        match_stage["sem.Semester"] = semester
+
+    pipeline = [
+        # Join semesters
         {
-            "Teacher": t,
-            "Failures": f,
-            "Total": t_count,
-            "Failure Rate": round((f / t_count if t_count > 0 else 0)*100,2),
-        }
-        for t, (f, t_count) in teacher_fails.items()
+            "$lookup": {
+                "from": "semesters",
+                "localField": "SemesterID",
+                "foreignField": "_id",
+                "as": "sem"
+            }
+        },
+        {"$unwind": "$sem"},
+
+        # Apply filters (only if provided)
+        *( [{"$match": match_stage}] if match_stage else [] ),
+
+        # Unwind Grades and Teachers with indices
+        {"$unwind": {"path": "$Grades", "includeArrayIndex": "idx"}},
+        {"$unwind": {"path": "$Teachers", "includeArrayIndex": "idx2"}},
+
+        # Match teacher-grade pairs (same index)
+        {"$match": {"$expr": {"$eq": ["$idx", "$idx2"]}}},
+
+        # Group by teacher
+        {
+            "$group": {
+                "_id": "$Teachers",
+                "Total": {"$sum": 1},
+                "Failures": {"$sum": {"$cond": [{"$lt": ["$Grades", 75]}, 1, 0]}}
+            }
+        },
+
+        # Compute Failure Rate
+        {
+            "$project": {
+                "Teacher": "$_id",
+                "Total": 1,
+                "Failures": 1,
+                "Failure Rate": {
+                    "$cond": [
+                        {"$gt": ["$Total", 0]},
+                        {"$round": [{"$multiply": [{"$divide": ["$Failures", "$Total"]}, 100]}, 2]},
+                        0
+                    ]
+                }
+            }
+        },
+
+        {"$sort": {"Failure Rate": -1}}
     ]
-    return pd.DataFrame(data).sort_values("Failure Rate", ascending=False)
+
+    result = list(grades_col.aggregate(pipeline))
+    df = pd.DataFrame(result)
+
+    if df.empty:
+        return pd.DataFrame()
+
+    df["Semester"] = semester if semester else "All"
+    df["SchoolYear"] = school_year if school_year else "All"
+
+    return df.reset_index(drop=True)
 
 # C. Course and Curriculum Insights
 @cache_result()
 def get_grade_trend_per_course():
-    data = []
-    for g in grades_col.find():
-        student = students.get(g["StudentID"])
-        sem = semesters.get(g["SemesterID"])
-        if student and sem:
-            data.append({
-                "Course": student["Course"],
-                "SchoolYear": sem["SchoolYear"],
-                "Average": avg(g["Grades"])
-            })
+    pipeline = [
+        # Join with semesters
+        {
+            "$lookup": {
+                "from": "semesters",
+                "localField": "SemesterID",
+                "foreignField": "_id",
+                "as": "sem"
+            }
+        },
+        {"$unwind": "$sem"},
 
-    df = pd.DataFrame(data)
+        # Join with students
+        {
+            "$lookup": {
+                "from": "students",
+                "localField": "StudentID",
+                "foreignField": "_id",
+                "as": "student"
+            }
+        },
+        {"$unwind": "$student"},
 
-    # --- Exclude zero averages ---
-    df = df[df["Average"] != 0]
+        # Exclude records without grades
+        {"$match": {"Grades.0": {"$exists": True}}},
 
-    # Group by course & school year and take the mean
-    return df.groupby(["Course", "SchoolYear"])["Average"].mean().reset_index()
+        # Compute per-record average
+        {
+            "$project": {
+                "Course": "$student.Course",
+                "SchoolYear": "$sem.SchoolYear",
+                "Average": {"$avg": "$Grades"}
+            }
+        },
+
+        # Group by Course + SchoolYear
+        {
+            "$group": {
+                "_id": {"Course": "$Course", "SchoolYear": "$SchoolYear"},
+                "Average": {"$avg": "$Average"}
+            }
+        },
+
+        # Reshape
+        {
+            "$project": {
+                "Course": "$_id.Course",
+                "SchoolYear": "$_id.SchoolYear",
+                "Average": 1,
+                "_id": 0
+            }
+        },
+
+        # Sort for trends
+        {"$sort": {"Course": 1, "SchoolYear": 1}}
+    ]
+
+    result = list(grades_col.aggregate(pipeline))
+    return pd.DataFrame(result)
 
 
-@cache_result()
+# @cache_result()
 def get_subject_load_intensity():
-    data = []
-    for g in grades_col.find():
-        student = students.get(g["StudentID"])
-        if student:
-            data.append({"Course": student["Course"], "Load": len(g["SubjectCodes"])})
-    df = pd.DataFrame(data)
-    return df.groupby("Course")["Load"].mean().reset_index()
+    pipeline = [
+        # Join students
+        {
+            "$lookup": {
+                "from": "students",
+                "localField": "StudentID",
+                "foreignField": "_id",
+                "as": "student"
+            }
+        },
+        {"$unwind": "$student"},
 
-@cache_result()
+        # Project course + subject load (array length of SubjectCodes)
+        {
+            "$project": {
+                "Course": "$student.Course",
+                "Load": {"$size": {"$ifNull": ["$SubjectCodes", []]}}
+            }
+        },
+
+        # Group by course and compute average load
+        {
+            "$group": {
+                "_id": "$Course",
+                "Load": {"$avg": "$Load"}
+            }
+        },
+
+        # Reshape result
+        {
+            "$project": {
+                "Course": "$_id",
+                "Load": 1,
+                "_id": 0
+            }
+        },
+        {"$sort": {"Course": 1}}
+    ]
+
+    result = list(grades_col.aggregate(pipeline))
+    return pd.DataFrame(result)
+
+
+# @cache_result()
 def get_ge_vs_major():
-    data = []
-    for g in grades_col.find():
-        for subj, grade in zip(g["SubjectCodes"], g["Grades"]):
-            subj_type = "GE" if subj.startswith("GE") else "Major"
-            data.append({"Type": subj_type, "Grade": grade})
-    df = pd.DataFrame(data)
-    return df.groupby("Type")["Grade"].mean().reset_index()
+    pipeline = [
+        # Unwind subjects + grades together
+        {"$unwind": {"path": "$SubjectCodes", "includeArrayIndex": "idx1"}},
+        {"$unwind": {"path": "$Grades", "includeArrayIndex": "idx2"}},
+        {"$match": {"$expr": {"$eq": ["$idx1", "$idx2"]}}},
+
+        # Compute type (GE vs Major)
+        {
+            "$project": {
+                "Type": {
+                    "$cond": [
+                        {"$regexMatch": {"input": "$SubjectCodes", "regex": "^GE"}},
+                        "GE",
+                        "Major"
+                    ]
+                },
+                "Grade": "$Grades"
+            }
+        },
+
+        # Group by type and compute average
+        {
+            "$group": {
+                "_id": "$Type",
+                "Grade": {"$avg": "$Grade"}
+            }
+        },
+
+        # Reshape result
+        {
+            "$project": {
+                "Type": "$_id",
+                "Grade": 1,
+                "_id": 0
+            }
+        }
+    ]
+
+    result = list(grades_col.aggregate(pipeline))
+    return pd.DataFrame(result)
+
 
 # D. Semester and Academic Year Analysis
-@cache_result()
+# @cache_result()
 def get_lowest_gpa_semester():
-    data = []
-    for g in grades_col.find():
-        sem = semesters.get(g["SemesterID"])
-        if sem:
-            data.append({"Semester": sem["Semester"], "SchoolYear": sem["SchoolYear"], "Avg": avg(g["Grades"])})
-    df = pd.DataFrame(data)
-    return df.groupby(["Semester","SchoolYear"])["Avg"].mean().reset_index().sort_values("Avg").head(1)
+    pipeline = [
+        # Compute average per student record
+        {
+            "$project": {
+                "SemesterID": 1,
+                "Avg": {"$avg": "$Grades"}
+            }
+        },
 
-@cache_result()
+        # Join with semesters
+        {
+            "$lookup": {
+                "from": "semesters",
+                "localField": "SemesterID",
+                "foreignField": "_id",
+                "as": "sem"
+            }
+        },
+        {"$unwind": "$sem"},
+
+        # Group by semester + school year
+        {
+            "$group": {
+                "_id": {"Semester": "$sem.Semester", "SchoolYear": "$sem.SchoolYear"},
+                "Avg": {"$avg": "$Avg"}
+            }
+        },
+
+        # Sort by GPA ascending (lowest first)
+        {"$sort": {"Avg": 1}},
+
+        # Take only 1 (lowest GPA)
+        {"$limit": 1},
+
+        # Reshape output
+        {
+            "$project": {
+                "Semester": "$_id.Semester",
+                "SchoolYear": "$_id.SchoolYear",
+                "Avg": 1,
+                "_id": 0
+            }
+        }
+    ]
+
+    result = list(grades_col.aggregate(pipeline))
+    return pd.DataFrame(result)
+
+# @cache_result()
 def get_best_gpa_semester():
     df = get_lowest_gpa_semester()
     return df.sort_values("Avg", ascending=False).head(1)
 
-@cache_result()
+# @cache_result()
 def get_grade_deviation_across_semesters():
+    pipeline = [
+        # Unwind subjects + grades together
+        {"$unwind": {"path": "$SubjectCodes", "includeArrayIndex": "idx1"}},
+        {"$unwind": {"path": "$Grades", "includeArrayIndex": "idx2"}},
+        {"$match": {"$expr": {"$eq": ["$idx1", "$idx2"]}}},
+
+        # Attach semester info
+        {
+            "$lookup": {
+                "from": "semesters",
+                "localField": "SemesterID",
+                "foreignField": "_id",
+                "as": "sem"
+            }
+        },
+        {"$unwind": "$sem"},
+
+        # Project only needed fields
+        {
+            "$project": {
+                "Subject": "$SubjectCodes",
+                "Semester": "$sem._id",
+                "Grade": "$Grades"
+            }
+        },
+
+        # Group by subject and compute stats
+        {
+            "$group": {
+                "_id": "$Subject",
+                "Grades": {"$push": "$Grade"}
+            }
+        }
+    ]
+
+    result = list(grades_col.aggregate(pipeline))
+
+    # Compute stddev in Python since MongoDB stdDevPop is server-side only
     data = []
-    for g in grades_col.find():
-        sem = semesters.get(g["SemesterID"])
-        if sem:
-            for subj, grade in zip(g["SubjectCodes"], g["Grades"]):
-                data.append({"Subject": subj, "Semester": sem["_id"], "Grade": grade})
-    df = pd.DataFrame(data)
-    return df.groupby("Subject")["Grade"].std().reset_index().rename(columns={"Grade":"StdDev"}).sort_values("StdDev", ascending=False)
+    for r in result:
+        grades = r["Grades"]
+        if len(grades) > 1:
+            stddev = pd.Series(grades).std()
+        else:
+            stddev = 0.0
+        data.append({"Subject": r["_id"], "StdDev": stddev})
+
+    return pd.DataFrame(data).sort_values("StdDev", ascending=False)
 
 # E. Student Demographics
-@cache_result()
+# @cache_result()
 def get_year_level_distribution():
     df = pd.DataFrame(list(students_col.find()))
     return df["YearLevel"].value_counts().reset_index().rename(columns={"index":"YearLevel","YearLevel":"Count"})
 
-@cache_result()
+# @cache_result()
 def get_student_count_per_course():
     df = pd.DataFrame(list(students_col.find()))
     return df["Course"].value_counts().reset_index().rename(columns={"index":"Course","Course":"Count"})
 
-@cache_result()
+# @cache_result()
 def get_performance_by_year_level():
-    data = []
-    for g in grades_col.find():
-        student = students.get(g["StudentID"])
-        if student:
-            data.append({"YearLevel": student["YearLevel"], "Average": avg(g["Grades"])})
-    df = pd.DataFrame(data)
-    return df.groupby("YearLevel")["Average"].mean().reset_index()
+    pipeline = [
+        # Join with students collection
+        {
+            "$lookup": {
+                "from": "students",
+                "localField": "StudentID",
+                "foreignField": "_id",
+                "as": "student"
+            }
+        },
+        {"$unwind": "$student"},
 
-@cache_result()
+        # Compute average grade per student
+        {
+            "$project": {
+                "YearLevel": "$student.YearLevel",
+                "Average": {"$avg": "$Grades"}
+            }
+        },
+
+        # Group by year level and average across students
+        {
+            "$group": {
+                "_id": "$YearLevel",
+                "Average": {"$avg": "$Average"}
+            }
+        },
+
+        # Sort nicely
+        {"$sort": {"_id": 1}}
+    ]
+
+    result = list(grades_col.aggregate(pipeline))
+    return pd.DataFrame(result).rename(columns={"_id": "YearLevel"})
+
+@cache_meta()
 def get_Schoolyear_options():
-    print('Loading school_year options')
     return db.semesters.distinct("SchoolYear")
 
-@cache_result()
+@cache_meta()
 def get_course_options():
-    print('Loading course options:')
     return db.students.distinct("Course")
 
-@cache_result()
+@cache_meta()
 def get_semester_options():
-    print('Loading semester options')
     return db.semesters.distinct("Semester")
 
 
 if __name__ == "__main__":
     # from app import st
-    data  = get_Schoolyear_options()
+    data  = get_hardest_subject()
     print(data)
 
