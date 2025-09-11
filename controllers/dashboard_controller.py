@@ -8,9 +8,14 @@ CACHE_FILE = "./cache/dashboard_cache.pkl"
 CACHE_TTL = 3600  # 1 hour in seconds
 
 def dasboard_view(st):
+
+    print('Loading grades...')
     grades = get_grades()
+    print('Loading students...')
     students = get_students()
+    print('Loading semesters...')
     semesters = get_semesters()
+    print('Loading subjects...')
     subjects = get_subjects()
 
     st.title("🎓 University Dashboard")

@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 from pymongo import MongoClient
 from collections import defaultdict
 import numpy as np
-from functools import wraps
 import os
 import pandas as pd
 import hashlib
@@ -10,32 +9,28 @@ import pickle
 import time
 from functools import wraps
 import statistics
+from config.settings import MONGODB_URI, MONGODB_DATABASE
 
-print('Connecting to db..')
-# ------------------------------
-# MongoDB Connection
-# ------------------------------
-uri = "mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net/mit261"
-# client = MongoClient(uri)
+print('Connecting to db..', end = '')
 
 # ------------------------------
-# Mongodb timeout
+# Mongodb Connection/timeout
 # ------------------------------
 client = MongoClient(
-    uri,
+    MONGODB_URI,
     # serverSelectionTimeoutMS=30000,  # 5 seconds for server selection
     # connectTimeoutMS=30000,          # 5 seconds to establish connection
     # socketTimeoutMS=30000           # 10 seconds for queries
 )
 
-db = client["mit261"]
+db = client[MONGODB_DATABASE]
 
 students_col = db["students"]
 grades_col = db["grades"]
 subjects_col = db["subjects"]
 semesters_col = db["semesters"]
 
-print('Connected to db..')
+print(' - success')
 
 
 # # test connection
@@ -68,7 +63,7 @@ def cache_result(ttl=600000000):  # default no expiration
             kwargs_tuple = tuple(sorted(kwargs.items()))
             cache_key = hashlib.md5(pickle.dumps((args_tuple, kwargs_tuple))).hexdigest()
             cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
-
+            os.makedirs("./cache/", exist_ok=True)
             if os.path.exists(cache_name):
                 file_mod_time = os.path.getmtime(cache_name)
                 if (time.time() - file_mod_time) / 60 > ttl_minutes:
@@ -105,7 +100,7 @@ def cache_meta(ttl=600000000):  # default no expiration
             kwargs_tuple = tuple(sorted(kwargs.items()))
             cache_key = hashlib.md5(pickle.dumps((args_tuple, kwargs_tuple))).hexdigest()
             cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
-
+            os.makedirs("./cache/", exist_ok=True)
             if os.path.exists(cache_name):
                 file_mod_time = os.path.getmtime(cache_name)
                 if (time.time() - file_mod_time) / 60 > ttl_minutes:
@@ -118,6 +113,7 @@ def cache_meta(ttl=600000000):  # default no expiration
                         return result 
             else:
                 result = func(*args, **kwargs)
+
 
             with open(cache_name, "wb") as f:
                 pickle.dump(result, f)

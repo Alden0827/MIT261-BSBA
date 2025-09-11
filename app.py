@@ -58,12 +58,13 @@ def main():
 
     # ---------------- Pages ----------------
     if menu == "Dashboard":
-        try:
+        # try:
             
-            dasboard_view(st)
-        except Exception as e:
-            st.error("⚠️ Failed to load grades.")
-            st.code(str(e))
+        #     dasboard_view(st)
+        # except Exception as e:
+        #     st.error("⚠️ Failed to load grades.")
+        #     st.code(str(e))
+        dasboard_view(st)
     elif menu == "Student Evaludation":
         student_view(st)
     elif menu == "Faculty":

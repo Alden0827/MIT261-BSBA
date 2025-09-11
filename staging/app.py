@@ -14,12 +14,8 @@ from report_helper import get_Schoolyear_options, get_course_options
 # ------------------------------
 # Streamlit App
 # ------------------------------
-
-print('stage: 1')
-
 st.set_page_config(page_title=" Analytics Reports", layout="wide")
 st.title("📊 Analytics & Visualization")
-print('stage: 2')
 
 report = st.selectbox(
     "Select a Report",
@@ -38,7 +34,7 @@ report = st.selectbox(
         # "GE vs Major Subjects Performance",
         # "Semester with Lowest GPA",
         # "Best Performing Semester",
-        "Grade Deviation Across Semesters",
+        # "Grade Deviation Across Semesters",
         "Year Level Distribution",
         "Student Count per Course",
         "Performance by Year Level"
@@ -49,6 +45,95 @@ report = st.selectbox(
 # ------------------------------
 # Report Logic
 # ------------------------------
+if report == "-- Select Report --":
+    st.markdown("""
+        # Reporting Module Overview
+
+        The **Reporting Module** provides comprehensive insights into student academic performance, teacher efficiency, course trends, and subject difficulty.
+
+        ---
+
+        ## Reports Available
+
+        ### 1. Top Performers
+        - **Purpose:** Identify students with the highest grades.
+        - **Metrics:** Student name, ID, course, average grade.
+
+        ### 2. Failing Students
+        - **Purpose:** Highlight students with failing grades.
+        - **Metrics:** Student name, ID, course, failed subjects, average grade.
+
+        ### 3. Students with Grade Improvement
+        - **Purpose:** Track students who have shown improvement.
+        - **Metrics:** Student name, ID, previous grades, current grades, improvement %.
+
+        ### 4. Distribution of Grades
+        - **Purpose:** Visualize the distribution of grades.
+        - **Metrics:** Frequency of each grade or grade range.
+
+        ### 5. Hardest Subject
+        - **Purpose:** Subjects with the lowest average grades.
+        - **Metrics:** Subject name, average grade, failure rate.
+
+        ### 6. Easiest Subjects
+        - **Purpose:** Subjects with the highest average grades.
+        - **Metrics:** Subject name, average grade, pass rate.
+
+        ### 7. Average Grades per Teacher
+        - **Purpose:** Evaluate teacher performance.
+        - **Metrics:** Teacher name, subjects taught, student averages.
+
+        ### 8. Teachers with High Failures
+        - **Purpose:** Identify teachers whose students have high failure rates.
+        - **Metrics:** Teacher name, subjects taught, failing students.
+
+        ### 9. Grade Trend per Course
+        - **Purpose:** Track performance trends per course.
+        - **Metrics:** Course, semester/year, average grade trend.
+
+        ### 10. Subject Load Intensity
+        - **Purpose:** Analyze subjects taken per student.
+        - **Metrics:** Student ID, total subjects per semester.
+
+        ### 11. GE vs Major Subjects Performance
+        - **Purpose:** Compare student performance in GE vs Major subjects.
+        - **Metrics:** Student ID, GE average, Major average, difference.
+
+        ### 12. Semester with Lowest GPA
+        - **Purpose:** Identify the semester with the lowest GPA.
+        - **Metrics:** Semester, average GPA, total failing students.
+
+        ### 13. Best Performing Semester
+        - **Purpose:** Highlight the semester with highest performance.
+        - **Metrics:** Semester, average GPA, top students.
+
+        ### 14. Grade Deviation Across Semesters
+        - **Purpose:** Measure variation in student grades.
+        - **Metrics:** Student ID, grade deviation %.
+
+        ### 15. Year Level Distribution
+        - **Purpose:** Show student distribution across year levels.
+        - **Metrics:** Year level, number of students.
+
+        ### 16. Student Count per Course
+        - **Purpose:** Count students in each course.
+        - **Metrics:** Course name, total students.
+
+        ### 17. Performance by Year Level
+        - **Purpose:** Analyze performance by year level.
+        - **Metrics:** Year level, average grade, highest/lowest grade.
+
+        ---
+
+        ## Features
+        - **Filters:** Course, semester, school year, teacher, student.
+        - **Visualization:** Charts, graphs, tables.
+        - **Export Options:** CSV, Excel, PDF.
+        - **Interactivity:** Drill-down to individual student or subject performance.
+        - **Insights:** Identify trends, improvements, and areas requiring attention.
+        """)
+
+
 if report == "Top Performers":
     print('Loading ', report)
 
@@ -1281,16 +1366,174 @@ elif report == "Grade Deviation Across Semesters":
 
 
 elif report == "Year Level Distribution":
-    df = r.get_year_level_distribution()
+    df = r.get_year_level_distribution()  # DataFrame with columns: YearLevel, Count
+
     st.subheader("🎓 Year Level Distribution")
-    st.bar_chart(df.set_index("YearLevel"))
+    st.markdown("""
+    This report shows the number of students per year level.
+    The chart is color-coded based on the student count, with the minimum and maximum values highlighted.
+    """)
+
+    year_levels = df["YearLevel"].tolist()
+    counts = df["Count"].tolist()
+    min_count = min(counts) - 100
+    max_count = max(counts) + 100
+
+    option = {
+        "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+        "xAxis": {"type": "category", "data": year_levels, "name": "Year Level"},
+        "yAxis": {
+            "type": "value",
+            "name": "Number of Students",
+            "min": min_count,   # Set min based on actual data
+            "max": max_count    # Set max based on actual data
+        },
+        "visualMap": {
+            "min": min_count,
+            "max": max_count,
+            "orient": "vertical",
+            "left": "right",
+            "top": "middle",
+            "text": ["High", "Low"],
+            "calculable": True,
+            "inRange": {"color": ["RED", "Yellow", "GREEN"]}  # Low = blue, High = red
+        },
+        "series": [
+            {
+                "name": "Students",
+                "type": "bar",
+                "data": counts,
+                "label": {"show": True, "position": "top"}
+            }
+        ]
+    }
+
+    st_echarts(options=option, height="400px")  # ✅ correct
+
+    st.markdown("### Table View")
+    st.table(df)
 
 elif report == "Student Count per Course":
-    df = r.get_student_count_per_course()
+    # Fetch data
+    df = r.get_student_count_per_course()  # DataFrame with columns: Course, Count
+
     st.subheader("📚 Student Count per Course")
-    st.bar_chart(df.set_index("Course"))
+    st.markdown("""
+    This report shows the number of students enrolled in each course.
+    The bar chart is color-coded based on the number of students, 
+    with the minimum and maximum values highlighted for easy comparison.
+    """)
+
+    # Prepare chart data
+    courses = df["Course"].tolist()
+    counts = df["Count"].tolist()
+    min_count = min(counts) - 1000
+    max_count = max(counts) + 1000
+
+    # ECharts option
+    option = {
+        "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+        "xAxis": {"type": "category", "data": courses, "name": "Course"},
+        "yAxis": {
+            "type": "value",
+            "name": "Number of Students",
+            "min": min_count,  # Set min based on actual data
+            "max": max_count   # Set max based on actual data
+        },
+        "visualMap": {
+            "min": min_count,
+            "max": max_count,
+            "orient": "vertical",
+            "left": "right",
+            "top": "middle",
+            "text": ["High", "Low"],
+            "calculable": True,
+            "inRange": {"color": ["RED", "Yellow", "GREEN"]}  # Low = blue, High = red
+        },
+        "series": [
+            {
+                "name": "Students",
+                "type": "bar",
+                "data": counts,
+                "label": {"show": True, "position": "top"}
+            }
+        ]
+    }
+
+    # Display chart
+    st_echarts(options=option, height="400px")
+
+    # Display table
+    st.markdown("### Table View")
+    st.table(df)
 
 elif report == "Performance by Year Level":
-    df = r.get_performance_by_year_level()
+
+    # Fetch data
+    df = r.get_performance_by_year_level()  # DataFrame with columns: YearLevel, Average
+
+    # Prepare chart data
+    year_levels = df["YearLevel"].tolist()
+    averages = df["Average"].tolist()
+    min_avg = min(averages) - 100
+    max_avg = max(averages) + 100
+
     st.subheader("📈 Performance by Year Level")
-    st.bar_chart(df.set_index("YearLevel"))
+    st.markdown("""
+    The **Performance by Year Level** report provides insights into how students in each year level are performing academically. 
+    This helps in identifying which year levels are excelling and which may require additional academic support.
+    """)
+
+    # Detailed Markdown for Chart
+    st.markdown(f"""
+    ### Chart Explanation
+    - The **bar chart** visualizes the average grades for each year level.
+    - **Color Coding:** Bars are color-coded according to the average grade:
+        - **Blue** = Lowest average
+        - **Green/Yellow** = Mid-range averages
+        - **Red** = Highest average
+    - **Y-Axis:** Scales dynamically from {min_avg:.2f} to {max_avg:.2f} to reflect true performance differences.
+    - **Labels:** The exact average grade is displayed at the top of each bar for quick reference.
+    - This visualization allows educators to quickly identify year levels performing above or below the overall average.
+    """)
+
+    # ECharts option
+    option = {
+        "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+        "xAxis": {"type": "category", "data": year_levels, "name": "Year Level"},
+        "yAxis": {"type": "value", "name": "Average Grade", "min": min_avg, "max": max_avg},
+        "visualMap": {
+            "min": min_avg,
+            "max": max_avg,
+            "orient": "vertical",
+            "left": "right",
+            "top": "middle",
+            "text": ["High", "Low"],
+            "calculable": True,
+            "inRange": {"color": ["blue", "yellow", "red"]}  # proper colors
+        },
+        "series": [
+            {
+                "name": "Average Grade",
+                "type": "bar",
+                "data": averages,
+                "label": {"show": True, "position": "top"}
+            }
+        ]
+    }
+
+    # Display chart
+    st_echarts(options=option, height="400px")
+
+    # Detailed Markdown for Table
+    st.markdown("""
+    ### Table Explanation
+    The table below provides the **exact average grades per year level**:
+
+    - **YearLevel:** Represents the academic year of the students (e.g., 1st Year, 2nd Year, etc.).
+    - **Average:** Shows the computed average grade for all students within that year level.
+    - This table complements the chart by giving precise numeric values for reporting, analysis, and decision-making.
+    - Use this table to cross-check chart data or generate summaries for administrative purposes.
+    """)
+
+    st.table(df)

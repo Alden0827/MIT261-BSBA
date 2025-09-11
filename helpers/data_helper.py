@@ -1,7 +1,7 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-
+from typing import Optional
 import pandas as pd
 from dotenv import load_dotenv
 import pymongo
@@ -31,8 +31,51 @@ def load_or_query(cache_file, query_func):
 
     df = query_func()
     if not df.empty:
-        # df.to_pickle(cache_file)
+        df.to_pickle(cache_file)
         pass
+    return df
+
+
+
+def fetch_students_bulk(
+    mongo_uri: str,
+    db_name: str,
+    collection_name: str,
+    batch_size: int = 5000,
+    query: Optional[dict] = None,
+) -> pd.DataFrame:
+    """
+    Fetch documents from a MongoDB collection in batches and return as a single DataFrame.
+
+    Args:
+        mongo_uri (str): MongoDB connection URI.
+        db_name (str): Database name.
+        collection_name (str): Collection name.
+        batch_size (int): Number of documents per batch.
+        query (dict, optional): MongoDB filter query. Defaults to {}.
+
+    Returns:
+        pd.DataFrame: Consolidated DataFrame with all fetched documents.
+    """
+    client = MongoClient(mongo_uri)
+    collection = client[db_name][collection_name]
+
+    if query is None:
+        query = {}
+
+    total_docs = collection.count_documents(query)
+    all_data = []
+
+    print(f"Fetching {total_docs} documents in batches of {batch_size}...")
+
+    cursor = collection.find(query, batch_size=batch_size)
+    for i, doc in enumerate(cursor, 1):
+        all_data.append(doc)
+        if i % batch_size == 0 or i == total_docs:
+            print(f"Fetched {i}/{total_docs} documents...")
+
+    print("All documents fetched. Converting to DataFrame.")
+    df = pd.DataFrame(all_data)
     return df
 
 
@@ -63,75 +106,206 @@ def get_students_collection(StudentID=None, limit=100000000):
     return load_or_query("students_cache_x.pkl", query)
 
 
-def get_students(StudentID=None, limit=100000000):
-    def query():
-        db = client["mit261"]
-        students_col = db["students"]
-        grades_col = db["grades"]
+# def get_students(StudentID=None, limit=100000000):
+#     def query():
+#         db = client["mit261"]
+#         students_col = db["students"]
+#         grades_col = db["grades"]
 
-        # Get unique student IDs that have grades
-        filter_ids = {}
-        # filter_ids["Course"] = 'BSBA'
-        if StudentID:
-            filter_ids["StudentID"] = StudentID
+#         # Get unique student IDs that have grades
+#         filter_ids = {}
+#         # filter_ids["Course"] = 'BSBA'
+#         if StudentID:
+#             filter_ids["StudentID"] = StudentID
             
 
-        student_ids_with_grades = grades_col.distinct("StudentID", filter=filter_ids)
-        print(f"filter_ids:{filter_ids}")
+#         student_ids_with_grades = grades_col.distinct("StudentID", filter=filter_ids)
+#         print(f"filter_ids:{filter_ids}")
 
-        if not student_ids_with_grades:
-            return pd.DataFrame(columns=["_id", "Name", "Course", "YearLevel"])
+#         if not student_ids_with_grades:
+#             return pd.DataFrame(columns=["_id", "Name", "Course", "YearLevel"])
 
-        # Fetch only students who have grades
-        cursor = students_col.find(
-            {"_id": {"$in": student_ids_with_grades}},
-            {"_id": 1, "Name": 1, "Course": 1, "YearLevel": 1}
-        ).sort("Name", 1)
+#         # Fetch only students who have grades
+#         cursor = students_col.find(
+#             {"_id": {"$in": student_ids_with_grades}},
+#             {"_id": 1, "Name": 1, "Course": 1, "YearLevel": 1}
+#         ).sort("Name", 1)
 
-        if limit:
-            cursor = cursor.limit(limit)
+#         if limit:
+#             cursor = cursor.limit(limit)
 
-        return pd.DataFrame(list(cursor))
+#         return pd.DataFrame(list(cursor))
 
-    return load_or_query("students_cache.pkl", query)
+#     return load_or_query("students_cache.pkl", query)
+
+def cache_meta(ttl=600000000):  # default no expiration
+    from functools import wraps
+    import hashlib
+    import pickle
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            print(f'-----------------------------------------------')
+            print(f'Func: {func.__name__}', end = '')
+
+            ttl_minutes = kwargs.pop('ttl', ttl)
+            args_tuple = tuple(arg for arg in args)
+            kwargs_tuple = tuple(sorted(kwargs.items()))
+            cache_key = hashlib.md5(pickle.dumps((args_tuple, kwargs_tuple))).hexdigest()
+            cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
+            os.makedirs("./cache/", exist_ok=True)
+            if os.path.exists(cache_name):
+                file_mod_time = os.path.getmtime(cache_name)
+                if (time.time() - file_mod_time) / 60 > ttl_minutes:
+                    os.remove(cache_name)
+                    result = func(*args, **kwargs)
+                else:
+                    with open(cache_name, "rb") as f:
+                        result = pickle.load(f)
+                        print(' - from cache')
+                        return result 
+            else:
+                result = func(*args, **kwargs)
 
 
+            with open(cache_name, "wb") as f:
+                pickle.dump(result, f)
 
-def get_subjects():
-    def query():
-        db = client["mit261"]
-        collection = db["subjects"]
-        cursor = collection.find({}, {"_id": 1, "Description": 1, "Units": 1, "Teacher": 1})
-        df = pd.DataFrame(list(cursor))
-        if not df.empty:
-            df.rename(columns={"_id": "Subject Code"}, inplace=True)
-            df["Subject Code"] = df["Subject Code"].astype(str)
-        return df
+            print(' - fresh')
 
-    return load_or_query("subjects_cache.pkl", query)
+            return result
+        return wrapper
+    return decorator
+
+@cache_meta(ttl=660000000) #60 minutes
+def get_students(StudentID=None, limit=1000):
+    # def query():
+    db = client["mit261"]
+    students_col = db["students"]
+    grades_col = db["grades"]
+
+    # Start pipeline from grades, since only students with grades matter
+    pipeline = [
+        {
+            "$match": {  # filter by StudentID if provided
+                **({"StudentID": StudentID} if StudentID else {})
+            }
+        },
+        {"$group": {"_id": "$StudentID"}},  # unique students with grades
+        {
+            "$lookup": {  # join with students collection
+                "from": "students",
+                "localField": "_id",
+                "foreignField": "_id",
+                "as": "student"
+            }
+        },
+        {"$unwind": "$student"},  # flatten student array
+        {
+            "$project": {
+                "_id": "$student._id",
+                "Name": "$student.Name",
+                "Course": "$student.Course",
+                "YearLevel": "$student.YearLevel"
+            }
+        },
+        {"$sort": {"Name": 1}}
+    ]
+
+    if limit:
+        pipeline.append({"$limit": limit})
+
+    cursor = grades_col.aggregate(pipeline)  # NOTE: run on grades_col
+    return pd.DataFrame(list(cursor))
+
+    # return load_or_query("students_cache.pkl", query)
 
 
-def get_semesters():
-    def query():
-        db = client["mit261"]
-        collection = db["semesters"]
-        cursor = collection.find({}, {"_id": 1, "Semester": 1, "SchoolYear": 1})
-        return pd.DataFrame(list(cursor))
+def get_subjects(batch_size=1000):
+    db = client["mit261"]
+    collection = db["subjects"]
 
-    return load_or_query("semesters_cache.pkl", query)
+    cursor = collection.find({}, {"_id": 1, "Description": 1, "Units": 1, "Teacher": 1})
+
+    docs, chunks = [], []
+    for i, doc in enumerate(cursor, 1):
+        docs.append(doc)
+        if i % batch_size == 0:
+            chunks.append(pd.DataFrame(docs))
+            docs = []
+
+    if docs:
+        chunks.append(pd.DataFrame(docs))
+
+    df = pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
+
+    if not df.empty:
+        df.rename(columns={"_id": "Subject Code"}, inplace=True)
+        df["Subject Code"] = df["Subject Code"].astype(str)
+
+    return df
 
 
-def get_grades():
-    def query():
-        db = client["mit261"]
-        collection = db["grades"]
-        cursor = collection.find(
-            {}, {"_id": 1, "StudentID": 1, "SubjectCodes": 1,
-                 "Grades": 1, "Teachers": 1, "SemesterID": 1}
-        )
-        return pd.DataFrame(list(cursor))
+    # return load_or_query("subjects_cache.pkl", query)
 
-    return load_or_query("grades_cache.pkl", query)
+@cache_meta(ttl=600000) #60 minutes
+def get_semesters(batch_size=1000):
+    db = client["mit261"]
+    collection = db["semesters"]
+
+    cursor = collection.find({}, {"_id": 1, "Semester": 1, "SchoolYear": 1})
+
+    docs, chunks = [], []
+    for i, doc in enumerate(cursor, 1):
+        docs.append(doc)
+        if i % batch_size == 0:
+            chunks.append(pd.DataFrame(docs))
+            docs = []
+
+    if docs:
+        chunks.append(pd.DataFrame(docs))
+
+    return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
+
+
+    # return load_or_query("semesters_cache.pkl", query)
+
+@cache_meta(ttl=600000) #60 minutes
+def get_grades(batch_size=1000):
+    db = client["mit261"]
+    collection = db["grades"]
+
+    print('Fetching data', end = '')
+    cursor = collection.find(
+        {},
+        {"_id": 1, "StudentID": 1, "SubjectCodes": 1,
+         "Grades": 1, "Teachers": 1, "SemesterID": 1}
+    )
+
+    docs, chunks = [], []
+    for i, doc in enumerate(cursor, 1):
+        docs.append(doc)
+        if i % batch_size == 0:
+            print('.',end = '')
+            chunks.append(pd.DataFrame(docs))
+            docs = []
+
+    if docs:  # remaining docs
+        chunks.append(pd.DataFrame(docs))
+
+    return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
+
+# def get_grades():
+#     # def query():
+#     db = client["mit261"]
+#     collection = db["grades"]
+#     cursor = collection.find(
+#         {}, {"_id": 1, "StudentID": 1, "SubjectCodes": 1,
+#              "Grades": 1, "Teachers": 1, "SemesterID": 1}
+#     )
+#     return pd.DataFrame(list(cursor))
+
+    # return load_or_query("grades_cache.pkl", query)
 
 
 def get_student_grades_with_info(SubjectCode=None, Semester=None, SchoolYear=None, limit=1000):
@@ -380,8 +554,8 @@ if __name__ == "__main__":
     
     # print( get_students_collection().head(1)) #   b'$2b$12$7gc.TcApIFGSEC3anIVHoufkm5L/vx.t0O5Vj8syaCAn7UOvW6Nyu'
 
-    print(get_students(StudentID=500001))
-    # print(get_students())
+    # print(get_students(StudentID=500001))
+    print(get_subjects())
 
     
 

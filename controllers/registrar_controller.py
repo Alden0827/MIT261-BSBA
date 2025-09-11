@@ -10,94 +10,67 @@ def registrar_view(st, db):
         [
             "📊 Dashboard",
             "📚 Curriculum Manager",
-            "🏫 Subjects",
-            "🧑‍ Student Records",
-            "🗓 Semester Control",
-            "📑 Class Scheduling",
-            "📑 Analysis",
+            "📘 Subjects",
+            "🧑‍🎓 Student Records",
+            "🗓️ Semester Control",
+            "🗂️ Class Scheduling",
+            "📈 Analysis & Visualization",
         ]
     )
 
     # Default value for menu
     menu = main_menu  
 
-    # Show analysis submenu ONLY if "📑 Analysis" is selected
-    if main_menu == "📑 Analysis":
+    # Show analysis submenu ONLY if "📈 Analysis & Visualization" is selected
+    if main_menu == "📈 Analysis & Visualization":
         analysis_menu = st.sidebar.radio(
-            "📑 Select Analysis",
+            "📊 Select Analysis",
             [
-                "📚 Prospectus", 
-                "📝 Grade Management",
-                "📈 Reports",
+                "📖 Prospectus", 
+                "📊 Student Performance",
+                "👩‍🏫 Teacher & Subject Analysis",
+                "📚 Course & Curriculum Insight",
+                "📅 Sem & Academic Year Analysis",
+                "👥 Student Demographic Analysis"
             ]
         )
         menu = analysis_menu
 
-    # ---------------------------
-    # 1️⃣ Dashboard
-    # ---------------------------
     if menu == "📊 Dashboard":
         dasboard_view(st)
-
-    # ---------------------------
-    # 2️⃣ Curriculum Manager
-    # ---------------------------
     elif menu == "📚 Curriculum Manager":
         from .registrar.curriculum_manager import curriculum_manager_page 
         curriculum_manager_page(st,db)
-
-    # ---------------------------
-    # 3️⃣ Prospectus (under Analysis)
-    # ---------------------------
-    elif menu == "📚 Prospectus":
+    elif menu == "📖 Prospectus":
         from .registrar.prospectus_manager import prospectus_page 
         prospectus_page(st)
-
-    # ---------------------------
-    # 4️⃣ Subjects
-    # ---------------------------
-    elif menu == "🏫 Subjects":
+    elif menu == "📘 Subjects":
         from .registrar.subjects_manager import subjects_manager_page
         subjects_manager_page(st,db)
-
-    # ---------------------------
-    # 5️⃣ Student Records
-    # ---------------------------
-    elif menu == "🧑‍ Student Records":
+    elif menu == "🧑‍🎓 Student Records":
         from .registrar.student_records_manager import student_records_manager_page
         student_records_manager_page(st,db)
-
-    # ---------------------------
-    # 6️⃣ Semester Control
-    # ---------------------------
-    elif menu == "🗓 Semester Control":
+    elif menu == "🗓️ Semester Control":
         from .registrar.semester_manager import semester_manager_page 
         semester_manager_page(st,db)
-
-    # ---------------------------
-    # 7️⃣ Class Scheduling
-    # ---------------------------
-    elif menu == "📑 Class Scheduling":
+    elif menu == "🗂️ Class Scheduling":
         from .registrar.class_scheduler_manager import class_scheduler_manager_page
         class_scheduler_manager_page(st,db)
-
-    # ---------------------------
-    # 8️⃣ Enrollment Approvals
-    # ---------------------------
-    elif menu == "🧑‍ Enrollment Approvals":
+    elif menu == "🧾 Enrollment Approvals":
         from .registrar.enrollment_approval_manager import enrollment_approval_manager_page
         enrollment_approval_manager_page(st,db)
-
-    # ---------------------------
-    # 9️⃣ Grade Management (under Analysis)
-    # ---------------------------
-    elif menu == "📝 Grade Management":
-        from grade_manager import grade_manager_page
-        grade_manager_page(st,db)
-
-    # ---------------------------
-    # 🔟 Reports (under Analysis)
-    # ---------------------------
-    elif menu == "📈 Reports":
-        from .registrar.report_manager import report_manager_page
-        report_manager_page(st,db)
+    elif menu == "📊 Student Performance":
+        from .reports.student_performance_report import report_page
+        report_page(st,db)
+    elif menu == "👩‍🏫 Teacher & Subject Analysis":
+        from .reports.subject_and_teacher_report import report_page
+        report_page(st,db)
+    elif menu == "📚 Course & Curriculum Insight":
+        from .reports.course_and_curriculum_report import report_page
+        report_page(st,db)
+    elif menu == "📅 Sem & Academic Year Analysis":
+        from .reports.semester_and_cademic_year_report import report_page
+        report_page(st,db)
+    elif menu == "👥 Student Demographic Analysis":
+        from .reports.student_demographics_report import report_page
+        report_page(st,db)
