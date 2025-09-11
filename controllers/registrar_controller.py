@@ -14,6 +14,7 @@ def registrar_view(st, db):
             "🧑‍🎓 Student Records",
             "🗓️ Semester Control",
             "🗂️ Class Scheduling",
+            "📜 Enrollment",
             "📈 Analysis & Visualization",
         ]
     )
@@ -56,6 +57,9 @@ def registrar_view(st, db):
     elif menu == "🗂️ Class Scheduling":
         from .registrar.class_scheduler_manager import class_scheduler_manager_page
         class_scheduler_manager_page(st,db)
+    elif menu == "📜 Enrollment":
+        from .registrar.enrollment_manager import enrollment_manager_page
+        enrollment_manager_page(st,db)
     elif menu == "🧾 Enrollment Approvals":
         from .registrar.enrollment_approval_manager import enrollment_approval_manager_page
         enrollment_approval_manager_page(st,db)
