@@ -105,11 +105,11 @@ def report_page(st, db):
 	        # --- Add ECharts Bar Chart ---
 	        if not df.empty:
 
-	            '''
+	            st.markdown('''
 	            The table lists subjects with the highest failure rates based on the selected course and school year. 
 	            It allows educators to identify which subjects consistently challenge students 
 	            and may require additional support, curriculum review, or targeted interventions.
-	            '''
+	            ''')
 	            st.dataframe(df)
 
 
@@ -146,13 +146,13 @@ def report_page(st, db):
 	                    }
 	                ]
 	            }
-	            '''
+	            st.markdown('''
 	            The bar chart visualizes the top 10 hardest subjects by failure rate. 
 	            Bars are color-coded for clarity: green indicates low failure rates, 
 	            orange represents moderate difficulty, and red highlights the most challenging subjects. 
 	            The chart allows for quick comparison between subjects, making it easy to pinpoint 
 	            areas where students struggle the most and prioritize academic support.
-	            '''
+	            ''')
 	            st_echarts(options=options, height="500px")
 
 
@@ -181,12 +181,12 @@ def report_page(st, db):
 	    if not df.empty:
 
 	        st.subheader("📈 Easiest Subjects")
-	        '''
+	        st.markdown('''
 	        The table lists subjects where students achieve the highest grades, 
 	        based on the selected course and school year. This provides a clear 
 	        view of subjects in which students excel, helping educators recognize 
 	        areas of strength and effective teaching practices.
-	        '''
+	        ''')
 	        st.dataframe(df)
 
 	        # --- Add ECharts Bar Chart ---
@@ -232,13 +232,13 @@ def report_page(st, db):
 	                ]
 	            }
 
-	            '''
+	            st.markdown('''
 	            The bar chart visualizes the top 10 easiest subjects by high-grade rate (grades ≥ 90%). 
 	            Bars are color-coded: green represents subjects with the highest success rates, orange for 
 	            moderate success, and red for lower high-grade rates. This chart allows for quick comparison of 
 	            subjects where students consistently perform well, 
 	            helping in curriculum evaluation and identifying exemplary teaching outcomes.
-	            '''
+	            ''')
 	            st_echarts(options=options, height="500px")
 
 	elif report == "Average Grades per Teacher":
@@ -262,11 +262,11 @@ def report_page(st, db):
 	    # Fetch filtered data
 	    # -------------------------
 	    df = r.get_avg_grades_per_teacher(school_year=year_filter, semester=semester_filter)
-	    '''
+	    st.markdown('''
 	        The table below lists the computed average grades per teacher, allowing for an easy comparison of a
 	        cademic performance across faculty members. This provides a straightforward numerical 
 	        reference that can be used for record-keeping and further analysis.
-	    '''
+	    ''')
 	    st.dataframe(df)
 
 	    # -------------------------
@@ -324,12 +324,12 @@ def report_page(st, db):
 	            ]
 	        }
 
-	        '''
+	        st.markdown('''
 	            The bar chart below visually represents the distribution of teachers’ average grades. 
 	            Using a color gradient from red (lower averages) to green (higher averages), 
 	            the chart makes it easier to quickly identify performance trends, highlight strengths, 
 	            and spot areas that may require additional academic support.
-	        '''
+	        ''')
 	        st_echarts(options=options, height="500px")
 	    else:
 	        st.info("No data available for the selected filters.")

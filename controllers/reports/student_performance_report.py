@@ -94,20 +94,20 @@ def report_page(st, db):
 		        df_top = all_data.sort_values("Average", ascending=False).head(10)
 
 		        st.subheader("🏆 Top 10 Performers")
-		        '''
+		        st.markdown('''
 		        The table below presents the Top 10 Performers for the selected semester and school year. 
 		        It provides detailed information on each student’s average grade, giving a clear picture of the highest achievers during the period.
-		        '''
+		        ''')
 		        st.dataframe(df_top)
 
-		        '''
+		        st.markdown('''
 		        The horizontal bar chart highlights the top 10 students and their corresponding average grades, 
 		        making it easy to compare performance at a glance. Alongside, the pie chart shows the distribution 
 		        of these top performers by course, allowing a quick understanding of which programs or 
 		        courses have produced the most high-achieving students. 
 		        Together, these visualizations provide both individual 
 		        recognition and an overview of academic excellence across courses.
-		        '''
+		        ''')
 
 		        col1, col2 = st.columns(2)
 		        with col1:
@@ -152,11 +152,11 @@ def report_page(st, db):
 	        )
 
 	        st.subheader("📉 Students with High Failure Rate")
-	        '''
+	        st.markdown('''
 	        The table lists all students with high failure rates based on the selected semester and school year. 
 	        It provides a detailed breakdown of each student’s academic performance, including the number of failed subjects. 
 	        This allows educators and administrators to identify at-risk students who may need further academic support or intervention.
-	        '''
+	        ''')
 	        if not df_fails.empty:
 	            # --- Table ---
 	            st.dataframe(df_fails)
@@ -242,11 +242,11 @@ def report_page(st, db):
 	                }]
 	            }
 
-	            '''
+	            st.markdown('''
 	            The heatmap compares students against their enrolled courses, showing the intensity of failures per course. 
 	            Darker or warmer colors represent higher failure counts, giving a clear visual signal of s
 	            tudents and courses that require attention.
-	            '''
+	            ''')
 	            st_echarts(options=options1, height="1200px")
 	            # --- Chart 2: Failures by Course (Pie) ---
 	            course_failures = df_fails.groupby("Course")["Failures"].sum().reset_index()
@@ -328,11 +328,11 @@ def report_page(st, db):
 	                }],
 	                "grid": {"bottom": 100},  # prevent label cutoff
 	            }
-	            '''
+	            st.markdown('''
 	            The line chart illustrates the failure rate trend over time across different school years and semesters. 
 	            By tracking changes in failure percentages, this visualization highlights patterns and helps in monitoring 
 	            whether interventions are effective in reducing failures.
-	            '''
+	            ''')
 	            st_echarts(options=options3, height="400px")
 
 
@@ -368,10 +368,10 @@ def report_page(st, db):
 
 	    if not df.empty:
 	        # Show table
-	        '''
+	        st.markdown('''
 	        The table below lists all students who have shown improvement in their grades for the selected semester and school year. 
 	        It provides a clear overview of individual progress, allowing educators to identify students who are benefiting from interventions or extra support.
-	        '''
+	        ''')
 
 	        st.dataframe(df)
 
@@ -439,13 +439,13 @@ def report_page(st, db):
 	                }
 	            ]
 	        }
-	        '''
+	        st.markdown('''
 	        The bar chart visualizes the Top 15 students with the highest grade improvement. 
 	        Using a gradient from green to yellow, the chart highlights the degree of improvement for each student. 
 	        The X-axis dynamically adjusts to the minimum and maximum improvement values, 
 	        ensuring that even small gains are visible. 
 	        This visualization makes it easy to quickly recognize top improvers and compare performance across students.
-	        '''
+	        ''')
 	        st_echarts(option, height="500px")
 
 	    else:
@@ -454,10 +454,10 @@ def report_page(st, db):
 
 	elif report == "Distribution of Grades":
 	    st.subheader("📊 Grade Distribution")
-	    '''
+	    st.markdown('''
 	    The table below provides a detailed view of student performance for the selected semester and school year, 
 	    allowing educators to inspect exact grades and identify trends in individual performance.
-	    '''
+	    ''')
 	    # Load all data first (for filter dropdowns)
 	    all_data = r.get_distribution_of_grades()  # Returns a DataFrame now
 
@@ -516,14 +516,14 @@ def report_page(st, db):
 	                "barMaxWidth": "50%"
 	            }]
 	        }
-	        '''
+	        st.markdown('''
 	        The bar chart visualizes the distribution of grades across defined ranges. 
 	        Each bar represents the frequency of students falling into a particular grade bracket. 
 	        Color coding highlights performance levels: red indicates failing grades, orange 
 	        shows average performance, and green represents high achievement. This visualization 
 	        makes it easy to quickly assess overall class performance, identify clusters of low or 
 	        high scores, and evaluate the effectiveness of teaching interventions.
-	        '''
+	        ''')
 	        st_echarts(option, height="400px")
 	    else:
 	        st.info("No grades found for the selected Semester/School Year.")

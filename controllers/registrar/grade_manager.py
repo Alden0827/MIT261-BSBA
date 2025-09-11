@@ -1,10 +1,10 @@
 def grade_manager_page(st,db):
-    '''
+    st.markdown('''
     Receiving and officially recording grades submitted by faculty.
     Maintaining the official academic records (transcripts, report cards, etc.).
     Implementing institutional policies on grade submission deadlines, changes, and disputes.
     Securing and archiving grade data for compliance and accreditation.
-    '''
+    ''')
     st.subheader("Grade Management")
     enrollments = list(db.enrollments.find({"status": "Enrolled"}))
     if not enrollments:

@@ -144,10 +144,10 @@ def report_page(st, db):
 	    df = r.get_subject_load_intensity()  # Expected columns: ["Course", "Load"]
 	    
 	    st.subheader("📊 Subject Load Intensity per Course")
-	    '''
+	    st.markdown('''
 	    The table displays the average subject load per course, showing how intensive the curriculum is for students in each program. 
 	    Higher load values indicate more intensive coursework.
-	    '''
+	    ''')
 	    st.dataframe(df)
 
 	    if not df.empty:
@@ -179,11 +179,11 @@ def report_page(st, db):
 	            }]
 	        }
 
-	        '''
+	        st.markdown('''
 	        The column chart visualizes the subject load intensity for each course. Bars are color-coded:
 	        green represents lighter course loads, orange indicates moderate intensity, and red highlights heavier workloads.
 	        This chart allows administrators and educators to quickly identify which courses have heavier academic demands.
-	        '''
+	        ''')
 	        st_echarts(options=options, height="500px")
 	    else:
 	        st.info("No course load data found.")
