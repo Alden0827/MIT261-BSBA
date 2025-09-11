@@ -32,7 +32,7 @@ def main():
     
     # ---------------- Sidebar Navigation ----------------
     menu_options = {
-        "admin": ["Dashboard", "Student Evaludation", "Faculty", "Registrar"],
+        "admin": ["Student Evaludation", "Faculty", "Registrar"],
         "registrar": ["Registrar"],
         "faculty": ["Faculty"],
         "student": ["Student Evaludation"]

@@ -249,11 +249,32 @@ def get_subjects(batch_size=1000):
     # return load_or_query("subjects_cache.pkl", query)
 
 @cache_meta(ttl=600000) #60 minutes
-def get_semesters():
+def get_semester_names():
+    print('fetching semester from semesters collection as list')
     db = client["mit261"]
     collection = db["semesters"]
     return collection.distinct("Semester")
 
+@cache_meta(ttl=600000) #60 minutes
+def get_semesters(batch_size=1000):
+    print('fetching semesters collection as DataFrame')
+    db = client["mit261"]
+    collection = db["semesters"]
+
+
+    cursor = collection.find({}, {"_id": 1, "Semester": 1, "SchoolYear": 1})
+
+    docs, chunks = [], []
+    for i, doc in enumerate(cursor, 1):
+        docs.append(doc)
+        if i % batch_size == 0:
+            chunks.append(pd.DataFrame(docs))
+            docs = []
+
+    if docs:
+        chunks.append(pd.DataFrame(docs))
+
+    return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
 
 @cache_meta(ttl=600000) #60 minutes
 def get_school_years():

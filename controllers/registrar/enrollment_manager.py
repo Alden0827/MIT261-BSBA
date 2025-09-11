@@ -8,7 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 # Helpers
 from helpers.data_helper import (
     get_school_years,
-    get_semesters,
+    get_semester_names,
     get_courses,
     get_curriculum,
     get_student_subjects_grades,
@@ -39,7 +39,7 @@ def enrollment_manager_page(st,db):
     with col1:
         selected_school_year = st.selectbox("School Year", get_school_years())
     with col2:
-        selected_semester = st.selectbox("Semester", get_semesters())
+        selected_semester = st.selectbox("Semester", get_semester_names())
     with col3:
         selected_course = st.selectbox("Course", get_courses())
 

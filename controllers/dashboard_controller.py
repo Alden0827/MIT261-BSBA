@@ -91,7 +91,7 @@ def dasboard_view(st):
         ):
             all_grades.append({"Grade": g, "SemesterID": sem_id})
     df_grades = pd.DataFrame(all_grades)
-
+    print("semesters:",semesters)
     df_grades = df_grades.merge(semesters, left_on="SemesterID", right_on="_id", how="left")
     df_grades["SemesterLabel"] = df_grades["Semester"].astype(str) + " " + df_grades["SchoolYear"].astype(str)
 
