@@ -35,35 +35,41 @@ def report_page(st, db):
 	# ------------------------------
 	if report == "-- Select Report --":
 	    st.markdown("""
-	        # Reporting Module Overview
+	        ## D. Semester and Academic Year Analysis
 
-	        The **Reporting Module** provides comprehensive insights into student academic performance, teacher efficiency, course trends, and subject difficulty.
-
-	        ---
-
-	        ## Reports Available
-
-	        ### 1. Semester with Lowest GPA
-	        - **Purpose:** Identify the semester with the lowest GPA.
-	        - **Metrics:** Semester, average GPA, total failing students.
-
-	        ### 2. Best Performing Semester
-	        - **Purpose:** Highlight the semester with highest performance.
-	        - **Metrics:** Semester, average GPA, top students.
-
-	        ### 3. Grade Deviation Across Semesters
-	        - **Purpose:** Measure variation in student grades.
-	        - **Metrics:** Student ID, grade deviation %.
+	        The **Reporting Module** provides insights into how students perform 
+	        across different semesters, highlighting the best and worst academic periods 
+	        and analyzing grade stability.
 
 	        ---
 
-	        ## Features
-	        - **Filters:** Course, semester, school year, teacher, student.
-	        - **Visualization:** Charts, graphs, tables.
-	        - **Export Options:** CSV, Excel, PDF.
-	        - **Interactivity:** Drill-down to individual student or subject performance.
-	        - **Insights:** Identify trends, improvements, and areas requiring attention.
-	        """)
+	        ## 📑 Reports Available
+
+	        ### 1. ⬇️ Semester with Lowest GPA
+	        - **Purpose:** Identify the semester with the lowest overall GPA.  
+	        - **Metrics:** Semester, average GPA, total failing students.  
+	        - **Use Case:** Detect when student performance dipped and investigate possible causes.  
+
+	        ### 2. 🏆 Best Performing Semester
+	        - **Purpose:** Highlight the semester with the strongest performance.  
+	        - **Metrics:** Semester, average GPA, top-performing subjects and students.  
+	        - **Use Case:** Recognize academic strengths and replicate effective strategies.  
+
+	        ### 3. 📈 Grade Deviation Across Semesters
+	        - **Purpose:** Measure variation in student grades across terms.  
+	        - **Metrics:** Average GPA (Mean), grade variance (StdDev), student count.  
+	        - **Use Case:** Identify stable vs. volatile subjects, supporting curriculum and teaching improvements.  
+
+	        ---
+
+	        ## ⚙️ Features
+	        - **Filters:** Course, semester, school year, teacher, student.  
+	        - **Visualization:** Interactive charts, graphs, and tables.  
+	        - **Export Options:** CSV, Excel, PDF.  
+	        - **Drill-Down:** Explore individual subjects or student groups.  
+	        - **Insights:** Spot academic trends, highlight best practices, and target areas for support.  
+	    """)
+
 
 	elif report == "Semester with Lowest GPA":
 	    header, subjects_df = r.get_lowest_gpa_semester()

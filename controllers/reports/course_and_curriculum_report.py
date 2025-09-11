@@ -35,36 +35,39 @@ def report_page(st, db):
 	# ------------------------------
 	if report == "-- Select Report --":
 	    st.markdown("""
-	        # Reporting Module Overview
+	        ## C. Course and Curriculum Insights
 
-	        The **Reporting Module** provides comprehensive insights into student academic performance, teacher efficiency, course trends, and subject difficulty.
-
-	        ---
-
-	        ## Reports Available
-
-
-	        ### 1. Grade Trend per Course
-	        - **Purpose:** Track performance trends per course.
-	        - **Metrics:** Course, semester/year, average grade trend.
-
-	        ### 2. Subject Load Intensity
-	        - **Purpose:** Analyze subjects taken per student.
-	        - **Metrics:** Student ID, total subjects per semester.
-
-	        ### 3. GE vs Major Subjects Performance
-	        - **Purpose:** Compare student performance in GE vs Major subjects.
-	        - **Metrics:** Student ID, GE average, Major average, difference.
+	        The **Reporting Module** provides a deep dive into curriculum structures, subject intensity, 
+	        and comparative performance between General Education and Major subjects.
 
 	        ---
 
-	        ## Features
-	        - **Filters:** Course, semester, school year, teacher, student.
-	        - **Visualization:** Charts, graphs, tables.
+	        ## 📑 Reports Available
+
+	        ### 1. 📈 Grade Trend per Course
+	        - **Purpose:** Track how grades evolve per course across different school years.
+	        - **Metrics:** Course, School Year, Average Grade.
+	        - **Use Case:** Spot long-term performance patterns to guide academic program adjustments.
+
+	        ### 2. 📊 Subject Load Intensity
+	        - **Purpose:** Analyze the number of subjects students typically take per course.
+	        - **Metrics:** Course, Average Subject Load per Semester.
+	        - **Use Case:** Identify programs with heavier workloads to balance student academic demands.
+
+	        ### 3. 🎓 GE vs Major Subjects Performance
+	        - **Purpose:** Compare student outcomes in General Education vs Major subjects.
+	        - **Metrics:** School Year, GE Average, Major Average, Performance Gap.
+	        - **Use Case:** Detect whether students struggle more in GE or Major subjects, guiding targeted interventions.
+
+	        ---
+
+	        ## ⚙️ Features
+	        - **Filters:** Course, Semester, School Year, Teacher, Student.
+	        - **Visualization:** Heatmaps, bar charts, and comparative graphs.
 	        - **Export Options:** CSV, Excel, PDF.
-	        - **Interactivity:** Drill-down to individual student or subject performance.
-	        - **Insights:** Identify trends, improvements, and areas requiring attention.
-	        """)
+	        - **Drill-Down:** Explore subject- or course-specific details.
+	        - **Insights:** Understand curriculum demands, balance workloads, and improve subject-specific performance.
+	    """)
 
 
 	elif report == "Grade Trend per Course":
@@ -121,14 +124,16 @@ def report_page(st, db):
 	                "emphasis": {"itemStyle": {"shadowBlur": 10, "shadowColor": "rgba(0,0,0,0.5)"}}
 	            }]
 	        }
-	        '''
+	        
+	        st.markdown('''
 	        This heatmap visualizes the trend of average grades per course across different school years. 
 	        Each row represents a course, and each column represents a school year. 
 	        The color intensity indicates the average grade, with red showing lower averages, yellow for moderate performance, 
 	        and green for higher averages. This allows educators and administrators to quickly identify courses where 
 	        students are consistently performing well or struggling over time, helping guide curriculum adjustments and 
 	        targeted interventions.
-	        '''
+	        ''')
+
 	        st_echarts(options=options, height="600px")
 	    else:
 	        st.info("No grade data found for the selected filters.")

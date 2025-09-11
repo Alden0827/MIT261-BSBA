@@ -36,41 +36,40 @@ def report_page(st, db):
 	# ------------------------------
 	if report == "-- Select Report --":
 	    st.markdown("""
-	        ## Student Performance Analytics
+			## A. Student Performance Analytics
 
-	        The **Student Performance Analytics** dashboard provides detailed insights into how students are performing academically.  
-	        It helps educators, administrators, and program coordinators **monitor progress, identify risks, and celebrate achievements**.
+			The **Student Performance Analytics** dashboard provides detailed insights into how students are performing academically.  
+			It helps educators, administrators, and program coordinators **monitor progress, identify risks, and celebrate achievements**.
 
-	        ---
+			---
 
-	        ## Reports Available
+			## 📊 Reports Available
 
-	        ### 1. Top Performers
-	        - **Purpose:** Identify students with the highest grades.
-	        - **Metrics:** Student name, ID, course, average grade.
+			### 🏆 Top Performers
+			- **Purpose:** Identify students with the highest grades.  
+			- **Metrics:** Student name, ID, course, average grade, ranking.  
 
-	        ### 2. Failing Students
-	        - **Purpose:** Highlight students with failing grades.
-	        - **Metrics:** Student name, ID, course, failed subjects, average grade.
+			### 📉 Failing Students
+			- **Purpose:** Highlight students with failing grades.  
+			- **Metrics:** Student name, ID, course, failed subjects, number of failures, average grade.  
 
-	        ### 3. Students with Grade Improvement
-	        - **Purpose:** Track students who have shown improvement.
-	        - **Metrics:** Student name, ID, previous grades, current grades, improvement %.
+			### 📈 Students with Grade Improvement
+			- **Purpose:** Track students who have shown academic progress.  
+			- **Metrics:** Student name, ID, previous grades, current grades, improvement %.  
 
-	        ### 4. Distribution of Grades
-	        - **Purpose:** Visualize the distribution of grades.
-	        - **Metrics:** Frequency of each grade or grade range.
+			### 📊 Distribution of Grades
+			- **Purpose:** Visualize the spread of grades across classes or programs.  
+			- **Metrics:** Grade ranges (e.g., 60–65, 66–70), frequency, performance clusters.  
 
+			---
 
+			## ⚙️ Features
+			- 🔍 **Filters:** Course, semester, school year, teacher, student.  
+			- 📈 **Visualizations:** Interactive charts, graphs, and summary tables.  
+			- 📂 **Export Options:** CSV, Excel, PDF.  
+			- 🖱 **Interactivity:** Drill down to individual student or subject performance.  
+			- 💡 **Insights:** Identify trends, improvements, and areas requiring attention.  
 
-	        ---
-
-	        ## Features
-	        - **Filters:** Course, semester, school year, teacher, student.
-	        - **Visualization:** Charts, graphs, tables.
-	        - **Export Options:** CSV, Excel, PDF.
-	        - **Interactivity:** Drill-down to individual student or subject performance.
-	        - **Insights:** Identify trends, improvements, and areas requiring attention.
 	        """)
 
 

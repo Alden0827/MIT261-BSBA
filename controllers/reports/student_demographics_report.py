@@ -33,35 +33,39 @@ def report_page(st, db):
 	# ------------------------------
 	if report == "-- Select Report --":
 	    st.markdown("""
-	        # Reporting Module Overview
+	        ## E. Student Demographics
 
-	        The **Reporting Module** provides comprehensive insights into student academic performance, teacher efficiency, course trends, and subject difficulty.
-
-	        ---
-
-	        ## Reports Available
-
-	        ### 1. Year Level Distribution
-	        - **Purpose:** Show student distribution across year levels.
-	        - **Metrics:** Year level, number of students.
-
-	        ### 2. Student Count per Course
-	        - **Purpose:** Count students in each course.
-	        - **Metrics:** Course name, total students.
-
-	        ### 3. Performance by Year Level
-	        - **Purpose:** Analyze performance by year level.
-	        - **Metrics:** Year level, average grade, highest/lowest grade.
+	        The **Reporting Module** provides insights into student distribution and academic performance 
+	        based on year level and course.
 
 	        ---
 
-	        ## Features
-	        - **Filters:** Course, semester, school year, teacher, student.
-	        - **Visualization:** Charts, graphs, tables.
-	        - **Export Options:** CSV, Excel, PDF.
-	        - **Interactivity:** Drill-down to individual student or subject performance.
-	        - **Insights:** Identify trends, improvements, and areas requiring attention.
-	        """)
+	        ## 📑 Reports Available
+
+	        ### 1. 🏫 Year Level Distribution
+	        - **Purpose:** Show how students are distributed across different year levels.  
+	        - **Metrics:** Year level, number of students.  
+	        - **Use Case:** Identify enrollment patterns and spot imbalances between year levels.  
+
+	        ### 2. 📚 Student Count per Course
+	        - **Purpose:** Count the total number of students in each course.  
+	        - **Metrics:** Course name, student count.  
+	        - **Use Case:** Compare course popularity and track trends in enrollment.  
+
+	        ### 3. 📈 Performance by Year Level
+	        - **Purpose:** Analyze academic performance trends per year level.  
+	        - **Metrics:** Average grade, highest/lowest grade per year.  
+	        - **Use Case:** Identify year levels performing above or below expectations, guide interventions.  
+
+	        ---
+
+	        ## ⚙️ Features
+	        - **Filters:** Course, semester, school year, teacher, student.  
+	        - **Visualization:** Interactive charts, graphs, tables.  
+	        - **Export Options:** CSV, Excel, PDF.  
+	        - **Insights:** Identify trends, highlight strengths, and address areas needing support.  
+	    """)
+
 
 	elif report == "Year Level Distribution":
 	    df = r.get_year_level_distribution()  # DataFrame with columns: YearLevel, Count

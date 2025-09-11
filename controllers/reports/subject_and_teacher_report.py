@@ -15,7 +15,7 @@ def report_page(st, db):
 	# Streamlit App
 	# ------------------------------
 	st.set_page_config(page_title=" Analytics Reports", layout="wide")
-	st.title("📊 Analytics & Visualization")
+	st.title("Analytics & Visualization")
 
 	report = st.selectbox(
 	    "Select a Report",
@@ -35,40 +35,46 @@ def report_page(st, db):
 	# ------------------------------
 	if report == "-- Select Report --":
 	    st.markdown("""
-	        # Reporting Module Overview
+	        ## B. Subject and Teacher Analytics
 
-	        The **Reporting Module** provides comprehensive insights into student academic performance, teacher efficiency, course trends, and subject difficulty.
-
-	        ---
-
-	        ## Reports Available
-
-	        ### 1. Hardest Subject
-	        - **Purpose:** Subjects with the lowest average grades.
-	        - **Metrics:** Subject name, average grade, failure rate.
-
-	        ### 2. Easiest Subjects
-	        - **Purpose:** Subjects with the highest average grades.
-	        - **Metrics:** Subject name, average grade, pass rate.
-
-	        ### 3. Average Grades per Teacher
-	        - **Purpose:** Evaluate teacher performance.
-	        - **Metrics:** Teacher name, subjects taught, student averages.
-
-	        ### 4. Teachers with High Failures
-	        - **Purpose:** Identify teachers whose students have high failure rates.
-	        - **Metrics:** Teacher name, subjects taught, failing students.
-
+	        The **Reporting Module** provides insights into student performance, subject difficulty, 
+	        and teacher effectiveness. Use the menu above to select a report and apply filters such 
+	        as course, semester, and school year for more specific analysis.
 
 	        ---
 
-	        ## Features
-	        - **Filters:** Course, semester, school year, teacher, student.
-	        - **Visualization:** Charts, graphs, tables.
-	        - **Export Options:** CSV, Excel, PDF.
-	        - **Interactivity:** Drill-down to individual student or subject performance.
-	        - **Insights:** Identify trends, improvements, and areas requiring attention.
-	        """)
+	        ## 📑 Reports Available
+
+	        ### 1. 📉 Hardest Subjects
+	        - **Purpose:** Identify subjects where students struggle the most.  
+	        - **Metrics:** Subject name, average grade, failure rate (%).  
+	        - **Use Case:** Pinpoint subjects that may need curriculum review or additional academic support.  
+
+	        ### 2. 📈 Easiest Subjects
+	        - **Purpose:** Highlight subjects where students excel.  
+	        - **Metrics:** Subject name, average grade, high-grade rate (%).  
+	        - **Use Case:** Recognize effective teaching methods and subject strengths.  
+
+	        ### 3. 👩‍🏫 Average Grades per Teacher
+	        - **Purpose:** Evaluate teacher performance based on student outcomes.  
+	        - **Metrics:** Teacher name, subjects taught, computed average grades.  
+	        - **Use Case:** Support faculty performance reviews and track teaching effectiveness.  
+
+	        ### 4. ❌ Teachers with High Failures
+	        - **Purpose:** Detect instructors with high student failure rates.  
+	        - **Metrics:** Teacher name, subjects handled, failure rates (%).  
+	        - **Use Case:** Identify areas where teaching strategies or additional resources may be required.  
+
+	        ---
+
+	        ## ⚙️ Features
+	        - **Filters:** Course, semester, school year, teacher, student.  
+	        - **Visualization:** Interactive charts, graphs, and summary tables.  
+	        - **Export Options:** Download results as CSV, Excel, or PDF.  
+	        - **Drill-Down:** Navigate from overview reports to individual student or subject data.  
+	        - **Insights:** Spot academic trends, highlight strengths, and address areas needing improvement.  
+	    """)
+
 
 	elif report == "Hardest Subject":
 	    # --- Dropdown filters ---
