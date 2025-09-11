@@ -15,7 +15,7 @@ def registrar_view(st, db):
             "🗓️ Semester Control",
             "🗂️ Class Scheduling",
             "📜 Enrollment",
-            "📈 Analysis & Visualization",
+            "📈 Reports",
         ]
     )
 
@@ -23,16 +23,16 @@ def registrar_view(st, db):
     menu = main_menu  
 
     # Show analysis submenu ONLY if "📈 Analysis & Visualization" is selected
-    if main_menu == "📈 Analysis & Visualization":
+    if main_menu == "📈 Reports":
         analysis_menu = st.sidebar.radio(
-            "📊 Select Analysis",
+            "📊 Analysis & Visualization",
             [
                 "📖 Prospectus", 
                 "📊 Student Performance",
-                "👩‍🏫 Teacher & Subject Analysis",
-                "📚 Course & Curriculum Insight",
-                "📅 Sem & Academic Year Analysis",
-                "👥 Student Demographic Analysis"
+                "👩‍🏫 Teacher & Subject",
+                "📚 Course & Curriculum",
+                "📅 Sem & Academic Year",
+                "👥 Student Demographic"
             ]
         )
         menu = analysis_menu
@@ -66,15 +66,15 @@ def registrar_view(st, db):
     elif menu == "📊 Student Performance":
         from .reports.student_performance_report import report_page
         report_page(st,db)
-    elif menu == "👩‍🏫 Teacher & Subject Analysis":
+    elif menu == "👩‍🏫 Teacher & Subject":
         from .reports.subject_and_teacher_report import report_page
         report_page(st,db)
-    elif menu == "📚 Course & Curriculum Insight":
+    elif menu == "📚 Course & Curriculum":
         from .reports.course_and_curriculum_report import report_page
         report_page(st,db)
-    elif menu == "📅 Sem & Academic Year Analysis":
+    elif menu == "📅 Sem & Academic Year":
         from .reports.semester_and_cademic_year_report import report_page
         report_page(st,db)
-    elif menu == "👥 Student Demographic Analysis":
+    elif menu == "👥 Student Demographic":
         from .reports.student_demographics_report import report_page
         report_page(st,db)

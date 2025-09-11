@@ -30,7 +30,20 @@ def main():
         </div>
     """, unsafe_allow_html=True)
     
+
+
     # ---------------- Sidebar Navigation ----------------
+    st.sidebar.markdown(
+        """
+        <div style="text-align:center;">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjvoWxGatGPpCoUDlDd_tHUcWr92COSNaEE4-1rtDQ0aplkWFjqhUBjraQHKx-3AmVB224hNeZWZzt-fTZ8ZQvSA8Wlu-zCh3xZ5FCJTwhyaBkWAm4nYRn4GaPVYT5Kxsp785Cma5prdWRW/s1600/ndmu-seal1.png"
+                 style="width:80px; border-radius:50%; margin-bottom:10px;">
+            <h4>BSBA Department</h4>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     menu_options = {
         "admin": ["Student Evaludation", "Faculty", "Registrar"],
         "registrar": ["Registrar"],
@@ -49,11 +62,6 @@ def main():
     else:
         menu = "Dashboard"
 
-    if st.sidebar.button("Logout"):
-        st.session_state["logged_in"] = False
-        st.session_state["user_role"] = None
-        st.session_state["username"] = None
-        st.rerun()
 
 
     # ---------------- Pages ----------------
@@ -71,6 +79,15 @@ def main():
         faculty_view(st)
     elif menu == "Registrar":
         registrar_view(st, db)
+
+
+
+
+    if st.sidebar.button("Logout"):
+        st.session_state["logged_in"] = False
+        st.session_state["user_role"] = None
+        st.session_state["username"] = None
+        st.rerun()
 
     # ---------------- Footer ----------------
     st.markdown("""

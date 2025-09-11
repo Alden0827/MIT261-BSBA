@@ -72,7 +72,8 @@ def report_page(st, db):
 
 
 	elif report == "Semester with Lowest GPA":
-	    header, subjects_df = r.get_lowest_gpa_semester()
+	    with st.spinner('Loading ', report):
+	    	header, subjects_df = r.get_lowest_gpa_semester()
 
 	    st.subheader("⬇️ Semester with Lowest GPA")
 	    st.markdown(

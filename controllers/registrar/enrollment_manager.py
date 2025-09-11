@@ -14,13 +14,19 @@ from helpers.data_helper import (
     get_student_subjects_grades,
 )
 from helpers.registration_helper import find_best_match
-
-
+    
 # ---------------------------
 # Main Enrollment Manager Page
 # ---------------------------
 def enrollment_manager_page(st,db):
     st.title("Enrollment Manager")
+
+    with st.spinner("Loading school years..."):
+        school_years = get_school_years()
+    with st.spinner("Loading semesters..."):
+        semester_names = get_semester_names()
+    with st.spinner("Loading Courses..."):
+        courses = get_courses()
 
     # Initialize session state variables
     if "confirm_enrollment" not in st.session_state:
@@ -37,11 +43,11 @@ def enrollment_manager_page(st,db):
     # Dropdowns for filters
     col1, col2, col3 = st.columns(3)
     with col1:
-        selected_school_year = st.selectbox("School Year", get_school_years())
+        selected_school_year = st.selectbox("School Year", school_years)
     with col2:
-        selected_semester = st.selectbox("Semester", get_semester_names())
+        selected_semester = st.selectbox("Semester", semester_names)
     with col3:
-        selected_course = st.selectbox("Course", get_courses())
+        selected_course = st.selectbox("Course", courses)
 
     # Student Search
     st.subheader("🔍 Student Search")
