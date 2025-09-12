@@ -593,6 +593,47 @@ def delete_user(username):
     else:
         return False, "User not found or could not be deleted."
 
+
+def update_user(username, fullname, role):
+    """
+    Updates a user's fullname and role.
+    """
+    db = client["mit261"]
+    users_collection = db["userAccounts"]
+
+    # Prevent role change for the primary admin
+    if username == 'admin' and role != 'admin':
+        return False, "Cannot change the role of the primary admin user."
+
+    result = users_collection.update_one(
+        {"username": username},
+        {"$set": {"fullName": fullname, "role": role}}
+    )
+
+    if result.modified_count > 0:
+        return True, "User updated successfully."
+
+    return True, "No changes were made."
+
+
+def change_password(username, new_password):
+    """
+    Changes a user's password.
+    """
+    db = client["mit261"]
+    users_collection = db["userAccounts"]
+
+    password_hash = generate_password_hash(new_password)
+    result = users_collection.update_one(
+        {"username": username},
+        {"$set": {"passwordHash": password_hash}}
+    )
+
+    if result.modified_count > 0:
+        return True, "Password updated successfully."
+    else:
+        return False, "User not found or password could not be updated."
+
 def generate_password_hash(password: str) -> bytes:
     """
     Generates a bcrypt hash for a given plain-text password.
