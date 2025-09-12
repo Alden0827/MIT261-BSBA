@@ -4,6 +4,7 @@ from controllers.faculty_controller import faculty_view
 from controllers.student_controller import student_view
 from controllers.dashboard_controller import dasboard_view
 from controllers.login_controller import login_view
+from controllers.admin_controller import admin_view
 from helpers.data_helper import get_students, get_grades, get_semesters, get_subjects
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError, AutoReconnect
@@ -45,7 +46,7 @@ def main():
     )
 
     menu_options = {
-        "admin": ["Student Evaludation", "Faculty", "Registrar"],
+        "admin": ["Student Evaludation", "Faculty", "Registrar", "Admin"],
         "registrar": ["Registrar"],
         "faculty": ["Faculty"],
         "student": ["Student Evaludation"]
@@ -79,6 +80,8 @@ def main():
         faculty_view(st)
     elif menu == "Registrar":
         registrar_view(st, db)
+    elif menu == "Admin":
+        admin_view(st, db)
 
 
 

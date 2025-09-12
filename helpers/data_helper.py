@@ -529,6 +529,70 @@ def verify_password(password, hashed_password):
     """
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 
+
+def get_all_users():
+    """
+    Fetches all users from the userAccounts collection.
+    """
+    db = client["mit261"]
+    users_collection = db["userAccounts"]
+    # Exclude password hash for security
+    return pd.DataFrame(list(users_collection.find({}, {"passwordHash": 0})))
+
+
+def add_user(username, password, role, fullname):
+    """
+    Adds a new user to the userAccounts collection.
+    Returns a tuple (success, message).
+    """
+    db = client["mit261"]
+    users_collection = db["userAccounts"]
+
+    # Check if user already exists
+    if users_collection.find_one({"username": username}):
+        return False, "User already exists."
+
+    # Generate password hash
+    password_hash = generate_password_hash(password)
+
+    # Create new user document
+    # For simplicity, UID is set to username. In a real-world scenario,
+    # this should be a unique identifier.
+    new_user = {
+        "username": username,
+        "passwordHash": password_hash,
+        "role": role,
+        "fullName": fullname,
+        "UID": username
+    }
+
+    # Insert new user
+    result = users_collection.insert_one(new_user)
+    if result.inserted_id:
+        return True, "User added successfully."
+    else:
+        return False, "Failed to add user."
+
+
+def delete_user(username):
+    """
+    Deletes a user from the userAccounts collection.
+    Returns a tuple (success, message).
+    """
+    db = client["mit261"]
+    users_collection = db["userAccounts"]
+
+    # Basic safeguard to prevent deleting a main admin account
+    if username == 'admin':
+        return False, "Cannot delete the primary admin user."
+
+    result = users_collection.delete_one({"username": username})
+
+    if result.deleted_count > 0:
+        return True, "User deleted successfully."
+    else:
+        return False, "User not found or could not be deleted."
+
 def generate_password_hash(password: str) -> bytes:
     """
     Generates a bcrypt hash for a given plain-text password.
