@@ -1,0 +1,188 @@
+create python script that will generate prospectus base on the course as parameter.
+
+
+# data_structure with sample data
+uri = "mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net/mit261"
+
+#userAccounts #collection
+{
+  "_id": {
+    "$oid": "68b664688519ad27d3877a86"
+  },
+  "username": "registrar",
+  "role": "registrar",
+  "linkedId": null,
+  "passwordHash": {
+    "$binary": {
+      "base64": "JDJiJDEyJEpGWmRNUkR1cGJScExhVUI2czBpRnVlaC5IMC9LZ0pJUzJzYkNrN0NWWkU0WUxqckQ1bG9L",
+      "subType": "00"
+    }
+  },
+  "fullName": "",
+  "UID": 0
+}
+
+subjects #collection
+{
+  "_id": "IT101",
+  "Description": "Introduction to Information Technology",
+  "Units": 3,
+  "Teacher": "Prof. Jeorge Ortega"
+}
+
+students #collection
+{
+  "_id": 1,
+  "Name": "Lejeune, Niel Alfred F.",
+  "Course": "Information Technology",
+  "YearLevel": 1
+}
+
+semesters #collection
+{
+  "_id": 1,
+  "Semester": "FirstSem",
+  "SchoolYear": 2020
+}
+
+grades #collection
+{
+  "_id": 6,
+  "StudentID": 1,   #linkage to sutdents._id collection
+  "SubjectCodes": [
+    "GE040",
+    "IT405",
+    "EE105",
+    "GE008",
+    "EE302"
+  ],
+  "Grades": [
+    78,
+    82,
+    93,
+    67,
+    93
+  ],
+  "Teachers": [
+    "Prof. Brendalyn Samillano",
+    "Prof. Jake Ligoan",
+    "Prof. Michelle Velasco",
+    "Prof. Mico Dela Rosa",
+    "Prof. Sandra Reyes"
+  ],
+  "SemesterID": 6
+}
+
+curriculum #collection
+{
+  "_id": {
+    "$oid": "68b6a4a4b4ad4b9a7a79e496"
+  },
+  "programCode": "BSBA",
+  "programName": "BACHELOR OF SCIENCE IN BUSINESS ADMINISTRATION",
+  "curriculumYear": "2025-2026",
+  "subjects": [
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 200",
+      "name": "Understanding the Sell",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 203",
+      "name": "Life and Works of Rizal",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 204",
+      "name": "Gender and Society",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 201",
+      "name": "Reading in Philippine History",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 303",
+      "name": "Philippine Popular Culture",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "BACC 1",
+      "name": "Basic Microeconomics",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "PE 1",
+      "name": "Physical Activities Towards Health and Fitness 1 - Movement Competency Training",
+      "lec": 2,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "NSTP 1",
+      "name": "Civic Welfare Training Services 1",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1, #1-4
+      "semester": "Second", #First/Second
+      "code": "GE 402",
+      "name": "Mathematics in the Modern World",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1, #1-4
+      "semester": "Second",
+      "code": "NSTP 2",
+      "name": "Civic Welfare Training Services 2",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "NSTP 1"
+      ]
+    }
+  ]
+}

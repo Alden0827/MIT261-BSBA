@@ -1,0 +1,1207 @@
+{
+  "programCode": "IT",
+  "programName": "INFORMATION TECHNOLOGY",
+  "curriculumYear": "2023-2024",
+  "subjects": [
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "IT304",
+      "name": "Database Management Systems",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "CS304",
+      "name": "Parallel and Distributed Computing",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE019",
+      "name": "General Education Subject 19",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE028",
+      "name": "General Education Subject 28",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "CS404",
+      "name": "Emerging Technologies",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE045",
+      "name": "General Education Subject 45",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "IT404",
+      "name": "IT Infrastructure and Management",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE022",
+      "name": "General Education Subject 22",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE047",
+      "name": "General Education Subject 47",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE040",
+      "name": "General Education Subject 40",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "IT405",
+      "name": "Internship (OJT)",
+      "lec": 3,
+      "lab": 0,
+      "unit": 6,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "EE105",
+      "name": "Physics for Engineers",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE008",
+      "name": "General Education Subject 8",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "EE302",
+      "name": "Control Systems",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE055",
+      "name": "General Education Subject 55",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "EE403",
+      "name": "Professional Practice & Laws",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE060",
+      "name": "General Education Subject 60",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "EE401",
+      "name": "Electrical System Design",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE056",
+      "name": "General Education Subject 56",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "CS303",
+      "name": "Compiler Design",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "CS403",
+      "name": "Professional Practice and Ethics",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE033",
+      "name": "General Education Subject 33",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "EE201",
+      "name": "Digital Electronics",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "IT105",
+      "name": "Discrete Structures",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "CS305",
+      "name": "Data Mining",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE044",
+      "name": "General Education Subject 44",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "EE203",
+      "name": "Electromagnetics",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "CS203",
+      "name": "Database Systems",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE049",
+      "name": "General Education Subject 49",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "CS405",
+      "name": "Internship",
+      "lec": 3,
+      "lab": 0,
+      "unit": 6,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE021",
+      "name": "General Education Subject 21",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "EE104",
+      "name": "Basic Electrical Engineering",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "CS401",
+      "name": "Thesis Writing 1",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE054",
+      "name": "General Education Subject 54",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "EE205",
+      "name": "AC-DC Machinery",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE020",
+      "name": "General Education Subject 20",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "IT205",
+      "name": "Networking Fundamentals",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "CS102",
+      "name": "Mathematics in Computing",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "IT203",
+      "name": "Web Development 2 (PHP/JS)",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "CS202",
+      "name": "Object-Oriented Programming (Java)",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "IT204",
+      "name": "System Analysis and Design",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE032",
+      "name": "General Education Subject 32",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "CS201",
+      "name": "Operating Systems",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE002",
+      "name": "General Education Subject 2",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "EE101",
+      "name": "Engineering Mathematics I",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "EE301",
+      "name": "Power System Analysis",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE024",
+      "name": "General Education Subject 24",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE001",
+      "name": "General Education Subject 1",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "IT305",
+      "name": "Cloud Computing",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE016",
+      "name": "General Education Subject 16",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE048",
+      "name": "General Education Subject 48",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE018",
+      "name": "General Education Subject 18",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "IT102",
+      "name": "Computer Hardware and Troubleshooting",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE023",
+      "name": "General Education Subject 23",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "EE305",
+      "name": "Power Electronics",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE042",
+      "name": "General Education Subject 42",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "IT103",
+      "name": "Web Development 1 (HTML/CSS/JS)",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE034",
+      "name": "General Education Subject 34",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE038",
+      "name": "General Education Subject 38",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE046",
+      "name": "General Education Subject 46",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "CS301",
+      "name": "Artificial Intelligence",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE027",
+      "name": "General Education Subject 27",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "IT403",
+      "name": "IT Laws and Ethics",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE006",
+      "name": "General Education Subject 6",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "EE204",
+      "name": "Instrumentation and Measurement",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "IT303",
+      "name": "Cybersecurity Fundamentals",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "IT301",
+      "name": "Mobile App Development",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE051",
+      "name": "General Education Subject 51",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE010",
+      "name": "General Education Subject 10",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "EE202",
+      "name": "Electronic Devices and Circuits",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE017",
+      "name": "General Education Subject 17",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "EE402",
+      "name": "Renewable Energy Systems",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "CS101",
+      "name": "Intro to Programming (C++)",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "EE405",
+      "name": "On-the-Job Training",
+      "lec": 3,
+      "lab": 0,
+      "unit": 6,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE057",
+      "name": "General Education Subject 57",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE004",
+      "name": "General Education Subject 4",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "IT101",
+      "name": "Introduction to Information Technology",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE013",
+      "name": "General Education Subject 13",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "IT201",
+      "name": "Object-Oriented Programming",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "IT401",
+      "name": "Capstone Project 1",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE009",
+      "name": "General Education Subject 9",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE025",
+      "name": "General Education Subject 25",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE012",
+      "name": "General Education Subject 12",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "EE103",
+      "name": "Engineering Drawing",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "CS402",
+      "name": "Thesis Writing 2",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE035",
+      "name": "General Education Subject 35",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE037",
+      "name": "General Education Subject 37",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE036",
+      "name": "General Education Subject 36",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE043",
+      "name": "General Education Subject 43",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "EE303",
+      "name": "Energy Conversion",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE052",
+      "name": "General Education Subject 52",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "IT202",
+      "name": "Human-Computer Interaction",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE053",
+      "name": "General Education Subject 53",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "EE304",
+      "name": "Microprocessors",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE058",
+      "name": "General Education Subject 58",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "CS103",
+      "name": "Computer Organization",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE059",
+      "name": "General Education Subject 59",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "CS104",
+      "name": "Data Structures and Algorithms",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE015",
+      "name": "General Education Subject 15",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE041",
+      "name": "General Education Subject 41",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE003",
+      "name": "General Education Subject 3",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "EE404",
+      "name": "Special Topics in Electrical Engineering",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE039",
+      "name": "General Education Subject 39",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE005",
+      "name": "General Education Subject 5",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE007",
+      "name": "General Education Subject 7",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "IT302",
+      "name": "Enterprise Architecture",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "IT104",
+      "name": "Programming Fundamentals",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE026",
+      "name": "General Education Subject 26",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "GE031",
+      "name": "General Education Subject 31",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE050",
+      "name": "General Education Subject 50",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "SecondSem",
+      "code": "CS205",
+      "name": "Web Programming",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "CS204",
+      "name": "Software Engineering",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "GE014",
+      "name": "General Education Subject 14",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "CS302",
+      "name": "Machine Learning",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "EE102",
+      "name": "General Chemistry for Engineers",
+      "lec": 3,
+      "lab": 0,
+      "unit": 4,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE029",
+      "name": "General Education Subject 29",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE011",
+      "name": "General Education Subject 11",
+      "lec": 3,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "GE030",
+      "name": "General Education Subject 30",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "FirstSem",
+      "code": "IT402",
+      "name": "Capstone Project 2",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Summer",
+      "code": "CS105",
+      "name": "Logic Design and Switching Theory",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    }
+  ]
+}
