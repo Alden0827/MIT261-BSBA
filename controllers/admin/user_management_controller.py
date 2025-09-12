@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from helpers.data_helper import get_all_users, add_user, delete_user
+from helpers.data_helper import get_all_users, add_user, delete_user, update_user, change_password
 
 def user_management_view(st, db):
     st.header("User Management")
@@ -18,7 +18,7 @@ def user_management_view(st, db):
 
     if not users_df.empty:
         # Header
-        col1, col2, col3, col4 = st.columns([2, 2, 3, 1])
+        col1, col2, col3, col4 = st.columns([2, 2, 3, 2])
         with col1:
             st.markdown("**Username**")
         with col2:
@@ -30,7 +30,7 @@ def user_management_view(st, db):
 
         # User rows
         for index, row in users_df.iterrows():
-            col1, col2, col3, col4 = st.columns([2, 2, 3, 1])
+            col1, col2, col3, col4 = st.columns([2, 2, 3, 2])
             with col1:
                 st.write(row['username'])
             with col2:
@@ -38,6 +38,8 @@ def user_management_view(st, db):
             with col3:
                 st.write(row['fullName'])
             with col4:
+                if st.button("Edit", key=f"edit_{row['username']}"):
+                    st.session_state.edit_user = row
                 if st.button("Delete", key=f"delete_{row['username']}"):
                     success, message = delete_user(row['username'])
                     if success:
@@ -48,6 +50,48 @@ def user_management_view(st, db):
                         st.error(message)
     else:
         st.info("No users found.")
+
+    if 'edit_user' in st.session_state and st.session_state.edit_user is not None:
+        user_to_edit = st.session_state.edit_user
+
+        @st.dialog("Edit User")
+        def edit_user_dialog():
+            st.subheader(f"Editing: {user_to_edit['username']}")
+
+            with st.form("edit_form"):
+                fullname = st.text_input("Full Name", value=user_to_edit['fullName'])
+
+                roles = ["admin", "faculty", "student", "registrar"]
+                current_role_index = roles.index(user_to_edit['role']) if user_to_edit['role'] in roles else 0
+                role = st.selectbox("Role", roles, index=current_role_index)
+
+                st.subheader("Change Password (optional)")
+                new_password = st.text_input("New Password", type="password")
+
+                submitted = st.form_submit_button("Save Changes")
+                if submitted:
+                    # Update user info
+                    update_success, update_message = update_user(user_to_edit['username'], fullname, role)
+
+                    if update_success:
+                        st.success(update_message)
+                    else:
+                        st.error(update_message)
+
+                    # Change password if provided
+                    if new_password:
+                        pw_success, pw_message = change_password(user_to_edit['username'], new_password)
+                        if pw_success:
+                            st.success(pw_message)
+                        else:
+                            st.error(pw_message)
+
+                    refresh_users()
+                    st.session_state.edit_user = None
+                    st.rerun()
+
+        edit_user_dialog()
+
 
     st.subheader("Add a New User")
     with st.form("new_user_form", clear_on_submit=True):
@@ -67,6 +111,3 @@ def user_management_view(st, db):
                     refresh_users()
                 else:
                     st.error(message)
-
-    st.subheader("Edit a User")
-    st.info("Functionality to edit users will be implemented in a future update.")
