@@ -1,4 +1,4 @@
-create python script that will generate prospectus base on the course as parameter.
+
 
 
 # data_structure with sample data

@@ -1,0 +1,278 @@
+# report_page.py
+import streamlit as st
+import pandas as pd
+import helpers.registrar_main_report_helper as r
+from helpers.data_helper import student_find    
+from streamlit_echarts import st_echarts
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
+import pandas as pd
+
+
+def report_page(st, db):
+    st.set_page_config(page_title="Academic Reports", layout="wide")
+    st.title("📊 Academic Analytics & Insights")
+
+    report = st.selectbox(
+        "Select a Report",
+        [
+            "-- Select Report --",
+            "1. Student Academic Stand",
+            "2. Subject Pass/Fail Distribution",
+            "3. Enrollment Trend Analysis",
+            "4. Incomplete Grades",
+            "5. Retention and Dropout Rates",
+            "6. Top Performers per Program",
+            "7. Curriculum Progress Viewer"
+        ]
+    )
+
+    if report == "-- Select Report --":
+        st.markdown("""
+        ## 📑 Overview
+
+        This **Academic Reporting Module** provides a detailed view of student performance, curriculum coverage, 
+        subject-level outcomes, and retention metrics. It supports administrators and educators in identifying 
+        top performers, at-risk students, and curriculum gaps.
+
+        ---  
+
+        **Reports Available:**
+
+        1. **Student Academic Stand Report** – Identify top achievers and students on probation.
+        2. **Subject Pass/Fail Distribution** – Review performance per subject per term.
+        3. **Enrollment Trend Analysis** – Track new enrollees, dropouts, and retention rates.
+        4. **Incomplete Grades Report** – Follow up on missing or incomplete grades.
+        5. **Retention and Dropout Rates** – Measure student persistence across semesters.
+        6. **Top Performers per Program** – Highlight the highest GPA students per program.
+        7. **Curriculum Progress Viewer** – Track subject requirements, units, and prerequisites.
+
+        ---
+        """)
+
+    # ------------------------------
+    # 1. Student Academic Stand
+    # ------------------------------
+    elif report == "1. Student Academic Stand":
+        st.subheader("🎓 Student Academic Stand Report")
+
+        st.markdown("### A. Dean's List (Top 10 Students)")
+        st.markdown("**Criteria:** No grade < 85% & GPA >= 90%")
+        
+        with st.spinner(f"Preparing data for {report}."):
+            df_deans = r.get_deans_list()  # fetch data
+        st.dataframe(df_deans)
+
+        st.markdown("### B. Academic Probation (10 Students)")
+        st.markdown("**Criteria:** No grade < 75 OR >= 30% FAILS")
+
+        with st.spinner(f"Preparing data for {report}."):
+            df_probation = r.get_academic_probation_batch_checkpoint()  # expected columns: ['#', 'ID', 'Name', 'Prog', 'Yr', 'GPA', 'Units', 'High', 'LOW']
+        
+        st.dataframe(df_probation)
+
+        st.markdown("""
+        **Insight:**  
+        Quickly identify **high achievers** for recognition, and **students needing support** for early interventions. 
+        This view helps in academic counseling and program-level performance assessment.
+        """)
+
+    # ------------------------------
+    # 2. Subject Pass/Fail Distribution
+    # ------------------------------
+    elif report == "2. Subject Pass/Fail Distribution":
+        st.subheader("📊 Subject Pass/Fail Distributionx")
+        
+        with st.spinner(f"Preparing data for {report}."):
+            df_subjects = r.get_subject_pass_fail()  # columns: ['Subject Code', 'Subject Name', 'Semester', 'Pass Count', 'Fail Count', 'Pass %', 'Fail %']
+        st.dataframe(df_subjects)
+
+        st.markdown("""
+        **Insight:**  
+        Provides a clear picture of **subject-level performance per semester**, enabling targeted support for subjects 
+        with higher failure rates. Administrators can plan remediation programs effectively.
+        """)
+
+    # ------------------------------
+    # 3. Enrollment Trend Analysis
+    # ------------------------------
+    elif report == "3. Enrollment Trend Analysis":
+        st.subheader("📈 Enrollment Trend Analysis")
+
+        with st.spinner(f"Preparing data for {report}."):
+            df_enrollment = r.get_enrollment_trend()  # columns: ['Semester', 'Total Enrollment', 'New Enrollees', 'Dropouts', 'Retention Rate (%)']
+        st.dataframe(df_enrollment)
+
+        st.markdown("""
+        **Insight:**  
+        Observe semester-to-semester enrollment trends, **track retention rates**, and identify patterns of student dropouts. 
+        Helps institutions plan resource allocation and intervention strategies.
+        """)
+
+
+        # Prepare ECharts options
+        option = {
+            "tooltip": {"trigger": "axis"},
+            "legend": ["Total Enrollment", "New Enrollees", "Dropouts", "Retention Rate (%)"],
+            "xAxis": {"type": "category", "data": df_enrollment["Semester"].tolist()},
+            "yAxis": [
+                {"type": "value", "name": "Students"},
+                {"type": "value", "name": "Retention (%)", "min": 0, "max": 100}
+            ],
+            "series": [
+                {
+                    "name": "Total Enrollment",
+                    "type": "bar",
+                    "data": df_enrollment["Total Enrollment"].tolist()
+                },
+                {
+                    "name": "New Enrollees",
+                    "type": "bar",
+                    "data": df_enrollment["New Enrollees"].tolist()
+                },
+                {
+                    "name": "Dropouts",
+                    "type": "bar",
+                    "data": df_enrollment["Dropouts"].tolist()
+                },
+                {
+                    "name": "Retention Rate (%)",
+                    "type": "line",
+                    "yAxisIndex": 1,
+                    "data": df_enrollment["Retention Rate (%)"].tolist()
+                }
+            ]
+        }
+
+        st_echarts(options=option, height="450px")
+
+    # ------------------------------
+    # 4. Incomplete Grades
+    # ------------------------------
+    elif report == "4. Incomplete Grades":
+        st.subheader("⚠️ Incomplete Grades Report")
+
+        with st.spinner(f"Preparing data for {report}."):
+            df_incomplete = r.get_incomplete_grades()  # columns: ['Student ID', 'Name', 'Course Code', 'Course Title', 'Term', 'Grade Status']
+        st.dataframe(df_incomplete)
+
+        st.markdown("""
+        **Insight:**  
+        Enables the Registrar’s Office to follow up with **students and instructors** regarding incomplete or missing grades, 
+        ensuring timely grade submissions.
+        """)
+
+    # ------------------------------
+    # 5. Retention and Dropout Rates
+    # ------------------------------
+    elif report == "5. Retention and Dropout Rates":
+        st.subheader("📊 Retention and Dropout Rates")
+
+        with st.spinner(f"Preparing data for {report}."):
+            df_retention = r.get_retention_rates()  # columns: ['Semester to Semester', 'Retained', 'Dropped Out', 'Retention Rate (%)']
+        
+        st.dataframe(df_retention)
+
+        st.markdown("""
+        **Insight:**  
+        Measures **student persistence** across semesters and identifies retention issues early, 
+        providing actionable data for academic planning and intervention programs.
+        """)
+
+    # ------------------------------
+    # 6. Top Performers per Program
+    # ------------------------------
+    elif report == "6. Top Performers per Program":
+        st.subheader("🏆 Top Performers per Program")
+        
+        with st.spinner(f"Preparing data for {report}."):
+            df_top = r.get_top_performers()  # columns: ['Program', 'Semester', 'Student ID', 'Student Name', 'GPA', 'Rank']
+        
+        st.dataframe(df_top)
+
+        st.markdown("""
+        **Insight:**  
+        Highlights **high-achieving students** in each program. Useful for **recognition, awards, and program benchmarking**.
+        """)
+
+    # ------------------------------
+    # 7. Curriculum Progress Viewer
+    # ------------------------------
+    elif report == "7. Curriculum Progress Viewer":
+        st.subheader("📚 Curriculum Progress Viewer")
+
+        # --- Step 1: Select Course ---
+        courses = sorted(db.students.distinct("Course"))
+        selected_course = st.selectbox("Select Course:", courses)
+
+        # --- Step 2: Search Student by Name ---
+        search_name = st.text_input("Search Student by Name (wildcard):")
+        search_trigger = st.button("Search Student")
+
+        if search_trigger:
+            if search_name.strip():
+                results = student_find(search_name, db.students, course=selected_course)
+                if results:
+                    st.session_state.search_results = results
+                else:
+                    st.warning("No student found.")
+                    st.session_state.search_results = []
+            else:
+                st.warning("Please enter a name to search.")
+                st.session_state.search_results = []
+
+        # --- Step 3: Show search results as inline rows with select buttons ---
+        if "search_results" in st.session_state and st.session_state.search_results:
+            st.subheader("Search Results")
+            for student in st.session_state.search_results:
+                col1, col2 = st.columns([5, 1])
+                col1.write(f"{student['Name']} | {student.get('Course','')} | Year Level: {student.get('YearLevel','')}")
+                if col2.button("Select", key=f"select_{student['_id']}"):
+                    st.session_state.selected_student = student
+                    st.session_state.search_results = []  # clear search results
+                    st.rerun()  # reload page to show curriculum
+
+
+        # --- Step 4: Display Curriculum if a student is selected ---
+        if (
+            "selected_student" in st.session_state 
+            and st.session_state.selected_student 
+            and search_trigger is False  # only show after explicit selection, not auto-load
+        ):
+            student = st.session_state.selected_student
+            st.markdown(f"""
+            <div style="border:2px solid #1E90FF; padding:10px; border-radius:5px; background-color:#E6F0FF">
+            <strong>Name:</strong> {student['Name']}<br>
+            <strong>Student ID:</strong> {student['_id']}<br>
+            <strong>Course:</strong> {student['Course']}<br>
+            <strong>Year Level:</strong> {student.get('YearLevel', '')}<br>
+            </div>
+            """, unsafe_allow_html=True)
+
+            with st.spinner(f"Loading curriculum for {student['Course']}..."):
+                df_curriculum = r.get_curriculum_progress(program=student['Course'])
+
+            if not df_curriculum.empty:
+                df_curriculum = df_curriculum.sort_values(["Year", "Semester", "Subject Code"])
+                years = df_curriculum['Year'].unique()
+
+                for year in years:
+                    with st.expander(f"🎓 Year: {year}", expanded=True):
+                        year_data = df_curriculum[df_curriculum['Year'] == year]
+                        semesters = year_data['Semester'].unique()
+                        for semester in semesters:
+                            with st.expander(f"📚 Semester: {semester}", expanded=True):
+                                sem_data = year_data[year_data['Semester'] == semester]
+                                sem_display = sem_data[[
+                                    "Subject Code", "Subject Description", "Lec Hours",
+                                    "Lab Hours", "Units", "Prerequisites"
+                                ]]
+                                st.dataframe(sem_display, use_container_width=True)
+                                total_units = sem_data["Units"].sum()
+                                st.markdown(f"**Total Units:** {total_units}")
+
+
+        st.markdown("""
+        **Insight:**  
+        Provides a comprehensive view of curriculum structure, subject prerequisites, and credit distribution.  
+        Supports **curriculum planning and academic advising** for students to track progress toward graduation.
+        """)

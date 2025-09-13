@@ -1,13 +1,12 @@
 import streamlit as st
+from streamlit_option_menu import option_menu
 from controllers.registrar_controller import registrar_view
 from controllers.faculty_controller import faculty_view
 from controllers.student_controller import student_view
 from controllers.dashboard_controller import dasboard_view
 from controllers.login_controller import login_view
 from controllers.admin_controller import admin_view
-from helpers.data_helper import get_students, get_grades, get_semesters, get_subjects
 from pymongo import MongoClient
-from pymongo.errors import ServerSelectionTimeoutError, AutoReconnect
 from config.settings import APP_TITLE, DEFAULT_PAGE_TITLE, MONGODB_URI
 
 st.set_page_config(page_title=DEFAULT_PAGE_TITLE, layout="wide")
@@ -21,60 +20,60 @@ if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
     st.session_state["user_role"] = None
     st.session_state["username"] = None
+    st.session_state["fullname"] = ""
 
 # Main app
 def main():
     # ---------------- Header ----------------
     st.markdown(f"""
-        <div style="background-color:#4B8BBE;padding:10px;border-radius:5px">
+        <div style="background-color:#4B8BBE;padding:10px;border-radius:5px;margin-bottom:10px">
             <h5 style="color:white;text-align:center;">{APP_TITLE}</h5>
         </div>
     """, unsafe_allow_html=True)
-    
 
-
-    # ---------------- Sidebar Navigation ----------------
-    st.sidebar.markdown(
-        """
-        <div style="text-align:center;">
-            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjvoWxGatGPpCoUDlDd_tHUcWr92COSNaEE4-1rtDQ0aplkWFjqhUBjraQHKx-3AmVB224hNeZWZzt-fTZ8ZQvSA8Wlu-zCh3xZ5FCJTwhyaBkWAm4nYRn4GaPVYT5Kxsp785Cma5prdWRW/s1600/ndmu-seal1.png"
-                 style="width:80px; border-radius:50%; margin-bottom:10px;">
-            <h4>BSBA Department</h4>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    menu_options = {
-        "admin": ["Student Evaludation", "Faculty", "Registrar", "Admin"],
-        "registrar": ["Registrar"],
-        "faculty": ["Faculty"],
-        "student": ["Student Evaludation"]
-    }
-
-    user_role = st.session_state["user_role"]
-    if user_role in menu_options:
-        menu = st.sidebar.radio(
-            f"Welcome: {st.session_state['fullname']}",
-
-            menu_options[user_role],
-            key="sidebar_menu"
+    # ---------------- Sidebar ----------------
+    with st.sidebar:
+        st.markdown(
+            """
+            <div style="text-align:center;margin-bottom:10px;">
+                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjvoWxGatGPpCoUDlDd_tHUcWr92COSNaEE4-1rtDQ0aplkWFjqhUBjraQHKx-3AmVB224hNeZWZzt-fTZ8ZQvSA8Wlu-zCh3xZ5FCJTwhyaBkWAm4nYRn4GaPVYT5Kxsp785Cma5prdWRW/s1600/ndmu-seal1.png"
+                     style="width:80px; border-radius:50%; margin-bottom:10px;">
+                <h4>BSBA Department</h4>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
-    else:
-        menu = "Dashboard"
 
+        user_role = st.session_state["user_role"]
+        menu_options = {
+            "admin": ["Student Evaluation", "Faculty", "Registrar", "Admin"],
+            "registrar": ["Registrar"],
+            "faculty": ["Faculty"],
+            "student": ["Student Evaluation"]
+        }
 
+        if user_role in menu_options:
+            menu = option_menu(
+                menu_title=f"Welcome, {st.session_state['fullname']}",
+                options=menu_options[user_role],
+                icons=["bar-chart-line", "person-badge", "book", "gear"][:len(menu_options[user_role])],
+                menu_icon="cast",
+                default_index=0,
+                orientation="vertical",
+                styles={
+                    "container": {"padding": "5px", "background-color": "#f0f2f6"},
+                    "icon": {"color": "#2e7bcf", "font-size": "18px"}, 
+                    "nav-link": {"font-size": "16px", "text-align": "left", "--hover-color": "#eee"},
+                    "nav-link-selected": {"background-color": "#2e7bcf", "color": "white"}
+                }
+            )
+        else:
+            menu = "Dashboard"
 
     # ---------------- Pages ----------------
     if menu == "Dashboard":
-        # try:
-            
-        #     dasboard_view(st)
-        # except Exception as e:
-        #     st.error("⚠️ Failed to load grades.")
-        #     st.code(str(e))
         dasboard_view(st)
-    elif menu == "Student Evaludation":
+    elif menu == "Student Evaluation":
         student_view(st)
     elif menu == "Faculty":
         faculty_view(st)
@@ -83,13 +82,12 @@ def main():
     elif menu == "Admin":
         admin_view(st, db)
 
-
-
-
+    # ---------------- Logout ----------------
     if st.sidebar.button("Logout"):
         st.session_state["logged_in"] = False
         st.session_state["user_role"] = None
         st.session_state["username"] = None
+        st.session_state["fullname"] = ""
         st.rerun()
 
     # ---------------- Footer ----------------

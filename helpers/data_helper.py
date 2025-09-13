@@ -16,8 +16,17 @@ pd.set_option('display.max_columns', None)
 
 client = MongoClient(MONGODB_URI)
 
+def student_find(query, collection, course=None, limit=10):
+    """Search students by keywords in any order (case-insensitive). Optionally filter by course."""
+    words = query.strip().split()
+    regex_pattern = "".join(f"(?=.*{word})" for word in words) + ".*"
+    regex_query = {"Name": {"$regex": regex_pattern, "$options": "i"}}
 
+    # Filter by course if provided
+    if course:
+        regex_query["Course"] = course
 
+    return list(collection.find(regex_query, {"Name": 1, "Course": 1, "YearLevel": 1}).limit(limit))
 
 def load_or_query(cache_file, query_func):
     cache_file = f"./cache/{cache_file}"

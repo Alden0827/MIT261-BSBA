@@ -5,8 +5,6 @@ from config.settings import MONGODB_URI, DB_NAME
 
 # --- MongoDB connection ---
 
-
-
 COLLECTION_NAME = "curriculum"
 client = MongoClient(MONGODB_URI)
 db = client[DB_NAME]

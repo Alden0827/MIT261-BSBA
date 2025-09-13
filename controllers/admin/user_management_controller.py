@@ -38,19 +38,24 @@ def user_management_view(st, db):
             with col3:
                 st.write(row['fullName'])
             with col4:
-                if st.button("Edit", key=f"edit_{row['username']}"):
-                    st.session_state.edit_user = row
-                if st.button("Delete", key=f"delete_{row['username']}"):
-                    success, message = delete_user(row['username'])
-                    if success:
-                        st.success(message)
-                        refresh_users()
-                        st.rerun()
-                    else:
-                        st.error(message)
+                # Use sub-columns to place buttons side-by-side
+                edit_col, delete_col = st.columns(2)
+                with edit_col:
+                    if st.button("Edit", key=f"edit_{row['username']}"):
+                        st.session_state.edit_user = row
+                with delete_col:
+                    if st.button("Delete", key=f"delete_{row['username']}"):
+                        success, message = delete_user(row['username'])
+                        if success:
+                            st.success(message)
+                            refresh_users()
+                            st.rerun()
+                        else:
+                            st.error(message)
     else:
         st.info("No users found.")
 
+    # --- Edit User Dialog ---
     if 'edit_user' in st.session_state and st.session_state.edit_user is not None:
         user_to_edit = st.session_state.edit_user
 
@@ -70,15 +75,12 @@ def user_management_view(st, db):
 
                 submitted = st.form_submit_button("Save Changes")
                 if submitted:
-                    # Update user info
                     update_success, update_message = update_user(user_to_edit['username'], fullname, role)
-
                     if update_success:
                         st.success(update_message)
                     else:
                         st.error(update_message)
 
-                    # Change password if provided
                     if new_password:
                         pw_success, pw_message = change_password(user_to_edit['username'], new_password)
                         if pw_success:
@@ -92,22 +94,28 @@ def user_management_view(st, db):
 
         edit_user_dialog()
 
+    # --- Add New User Dialog ---
+    if st.button("Add New User"):
+        @st.dialog("Add New User")
+        def add_user_dialog():
+            st.subheader("Add a New User")
 
-    st.subheader("Add a New User")
-    with st.form("new_user_form", clear_on_submit=True):
-        new_username = st.text_input("Username")
-        new_password = st.text_input("Password", type="password")
-        new_fullname = st.text_input("Full Name")
-        new_role = st.selectbox("Role", ["admin", "faculty", "student", "registrar"])
+            with st.form("new_user_form", clear_on_submit=True):
+                new_username = st.text_input("Username")
+                new_password = st.text_input("Password", type="password")
+                new_fullname = st.text_input("Full Name")
+                new_role = st.selectbox("Role", ["admin", "faculty", "student", "registrar"])
 
-        submitted = st.form_submit_button("Add User")
-        if submitted:
-            if not all([new_username, new_password, new_fullname, new_role]):
-                st.warning("Please fill out all fields.")
-            else:
-                success, message = add_user(new_username, new_password, new_role, new_fullname)
-                if success:
-                    st.success(message)
-                    refresh_users()
-                else:
-                    st.error(message)
+                submitted = st.form_submit_button("Add User")
+                if submitted:
+                    if not all([new_username, new_password, new_fullname, new_role]):
+                        st.warning("Please fill out all fields.")
+                    else:
+                        success, message = add_user(new_username, new_password, new_role, new_fullname)
+                        if success:
+                            st.success(message)
+                            refresh_users()
+                        else:
+                            st.error(message)
+
+        add_user_dialog()

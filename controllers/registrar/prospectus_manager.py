@@ -10,7 +10,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def prospectus_page(st):
-    students = get_students_collection()
+
+    with st.spinner(f"Fetching student list."):
+        students = get_students_collection()
+
     st.title("🧑‍🎓 Student Prospectus & GPA")
 
     # ---------------- ACTION BAR (TOP) ----------------
@@ -39,8 +42,10 @@ def prospectus_page(st):
     student_id = student_row["_id"]
     program_code = student_row['Course']
 
-    curriculum_df = get_curriculum(program_code)
-    stud_grades = get_student_subjects_grades(StudentID=student_id)
+
+    with st.spinner(f"Fetching curriculum and student grades."):
+        curriculum_df = get_curriculum(program_code)
+        stud_grades = get_student_subjects_grades(StudentID=student_id)
 
     if curriculum_df.empty:
         st.warning(f"No curriculum found for the program: {program_code}")

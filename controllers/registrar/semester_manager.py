@@ -7,13 +7,28 @@ def add_semester_dialog(db):
     st.write("### New Semester")
     sy = st.number_input("School Year", step=1, format="%d")
     sem = st.selectbox("Semester", ["FirstSem", "SecondSem", "Summer"])
+
     if st.button("Save Semester"):
-        db.semesters.insert_one({
+        # Check duplicate (SchoolYear + Semester)
+        existing = db.semesters.find_one({
             "SchoolYear": int(sy),
             "Semester": sem
         })
-        st.success("Semester added")
-        st.rerun()
+
+        if existing:
+            st.error(f"Semester {sy} - {sem} already exists.")
+        else:
+            # Compute next _id
+            last = db.semesters.find_one(sort=[("_id", -1)])
+            next_id = (last["_id"] + 1) if last else 1
+
+            db.semesters.insert_one({
+                "_id": next_id,
+                "SchoolYear": int(sy),
+                "Semester": sem
+            })
+            st.success("Semester added")
+            st.rerun()
 
 @st.dialog("Edit Semester")
 def edit_semester_dialog(db, sem):
