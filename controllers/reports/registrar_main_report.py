@@ -4,7 +4,7 @@ import pandas as pd
 import helpers.registrar_main_report_helper as r
 from helpers.data_helper import student_find    
 from streamlit_echarts import st_echarts
-from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
+# from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 import pandas as pd
 
 
