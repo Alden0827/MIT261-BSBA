@@ -5,6 +5,20 @@ from controllers.dashboard_controller import dasboard_view
 def registrar_view(st, db):
     # Sidebar Menu
     with st.sidebar:
+        st.markdown(
+        """
+            <style>
+            [data-testid="stSidebar"] {
+                background-image: url('https://sms.ndmu.edu.ph/storage/carousel/1749470855_ndmu.jpg');
+                background-repeat: no-repeat;       /* prevent tiling */
+                background-size: auto 100%;         /* stretch vertically, width auto */
+                background-position: center top;    /* align top-center */
+            }
+            </style>
+        """,
+        unsafe_allow_html=True
+        )
+
         main_menu = option_menu(
             menu_title="Registrar Menu",
             options=[
@@ -32,35 +46,76 @@ def registrar_view(st, db):
             }
         )
 
+
+
     # Show submenu only if Reports is selected
     if main_menu == "Reports":
         with st.sidebar:
-            analysis_menu = option_menu(
-                menu_title="Analysis & Visualization",
+            # st.markdown("### Basic Reports")
+            st.markdown(
+                """
+                <h3 style="
+                    color: #ffffff;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+                ">
+                    Basic Reports
+                </h3>
+                """,
+                unsafe_allow_html=True
+            )
+            basic_reports = option_menu(
+                menu_title=None,
                 options=[
                     "Reports", 
-                    "Prospectus", 
+                    "Prospectus"
+                ],
+                icons=["file-text", "book"],
+                menu_icon="cast",
+                default_index=0,
+                orientation="vertical",
+                styles={
+                    "container": {"padding": "0px"},
+                    "icon": {"color": "#2e7bcf"},
+                    "nav-link": {"font-size": "14px"},
+                    "nav-link-selected": {"background-color": "#2e7bcf", "color": "white"}
+                }
+            )
+
+            # st.markdown("### Data Analysis with Visualzation")
+            st.markdown(
+                """
+                <h3 style="
+                    color: #ffffff;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+                ">
+                    Data Analysis with Visualization
+                </h3>
+                """,
+                unsafe_allow_html=True
+            )
+            analysis_reports = option_menu(
+                menu_title=None,
+                options=[
                     "Student Performance",
                     "Teacher & Subject",
                     "Course & Curriculum",
                     "Sem & Academic Year",
                     "Student Demographic"
                 ],
-                icons=[
-                    "file-text", "book", "bar-chart-line", "person-badge",
-                    "book-half", "calendar", "people"
-                ],
+                icons=["bar-chart-line", "person-badge", "book-half", "calendar", "people"],
                 menu_icon="cast",
                 default_index=0,
                 orientation="vertical",
                 styles={
-                    "container": {"padding": "5px"},
-                    "icon": {"color": "#2e7bcf", "font-size": "18px"}, 
-                    "nav-link": {"font-size": "14px", "text-align": "left", "--hover-color": "#eee"},
+                    "container": {"padding": "0px"},
+                    "icon": {"color": "#2e7bcf"},
+                    "nav-link": {"font-size": "14px"},
                     "nav-link-selected": {"background-color": "#2e7bcf", "color": "white"}
                 }
             )
-        menu = analysis_menu
+
+            # Combine selection (pick whichever was clicked)
+            menu = basic_reports or analysis_reports
     else:
         menu = main_menu
 

@@ -28,7 +28,7 @@ def report_page(st, db):
 
     if report == "-- Select Report --":
         st.markdown("""
-        ## 📑 Overview
+        ### 📑 Overview
 
         This **Academic Reporting Module** provides a detailed view of student performance, curriculum coverage, 
         subject-level outcomes, and retention metrics. It supports administrators and educators in identifying 

@@ -34,41 +34,59 @@ def report_page(st, db):
 	# Report Logic
 	# ------------------------------
 	if report == "-- Select Report --":
-	    st.markdown("""
-	        ## D. Semester and Academic Year Analysis
+		st.markdown("""
+		<div style="padding:20px; background-color:#f9f9f9; border-radius:10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
 
-	        The **Reporting Module** provides insights into how students perform 
-	        across different semesters, highlighting the best and worst academic periods 
-	        and analyzing grade stability.
+		    <h2 style="color:#2e7bcf;">D. Semester and Academic Year Analysis</h2>
+		    <p style="font-size:16px;">
+		        The <strong>Reporting Module</strong> provides insights into how students perform 
+		        across different semesters, highlighting the best and worst academic periods 
+		        and analyzing grade stability.
+		    </p>
+		    <hr style="border:1px solid #ddd;">
 
-	        ---
+		    <h3 style="color:#4B8BBE;">📑 Reports Available</h3>
 
-	        ## 📑 Reports Available
+		    <div style="margin-bottom:15px;">
+		        <h4>1. ⬇️ Semester with Lowest GPA</h4>
+		        <ul>
+		            <li><strong>Purpose:</strong> Identify the semester with the lowest overall GPA.</li>
+		            <li><strong>Metrics:</strong> Semester, average GPA, total failing students.</li>
+		            <li><strong>Use Case:</strong> Detect when student performance dipped and investigate possible causes.</li>
+		        </ul>
+		    </div>
 
-	        ### 1. ⬇️ Semester with Lowest GPA
-	        - **Purpose:** Identify the semester with the lowest overall GPA.  
-	        - **Metrics:** Semester, average GPA, total failing students.  
-	        - **Use Case:** Detect when student performance dipped and investigate possible causes.  
+		    <div style="margin-bottom:15px;">
+		        <h4>2. 🏆 Best Performing Semester</h4>
+		        <ul>
+		            <li><strong>Purpose:</strong> Highlight the semester with the strongest performance.</li>
+		            <li><strong>Metrics:</strong> Semester, average GPA, top-performing subjects and students.</li>
+		            <li><strong>Use Case:</strong> Recognize academic strengths and replicate effective strategies.</li>
+		        </ul>
+		    </div>
 
-	        ### 2. 🏆 Best Performing Semester
-	        - **Purpose:** Highlight the semester with the strongest performance.  
-	        - **Metrics:** Semester, average GPA, top-performing subjects and students.  
-	        - **Use Case:** Recognize academic strengths and replicate effective strategies.  
+		    <div style="margin-bottom:15px;">
+		        <h4>3. 📈 Grade Deviation Across Semesters</h4>
+		        <ul>
+		            <li><strong>Purpose:</strong> Measure variation in student grades across terms.</li>
+		            <li><strong>Metrics:</strong> Average GPA (Mean), grade variance (StdDev), student count.</li>
+		            <li><strong>Use Case:</strong> Identify stable vs. volatile subjects, supporting curriculum and teaching improvements.</li>
+		        </ul>
+		    </div>
 
-	        ### 3. 📈 Grade Deviation Across Semesters
-	        - **Purpose:** Measure variation in student grades across terms.  
-	        - **Metrics:** Average GPA (Mean), grade variance (StdDev), student count.  
-	        - **Use Case:** Identify stable vs. volatile subjects, supporting curriculum and teaching improvements.  
+		    <hr style="border:1px solid #ddd;">
 
-	        ---
+		    <h3 style="color:#4B8BBE;">⚙️ Features</h3>
+		    <ul>
+		        <li><strong>Filters:</strong> Course, semester, school year, teacher, student.</li>
+		        <li><strong>Visualization:</strong> Interactive charts, graphs, and tables.</li>
+		        <li><strong>Export Options:</strong> CSV, Excel, PDF.</li>
+		        <li><strong>Drill-Down:</strong> Explore individual subjects or student groups.</li>
+		        <li><strong>Insights:</strong> Spot academic trends, highlight best practices, and target areas for support.</li>
+		    </ul>
 
-	        ## ⚙️ Features
-	        - **Filters:** Course, semester, school year, teacher, student.  
-	        - **Visualization:** Interactive charts, graphs, and tables.  
-	        - **Export Options:** CSV, Excel, PDF.  
-	        - **Drill-Down:** Explore individual subjects or student groups.  
-	        - **Insights:** Spot academic trends, highlight best practices, and target areas for support.  
-	    """)
+		</div>
+		""", unsafe_allow_html=True)
 
 
 	elif report == "Semester with Lowest GPA":
