@@ -46,7 +46,7 @@ def registrar_view(st, db):
             }
         )
 
-    # Unified Reports submenu
+    # Unified Reports submenu with HR separation
     if main_menu == "Reports":
         with st.sidebar:
             st.markdown(
@@ -58,25 +58,16 @@ def registrar_view(st, db):
                 unsafe_allow_html=True
             )
 
-            reports_menu = option_menu(
-                menu_title=None,
+            # --- Basic Reports ---
+            basic_menu = option_menu(
+                menu_title="Basic Reports",
                 options=[
-                    "📂 Basic Reports",
                     "Reports", 
-                    "Prospectus",
-                    "📊 Data Analysis",
-                    "Student Performance",
-                    "Teacher & Subject",
-                    "Course & Curriculum",
-                    "Sem & Academic Year",
-                    "Student Demographic"
+                    "Prospectus"
                 ],
-                icons=[
-                    None, "file-text", "book",
-                    None, "bar-chart-line", "person-badge", "book-half", "calendar", "people"
-                ],
+                icons=["file-text", "book"],
                 menu_icon="cast",
-                default_index=1,
+                default_index=0,
                 orientation="vertical",
                 styles={
                     "container": {"padding": "0px"},
@@ -86,7 +77,36 @@ def registrar_view(st, db):
                 }
             )
 
-            menu = reports_menu
+            # --- Separator line ---
+            st.markdown("<hr style='margin:10px 0; border:1px solid #ccc;'>", unsafe_allow_html=True)
+
+            # --- Data Analysis ---
+            analysis_menu = option_menu(
+                menu_title="Data Analysis with Visualization",
+                options=[
+                    "Student Performance",
+                    "Teacher & Subject",
+                    "Course & Curriculum",
+                    "Sem & Academic Year",
+                    "Student Demographic"
+                ],
+                icons=["bar-chart-line", "person-badge", "book-half", "calendar", "people"],
+                menu_icon="cast",
+                default_index=0,
+                orientation="vertical",
+                styles={
+                    "container": {"padding": "0px"},
+                    "icon": {"color": "#2e7bcf"},
+                    "nav-link": {"font-size": "14px"},
+                    "nav-link-selected": {"background-color": "#2e7bcf", "color": "white"}
+                }
+            )
+
+            # Final menu selection
+            if basic_menu in ["Reports", "Prospectus"]:
+                menu = basic_menu
+            else:
+                menu = analysis_menu
     else:
         menu = main_menu
 
