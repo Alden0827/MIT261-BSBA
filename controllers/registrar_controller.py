@@ -147,7 +147,7 @@ def registrar_view(st, db):
         from .reports.course_and_curriculum_report import report_page
         report_page(st, db)
     elif menu == "Sem & Academic Year":
-        from .reports.semester_and_academic_year_report import report_page
+        from .reports.semester_and_cademic_year_report import report_page
         report_page(st, db)
     elif menu == "Student Demographic":
         from .reports.student_demographics_report import report_page
