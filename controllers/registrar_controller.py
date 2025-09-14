@@ -22,13 +22,13 @@ def registrar_view(st, db):
         main_menu = option_menu(
             menu_title="Registrar Menu",
             options=[
-                "Dashboard", 
-                "Curriculum Manager", 
-                "Subjects", 
+                "Dashboard",
+                "Curriculum Manager",
+                "Subjects",
                 "Student Records",
-                "Semester Control", 
-                "Class Scheduling", 
-                "Enrollment", 
+                "Semester Control",
+                "Class Scheduling",
+                "Enrollment",
                 "Reports"
             ],
             icons=[
@@ -40,13 +40,13 @@ def registrar_view(st, db):
             orientation="vertical",
             styles={
                 "container": {"padding": "5px", "background-color": "#f0f2f6"},
-                "icon": {"color": "#2e7bcf", "font-size": "18px"}, 
+                "icon": {"color": "#2e7bcf", "font-size": "18px"},
                 "nav-link": {"font-size": "16px", "text-align": "left", "margin":"0px", "--hover-color": "#eee"},
                 "nav-link-selected": {"background-color": "#2e7bcf", "color": "white"}
             }
         )
 
-    # Unified Reports submenu with HR separation
+    # Reports submenu with HR separation
     if main_menu == "Reports":
         with st.sidebar:
             st.markdown(
@@ -58,16 +58,17 @@ def registrar_view(st, db):
                 unsafe_allow_html=True
             )
 
-            # --- Basic Reports ---
+            # --- Basic Reports (placeholder first item) ---
             basic_menu = option_menu(
                 menu_title="Basic Reports",
                 options=[
-                    "Reports", 
+                    "— Select Basic Report —",  # placeholder default
+                    "Reports",
                     "Prospectus"
                 ],
-                icons=["file-text", "book"],
+                icons=[None, "file-text", "book"],
                 menu_icon="cast",
-                default_index=0,
+                default_index=0,  # placeholder is default
                 orientation="vertical",
                 styles={
                     "container": {"padding": "0px"},
@@ -102,7 +103,9 @@ def registrar_view(st, db):
                 }
             )
 
-            # Final menu selection
+            # Final menu selection:
+            # If user actively selected a Basic Reports item (not the placeholder), use it.
+            # Otherwise use the Data Analysis selection.
             if basic_menu in ["Reports", "Prospectus"]:
                 menu = basic_menu
             else:
@@ -114,7 +117,7 @@ def registrar_view(st, db):
     if menu == "Dashboard":
         dasboard_view(st)
     elif menu == "Curriculum Manager":
-        from .registrar.curriculum_manager import curriculum_manager_page 
+        from .registrar.curriculum_manager import curriculum_manager_page
         curriculum_manager_page(st, db)
     elif menu == "Subjects":
         from .registrar.subjects_manager import subjects_manager_page
@@ -123,7 +126,7 @@ def registrar_view(st, db):
         from .registrar.student_records_manager import student_records_manager_page
         student_records_manager_page(st, db)
     elif menu == "Semester Control":
-        from .registrar.semester_manager import semester_manager_page 
+        from .registrar.semester_manager import semester_manager_page
         semester_manager_page(st, db)
     elif menu == "Class Scheduling":
         from .registrar.class_scheduler_manager import class_scheduler_manager_page
@@ -144,13 +147,13 @@ def registrar_view(st, db):
         from .reports.course_and_curriculum_report import report_page
         report_page(st, db)
     elif menu == "Sem & Academic Year":
-        from .reports.semester_and_cademic_year_report import report_page
+        from .reports.semester_and_academic_year_report import report_page
         report_page(st, db)
     elif menu == "Student Demographic":
         from .reports.student_demographics_report import report_page
         report_page(st, db)
     elif menu == "Prospectus":
-        from .registrar.prospectus_manager import prospectus_page 
+        from .registrar.prospectus_manager import prospectus_page
         prospectus_page(st)
     elif menu == "Reports":
         from .reports.registrar_main_report import report_page
