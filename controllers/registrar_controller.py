@@ -10,9 +10,9 @@ def registrar_view(st, db):
             <style>
             [data-testid="stSidebar"] {
                 background-image: url('https://sms.ndmu.edu.ph/storage/carousel/1749470855_ndmu.jpg');
-                background-repeat: no-repeat;       /* prevent tiling */
-                background-size: auto 100%;         /* stretch vertically, width auto */
-                background-position: center top;    /* align top-center */
+                background-repeat: no-repeat;       
+                background-size: auto 100%;         
+                background-position: center top;    
             }
             </style>
         """,
@@ -46,65 +46,37 @@ def registrar_view(st, db):
             }
         )
 
-
-
-    # Show submenu only if Reports is selected
+    # Unified Reports submenu
     if main_menu == "Reports":
         with st.sidebar:
-            # st.markdown("### Basic Reports")
             st.markdown(
                 """
-                <h3 style="
-                    color: #ffffff;
-                    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-                ">
-                    Basic Reports
+                <h3 style="color:#ffffff;text-shadow:2px 2px 4px rgba(0,0,0,0.7);">
+                    Reports
                 </h3>
                 """,
                 unsafe_allow_html=True
-            )
-            basic_reports = option_menu(
-                menu_title=None,
-                options=[
-                    "Reports", 
-                    "Prospectus"
-                ],
-                icons=["file-text", "book"],
-                menu_icon="cast",
-                default_index=0,
-                orientation="vertical",
-                styles={
-                    "container": {"padding": "0px"},
-                    "icon": {"color": "#2e7bcf"},
-                    "nav-link": {"font-size": "14px"},
-                    "nav-link-selected": {"background-color": "#2e7bcf", "color": "white"}
-                }
             )
 
-            # st.markdown("### Data Analysis with Visualzation")
-            st.markdown(
-                """
-                <h3 style="
-                    color: #ffffff;
-                    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-                ">
-                    Data Analysis with Visualization
-                </h3>
-                """,
-                unsafe_allow_html=True
-            )
-            analysis_reports = option_menu(
+            reports_menu = option_menu(
                 menu_title=None,
                 options=[
+                    "📂 Basic Reports",
+                    "Reports", 
+                    "Prospectus",
+                    "📊 Data Analysis",
                     "Student Performance",
                     "Teacher & Subject",
                     "Course & Curriculum",
                     "Sem & Academic Year",
                     "Student Demographic"
                 ],
-                icons=["bar-chart-line", "person-badge", "book-half", "calendar", "people"],
+                icons=[
+                    None, "file-text", "book",
+                    None, "bar-chart-line", "person-badge", "book-half", "calendar", "people"
+                ],
                 menu_icon="cast",
-                default_index=0,
+                default_index=1,
                 orientation="vertical",
                 styles={
                     "container": {"padding": "0px"},
@@ -114,8 +86,7 @@ def registrar_view(st, db):
                 }
             )
 
-            # Combine selection (pick whichever was clicked)
-            menu = basic_reports or analysis_reports
+            menu = reports_menu
     else:
         menu = main_menu
 
