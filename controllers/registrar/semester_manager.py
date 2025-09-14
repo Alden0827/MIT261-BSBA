@@ -61,8 +61,9 @@ def semester_manager_page(st, db):
     if st.button("➕ Add Semester"):
         add_semester_dialog(db)
 
+    with st.spinner(f"Loading semesters...", show_time=True):
+        semesters = list(db.semesters.find())
 
-    semesters = list(db.semesters.find())
     if semesters:
         # Only keep the fields in your schema
         df = pd.DataFrame(semesters)[["_id", "SchoolYear", "Semester"]]

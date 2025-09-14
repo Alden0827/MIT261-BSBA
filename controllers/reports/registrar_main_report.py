@@ -58,14 +58,14 @@ def report_page(st, db):
         st.markdown("### A. Dean's List (Top 10 Students)")
         st.markdown("**Criteria:** No grade < 85% & GPA >= 90%")
         
-        with st.spinner(f"Preparing data for {report}."):
+        with st.spinner(f"Preparing data for {report}.", show_time = True):
             df_deans = r.get_deans_list()  # fetch data
         st.dataframe(df_deans)
 
         st.markdown("### B. Academic Probation (10 Students)")
         st.markdown("**Criteria:** No grade < 75 OR >= 30% FAILS")
 
-        with st.spinner(f"Preparing data for {report}."):
+        with st.spinner(f"Preparing data for {report}.", show_time = True):
             df_probation = r.get_academic_probation_batch_checkpoint()  # expected columns: ['#', 'ID', 'Name', 'Prog', 'Yr', 'GPA', 'Units', 'High', 'LOW']
         
         st.dataframe(df_probation)
@@ -82,7 +82,7 @@ def report_page(st, db):
     elif report == "2. Subject Pass/Fail Distribution":
         st.subheader("📊 Subject Pass/Fail Distributionx")
         
-        with st.spinner(f"Preparing data for {report}."):
+        with st.spinner(f"Preparing data for {report}.", show_time = True):
             df_subjects = r.get_subject_pass_fail()  # columns: ['Subject Code', 'Subject Name', 'Semester', 'Pass Count', 'Fail Count', 'Pass %', 'Fail %']
         st.dataframe(df_subjects)
 
@@ -98,7 +98,7 @@ def report_page(st, db):
     elif report == "3. Enrollment Trend Analysis":
         st.subheader("📈 Enrollment Trend Analysis")
 
-        with st.spinner(f"Preparing data for {report}."):
+        with st.spinner(f"Preparing data for {report}.", show_time = True):
             df_enrollment = r.get_enrollment_trend()  # columns: ['Semester', 'Total Enrollment', 'New Enrollees', 'Dropouts', 'Retention Rate (%)']
         st.dataframe(df_enrollment)
 
@@ -151,7 +151,7 @@ def report_page(st, db):
     elif report == "4. Incomplete Grades":
         st.subheader("⚠️ Incomplete Grades Report")
 
-        with st.spinner(f"Preparing data for {report}."):
+        with st.spinner(f"Preparing data for {report}.", show_time = True):
             df_incomplete = r.get_incomplete_grades()  # columns: ['Student ID', 'Name', 'Course Code', 'Course Title', 'Term', 'Grade Status']
         st.dataframe(df_incomplete)
 
@@ -167,7 +167,7 @@ def report_page(st, db):
     elif report == "5. Retention and Dropout Rates":
         st.subheader("📊 Retention and Dropout Rates")
 
-        with st.spinner(f"Preparing data for {report}."):
+        with st.spinner(f"Preparing data for {report}.", show_time = True):
             df_retention = r.get_retention_rates()  # columns: ['Semester to Semester', 'Retained', 'Dropped Out', 'Retention Rate (%)']
         
         st.dataframe(df_retention)
@@ -184,7 +184,7 @@ def report_page(st, db):
     elif report == "6. Top Performers per Program":
         st.subheader("🏆 Top Performers per Program")
         
-        with st.spinner(f"Preparing data for {report}."):
+        with st.spinner(f"Preparing data for {report}.", show_time = True):
             df_top = r.get_top_performers()  # columns: ['Program', 'Semester', 'Student ID', 'Student Name', 'GPA', 'Rank']
         
         st.dataframe(df_top)

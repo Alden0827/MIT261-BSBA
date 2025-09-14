@@ -48,7 +48,9 @@ def curriculum_manager_page(st, db):
     @st.dialog("Add Subject")
     def add_subject_dialog(program_doc):
         # --- Fetch subjects for dropdown ---
-        subjects_df = get_subjects()
+        with st.spinner(f"Loading metadata...", show_time=True):
+            subjects_df = get_subjects()
+            
         if subjects_df.empty:
             st.warning("⚠️ No subjects found in the database. Please add subjects first.")
             return

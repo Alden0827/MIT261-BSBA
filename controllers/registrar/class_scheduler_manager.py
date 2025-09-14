@@ -2,9 +2,10 @@
 def class_scheduler_manager_page(st,db):
 
     st.subheader("Class Scheduling")
-    programs = list(db.curriculum.find())
-    faculty_list = list(db.faculty.find())
-    semesters = list(db.semester.find())
+    with st.spinner(f"Loading metadata...", show_time=True):
+        programs = list(db.curriculum.find())
+        faculty_list = list(db.faculty.find())
+        semesters = list(db.semester.find())
 
     with st.form("add_class_schedule"):
         subject_codes = [s["code"] for p in programs for s in p.get("subjects", [])]

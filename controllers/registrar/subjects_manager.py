@@ -46,7 +46,9 @@ def subjects_manager_page(st, db):
     search_query = st.text_input("🔍 Search subjects", placeholder="Enter keywords (e.g. 'IT101 Introduction')")
 
     # --- Fetch all subjects ---
-    subjects = get_subjects().to_dict("records")
+    with st.spinner(f"Loading subject list...", show_time=True):
+        subjects = get_subjects().to_dict("records")
+    
     if not subjects:
         st.info("No subjects found. Add a new subject to get started.")
         return

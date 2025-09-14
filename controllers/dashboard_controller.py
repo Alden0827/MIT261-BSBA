@@ -10,18 +10,19 @@ CACHE_TTL = 3600  # 1 hour in seconds
 def dasboard_view(st):
 
 
-    with st.spinner("Loading students..."):
+    with st.spinner("Loading students...", show_time = True):
         students = get_students()
         time.sleep(1)
-    with st.spinner("Loading grades..."):
+    with st.spinner("Loading grades...", show_time = True):
         grades = get_grades()
         time.sleep(1)
-    with st.spinner("Loading semesters..."):
+    with st.spinner("Loading semesters...", show_time = True):
         semesters = get_semesters()
         time.sleep(1)
-    with st.spinner("Loading subjects..."):
+    with st.spinner("Loading subjects...", show_time = True):
         subjects = get_subjects()
         time.sleep(1)
+        
     st.title("🎓 University Dashboard")
 
     # KPI Metrics

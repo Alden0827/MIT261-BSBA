@@ -1,6 +1,7 @@
 def enrollment_approval_manager_page(db,st):
     st.subheader("Enrollment Approvals")
-    pending = list(db.enrollments.find({"status": "Pending"}))
+    with st.spinner(f"Loading metadata...", show_time=True):
+        pending = list(db.enrollments.find({"status": "Pending"}))
     if not pending:
         st.info("No pending enrollments")
     for e in pending:

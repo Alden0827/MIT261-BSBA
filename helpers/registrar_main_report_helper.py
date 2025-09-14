@@ -15,6 +15,10 @@ import pickle
 import os
 import time
 from config.settings import MONGODB_URI
+from helpers.cache_helper import cache_result, load_checkpoint, save_checkpoint
+
+CACHE_DIR = "./cache"
+
 
 # ------------------------------
 # MongoDB Connection
@@ -27,63 +31,60 @@ def get_db(uri=MONGODB_URI):
 # ------------------------------
 # Cache Decorator
 # ------------------------------
-def cache_result(ttl=600000000):  # default no expiration
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            print(f'Func: {func.__name__}', end='')
+# def cache_result(ttl=600000000):  # default no expiration
+#     def decorator(func):
+#         @wraps(func)
+#         def wrapper(*args, **kwargs):
+#             print(f'Func: {func.__name__}', end='')
 
-            ttl_minutes = kwargs.pop('ttl', ttl)
+#             ttl_minutes = kwargs.pop('ttl', ttl)
 
-            # Exclude db objects from args and kwargs
-            filtered_args = tuple(a for a in args if not hasattr(a, "client") and not hasattr(a, "command"))
-            filtered_kwargs = {k: v for k, v in kwargs.items() if not hasattr(v, "client") and not hasattr(v, "command")}
+#             # Exclude db objects from args and kwargs
+#             filtered_args = tuple(a for a in args if not hasattr(a, "client") and not hasattr(a, "command"))
+#             filtered_kwargs = {k: v for k, v in kwargs.items() if not hasattr(v, "client") and not hasattr(v, "command")}
 
-            cache_key = hashlib.md5(pickle.dumps((filtered_args, tuple(sorted(filtered_kwargs.items()))))).hexdigest()
-            cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
-            os.makedirs("./cache/", exist_ok=True)
+#             cache_key = hashlib.md5(pickle.dumps((filtered_args, tuple(sorted(filtered_kwargs.items()))))).hexdigest()
+#             cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
+#             os.makedirs("./cache/", exist_ok=True)
 
-            if os.path.exists(cache_name):
-                file_mod_time = os.path.getmtime(cache_name)
-                if (time.time() - file_mod_time) / 60 > ttl_minutes:
-                    os.remove(cache_name)
-                    result = func(*args, **kwargs)
-                else:
-                    with open(cache_name, "rb") as f:
-                        result = pickle.load(f)
-                        print(' - from cache')
-                        print(result.head(5) if isinstance(result, pd.DataFrame) else result)
-                        return result
-            else:
-                result = func(*args, **kwargs)
+#             if os.path.exists(cache_name):
+#                 file_mod_time = os.path.getmtime(cache_name)
+#                 if (time.time() - file_mod_time) / 60 > ttl_minutes:
+#                     os.remove(cache_name)
+#                     result = func(*args, **kwargs)
+#                 else:
+#                     with open(cache_name, "rb") as f:
+#                         result = pickle.load(f)
+#                         print(' - from cache')
+#                         print(result.head(5) if isinstance(result, pd.DataFrame) else result)
+#                         return result
+#             else:
+#                 result = func(*args, **kwargs)
 
-            with open(cache_name, "wb") as f:
-                pickle.dump(result, f)
+#             with open(cache_name, "wb") as f:
+#                 pickle.dump(result, f)
 
-            print(' - fresh')
-            if not result.empty:
-                print(result.iloc[0] if isinstance(result, pd.DataFrame) else result)
-            else:
-                print('Empty data!')
-            return result
-        return wrapper
-    return decorator
+#             print(' - fresh')
+#             if not result.empty:
+#                 print(result.iloc[0] if isinstance(result, pd.DataFrame) else result)
+#             else:
+#                 print('Empty data!')
+#             return result
+#         return wrapper
+#     return decorator
 
 
-CACHE_DIR = "./cache"
-CHECKPOINT_FILE = os.path.join(CACHE_DIR, "deans_list_checkpoint.pkl")
+# def save_checkpoint(i, results):
+#     # print(f'Saving checkpoint @ {i}')
+#     os.makedirs(CACHE_DIR, exist_ok=True)
+#     with open(CHECKPOINT_FILE, "wb") as f:
+#         pickle.dump({"last_index": i, "results": results}, f)
 
-def save_checkpoint(i, results):
-    # print(f'Saving checkpoint @ {i}')
-    os.makedirs(CACHE_DIR, exist_ok=True)
-    with open(CHECKPOINT_FILE, "wb") as f:
-        pickle.dump({"last_index": i, "results": results}, f)
-
-def load_checkpoint():
-    if os.path.exists(CHECKPOINT_FILE):
-        with open(CHECKPOINT_FILE, "rb") as f:
-            return pickle.load(f)
-    return {"last_index": 0, "results": []}
+# def load_checkpoint():
+#     if os.path.exists(CHECKPOINT_FILE):
+#         with open(CHECKPOINT_FILE, "rb") as f:
+#             return pickle.load(f)
+#     return {"last_index": 0, "results": []}
 
 
 @cache_result()
@@ -112,7 +113,7 @@ def get_students_batch_checkpoint(batch_size=1000):
     # --- Process in batches ---
     for i in range(start_index, len(student_ids), batch_size):
         batch_ids = student_ids[i:i+batch_size]
-        print(f"Chaching students collection: {i+1} - {min(i+batch_size, len(student_ids))}")
+        print(f"Caching students collection: {i+1} - {min(i+batch_size, len(student_ids))}")
 
         cursor = db.students.find(
             {"_id": {"$in": batch_ids}},
@@ -142,22 +143,11 @@ def get_students_batch_checkpoint(batch_size=1000):
 
 
 
-CACHE_DIR = "./cache"
-CHECKPOINT_FILE = os.path.join(CACHE_DIR, "deans_list_checkpoint.pkl")
 
-def save_checkpoint(last_index, results):
-    os.makedirs(CACHE_DIR, exist_ok=True)
-    with open(CHECKPOINT_FILE, "wb") as f:
-        pickle.dump({"last_index": last_index, "results": results}, f)
-
-def load_checkpoint():
-    if os.path.exists(CHECKPOINT_FILE):
-        with open(CHECKPOINT_FILE, "rb") as f:
-            return pickle.load(f)
-    return {"last_index": 0, "results": []}
 # ------------------------------
 # 1a. Dean's List
 # ------------------------------
+
 @cache_result()
 def get_deans_list(batch_size=1000, top_n=10):
     db = get_db()
@@ -170,7 +160,8 @@ def get_deans_list(batch_size=1000, top_n=10):
     print("Da 2")
 
     # 🔹 Load checkpoint
-    checkpoint = load_checkpoint()
+    CHECKPOINT_FILE = os.path.join(CACHE_DIR, "deans_list_checkpoint.pkl")
+    checkpoint = load_checkpoint(CHECKPOINT_FILE=CHECKPOINT_FILE)
     start_index = checkpoint.get("last_index", 0)
     results = []
 
@@ -216,7 +207,7 @@ def get_deans_list(batch_size=1000, top_n=10):
                 })
 
         # --- Save checkpoint after each batch ---
-        save_checkpoint(i + batch_size, {"last_index": i + batch_size})
+        save_checkpoint(last_index=i + batch_size, results={"last_index": i + batch_size}, CHECKPOINT_FILE=CHECKPOINT_FILE)
 
     if not results:
         return pd.DataFrame()
@@ -248,6 +239,7 @@ def get_deans_list(batch_size=1000, top_n=10):
 # ------------------------------
 @cache_result()
 def get_academic_probation_batch_checkpoint(batch_size=10000, top_n=10):
+    CHECKPOINT_FILE = os.path.join(CACHE_DIR, "get_academic_probation_batch_checkpoint.pkl")
     db = get_db()
 
     # 🔹 Load all students (cached)
@@ -258,7 +250,7 @@ def get_academic_probation_batch_checkpoint(batch_size=10000, top_n=10):
     student_ids = students_df["_id"].tolist()
 
     # 🔹 Load checkpoint if exists
-    checkpoint = load_checkpoint()
+    checkpoint = load_checkpoint(CHECKPOINT_FILE=CHECKPOINT_FILE)
     start_index = checkpoint["last_index"]
     results = checkpoint["results"]
 
@@ -318,7 +310,7 @@ def get_academic_probation_batch_checkpoint(batch_size=10000, top_n=10):
             results.append(batch_df)
 
         # 🔹 Save checkpoint after each batch
-        save_checkpoint(i + batch_size, results)
+        save_checkpoint(last_index=i + batch_size, results=results,CHECKPOINT_FILE=CHECKPOINT_FILE)
 
     if not results:
         return pd.DataFrame()
@@ -543,11 +535,12 @@ def get_incomplete_grades():
 # ------------------------------
 # 5. Retention and Dropout Rates (continued)
 # ------------------------------
+
 @cache_result()
 def get_retention_rates(batch_size=1000):
     db = get_db()
 
-    CACHE_DIR = "./cache"
+    
     CHECKPOINT_FILE = os.path.join(CACHE_DIR, "retention_checkpoint.pkl")
 
     # --- Load checkpoint ---
@@ -639,6 +632,7 @@ def get_retention_rates(batch_size=1000):
 # ------------------------------
 # 6. Top Performers per Program
 # ------------------------------
+
 @cache_result()
 def get_top_performers():
     db = get_db()
@@ -703,7 +697,8 @@ def get_top_performers():
 # ------------------------------
 # 7. Curriculum Progress Viewer
 # ------------------------------
-# @cache_result()
+
+@cache_result()
 def get_curriculum_progress(program=None):
     """
     Fetch curriculum subjects from the database.
@@ -762,7 +757,7 @@ if __name__ == "__main__":
     # incomplete = get_incomplete_grades() #4. Incomplete Grades Report
     # retention = get_retention_rates() #5. Retention and Dropout Rates
     # top_performers = get_top_performers() #6. Top Performers per Program
-    curriculum = get_curriculum_progress() #7. Curriculum Progress Viewer
-    print(curriculum.iloc[0])
+    # curriculum = get_curriculum_progress() #7. Curriculum Progress Viewer
+    # print(curriculum.iloc[0])
     pass
 

@@ -21,11 +21,11 @@ from helpers.registration_helper import find_best_match
 def enrollment_manager_page(st,db):
     st.title("Enrollment Manager")
 
-    with st.spinner("Loading school years..."):
+    with st.spinner("Loading school years...", show_time=True):
         school_years = get_school_years()
-    with st.spinner("Loading semesters..."):
+    with st.spinner("Loading semesters...", show_time=True):
         semester_names = get_semester_names()
-    with st.spinner("Loading Courses..."):
+    with st.spinner("Loading Courses...", show_time=True):
         courses = get_courses()
 
     # Initialize session state variables

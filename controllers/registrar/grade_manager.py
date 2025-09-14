@@ -6,7 +6,10 @@ def grade_manager_page(st,db):
     Securing and archiving grade data for compliance and accreditation.
     ''')
     st.subheader("Grade Management")
-    enrollments = list(db.enrollments.find({"status": "Enrolled"}))
+
+    with st.spinner("Loading metadata...", show_time=True):
+        enrollments = list(db.enrollments.find({"status": "Enrolled"}))
+
     if not enrollments:
         st.info("No grades to manage")
     for e in enrollments:

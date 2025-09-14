@@ -8,11 +8,14 @@ def display_enrollment_summary(db):
     st.subheader("Enrollment Summary")
 
     # Fetch data
-    total_students = db.students.count_documents({})
-    enrolled_students_cursor = db.enrollments.find({"status": "Enrolled"})
-    enrolled_students_list = list(enrolled_students_cursor)
-    enrolled_count = len(enrolled_students_list)
-    total_classes = db.classSchedule.count_documents({})
+    with st.spinner(f"Fetching total students...", show_time=True):
+        total_students = db.students.count_documents({})
+    with st.spinner(f"Fetching enrolled student...", show_time=True):
+        enrolled_students_cursor = db.enrollments.find({"status": "Enrolled"})
+        enrolled_students_list = list(enrolled_students_cursor)
+        enrolled_count = len(enrolled_students_list)
+    with st.spinner(f"Fetching total class schedule...", show_time=True):
+        total_classes = db.classSchedule.count_documents({})
 
     # Display metrics
     col1, col2, col3 = st.columns(3)

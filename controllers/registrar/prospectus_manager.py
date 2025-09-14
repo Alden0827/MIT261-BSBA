@@ -11,7 +11,7 @@ import numpy as np
 
 def prospectus_page(st):
 
-    with st.spinner(f"Fetching student list."):
+    with st.spinner(f"Fetching student list.", show_time=True):
         students = get_students_collection()
 
     st.title("🧑‍🎓 Student Prospectus & GPA")
@@ -43,7 +43,7 @@ def prospectus_page(st):
     program_code = student_row['Course']
 
 
-    with st.spinner(f"Fetching curriculum and student grades."):
+    with st.spinner(f"Fetching curriculum and student grades.", show_time = True):
         curriculum_df = get_curriculum(program_code)
         stud_grades = get_student_subjects_grades(StudentID=student_id)
 

@@ -29,7 +29,8 @@ def registrar_view(st, db):
                 "Semester Control",
                 "Class Scheduling",
                 "Enrollment",
-                "Reports"
+                "Reports",
+                "Data Analysis"
             ],
             icons=[
                 "bar-chart-line", "book", "book-half", "people",
@@ -46,7 +47,9 @@ def registrar_view(st, db):
             }
         )
 
-    # Reports submenu with HR separation
+    # Submenus
+    menu = main_menu
+
     if main_menu == "Reports":
         with st.sidebar:
             st.markdown(
@@ -58,17 +61,15 @@ def registrar_view(st, db):
                 unsafe_allow_html=True
             )
 
-            # --- Basic Reports (placeholder first item) ---
-            basic_menu = option_menu(
+            menu = option_menu(
                 menu_title="Basic Reports",
                 options=[
-                    "— Select Basic Report —",  # placeholder default
                     "Reports",
                     "Prospectus"
                 ],
-                icons=[None, "file-text", "book"],
+                icons=["file-text", "book"],
                 menu_icon="cast",
-                default_index=0,  # placeholder is default
+                default_index=0,
                 orientation="vertical",
                 styles={
                     "container": {"padding": "0px"},
@@ -78,11 +79,9 @@ def registrar_view(st, db):
                 }
             )
 
-            # --- Separator line ---
-            st.markdown("<hr style='margin:10px 0; border:1px solid #ccc;'>", unsafe_allow_html=True)
-
-            # --- Data Analysis ---
-            analysis_menu = option_menu(
+    elif main_menu == "Data Analysis":
+        with st.sidebar:
+            menu = option_menu(
                 menu_title="Data Analysis with Visualization",
                 options=[
                     "Student Performance",
@@ -103,17 +102,7 @@ def registrar_view(st, db):
                 }
             )
 
-            # Final menu selection:
-            # If user actively selected a Basic Reports item (not the placeholder), use it.
-            # Otherwise use the Data Analysis selection.
-            if basic_menu in ["Reports", "Prospectus"]:
-                menu = basic_menu
-            else:
-                menu = analysis_menu
-    else:
-        menu = main_menu
-
-    # Page routing
+    # --- Routing (works for all menus) ---
     if menu == "Dashboard":
         dasboard_view(st)
     elif menu == "Curriculum Manager":
@@ -147,7 +136,7 @@ def registrar_view(st, db):
         from .reports.course_and_curriculum_report import report_page
         report_page(st, db)
     elif menu == "Sem & Academic Year":
-        from .reports.semester_and_cademic_year_report import report_page
+        from .reports.semester_and_academic_year_report import report_page
         report_page(st, db)
     elif menu == "Student Demographic":
         from .reports.student_demographics_report import report_page

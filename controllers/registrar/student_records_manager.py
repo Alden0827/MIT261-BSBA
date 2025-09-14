@@ -43,7 +43,9 @@ def student_records_manager_page(st, db):
 
     # --- Fetch all students ---
     # students = list(db.students.find())
-    students = get_students().to_dict("records")
+
+    with st.spinner(f"Loading student list...", show_time=True):
+        students = get_students().to_dict("records")
 
     if not students:
         st.info("No students found. Add a new student to get started.")

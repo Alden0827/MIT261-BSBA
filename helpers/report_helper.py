@@ -10,6 +10,7 @@ import time
 from functools import wraps
 import statistics
 from config.settings import MONGODB_URI, MONGODB_DATABASE
+from helpers.cache_helper import cache_meta, cache_result
 
 print('Connecting to db..', end = '')
 
@@ -45,107 +46,95 @@ except Exception as e:
 # ------------------------------
 print("Initializing load_all_data!")
 
-def avg(lst):
-    return sum(lst) / len(lst) if lst else 0
+# def avg(lst):
+#     return sum(lst) / len(lst) if lst else 0
 
 # ------------------------------
 # Cache Decorator
 # ------------------------------
-def cache_result(ttl=600000000):  # default no expiration
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            print(f'-----------------------------------------------')
-            print(f'Func: {func.__name__}', end = '')
+# def cache_result(ttl=600000000):  # default no expiration
+#     def decorator(func):
+#         @wraps(func)
+#         def wrapper(*args, **kwargs):
+#             print(f'-----------------------------------------------')
+#             print(f'Func: {func.__name__}', end = '')
 
-            ttl_minutes = kwargs.pop('ttl', ttl)
-            args_tuple = tuple(arg for arg in args)
-            kwargs_tuple = tuple(sorted(kwargs.items()))
-            cache_key = hashlib.md5(pickle.dumps((args_tuple, kwargs_tuple))).hexdigest()
-            cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
-            os.makedirs("./cache/", exist_ok=True)
-            if os.path.exists(cache_name):
-                file_mod_time = os.path.getmtime(cache_name)
-                if (time.time() - file_mod_time) / 60 > ttl_minutes:
-                    os.remove(cache_name)
-                    result = func(*args, **kwargs)
-                else:
-                    with open(cache_name, "rb") as f:
-                        result = pickle.load(f)
-                        print(' - from cache')
-                        print(result.head(5))
-                        return result 
-            else:
-                result = func(*args, **kwargs)
+#             ttl_minutes = kwargs.pop('ttl', ttl)
+#             args_tuple = tuple(arg for arg in args)
+#             kwargs_tuple = tuple(sorted(kwargs.items()))
+#             cache_key = hashlib.md5(pickle.dumps((args_tuple, kwargs_tuple))).hexdigest()
+#             cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
+#             os.makedirs("./cache/", exist_ok=True)
+#             if os.path.exists(cache_name):
+#                 file_mod_time = os.path.getmtime(cache_name)
+#                 if (time.time() - file_mod_time) / 60 > ttl_minutes:
+#                     os.remove(cache_name)
+#                     result = func(*args, **kwargs)
+#                 else:
+#                     with open(cache_name, "rb") as f:
+#                         result = pickle.load(f)
+#                         print(' - from cache')
+#                         print(result.head(5))
+#                         return result 
+#             else:
+#                 result = func(*args, **kwargs)
 
-            with open(cache_name, "wb") as f:
-                pickle.dump(result, f)
+#             with open(cache_name, "wb") as f:
+#                 pickle.dump(result, f)
 
-            print(' - fresh')
-            print(result.head(5))
+#             print(' - fresh')
+#             print(result.head(5))
 
-            return result
-        return wrapper
-    return decorator
+#             return result
+#         return wrapper
+#     return decorator
 
-def cache_meta(ttl=600000000):  # default no expiration
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            print(f'-----------------------------------------------')
-            print(f'Func: {func.__name__}', end = '')
+# def cache_meta(ttl=600000000):  # default no expiration
+#     def decorator(func):
+#         @wraps(func)
+#         def wrapper(*args, **kwargs):
+#             print(f'-----------------------------------------------')
+#             print(f'Func: {func.__name__}', end = '')
 
-            ttl_minutes = kwargs.pop('ttl', ttl)
-            args_tuple = tuple(arg for arg in args)
-            kwargs_tuple = tuple(sorted(kwargs.items()))
-            cache_key = hashlib.md5(pickle.dumps((args_tuple, kwargs_tuple))).hexdigest()
-            cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
-            os.makedirs("./cache/", exist_ok=True)
-            if os.path.exists(cache_name):
-                file_mod_time = os.path.getmtime(cache_name)
-                if (time.time() - file_mod_time) / 60 > ttl_minutes:
-                    os.remove(cache_name)
-                    result = func(*args, **kwargs)
-                else:
-                    with open(cache_name, "rb") as f:
-                        result = pickle.load(f)
-                        print(' - from cache')
-                        return result 
-            else:
-                result = func(*args, **kwargs)
+#             ttl_minutes = kwargs.pop('ttl', ttl)
+#             args_tuple = tuple(arg for arg in args)
+#             kwargs_tuple = tuple(sorted(kwargs.items()))
+#             cache_key = hashlib.md5(pickle.dumps((args_tuple, kwargs_tuple))).hexdigest()
+#             cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
+#             os.makedirs("./cache/", exist_ok=True)
+#             if os.path.exists(cache_name):
+#                 file_mod_time = os.path.getmtime(cache_name)
+#                 if (time.time() - file_mod_time) / 60 > ttl_minutes:
+#                     os.remove(cache_name)
+#                     result = func(*args, **kwargs)
+#                 else:
+#                     with open(cache_name, "rb") as f:
+#                         result = pickle.load(f)
+#                         print(' - from cache')
+#                         return result 
+#             else:
+#                 result = func(*args, **kwargs)
 
 
-            with open(cache_name, "wb") as f:
-                pickle.dump(result, f)
+#             with open(cache_name, "wb") as f:
+#                 pickle.dump(result, f)
 
-            print(' - fresh')
+#             print(' - fresh')
 
-            return result
-        return wrapper
-    return decorator
+#             return result
+#         return wrapper
+#     return decorator
 
 
 # @cache_meta()
-def load_all_data():
-    students = {s["_id"]: s for s in students_col.find()} # {'Course':'BSBA'}
-    semesters = {s["_id"]: s for s in semesters_col.find()}
-    # students = {s["_id"]: s for s in students_col.find({}, {"Course": 1, "Name": 1})}
-    # semesters = {s["_id"]: s for s in semesters_col.find({}, {"Semester": 1, "SchoolYear": 1})}
+# def load_all_data():
+#     students = {s["_id"]: s for s in students_col.find()} # {'Course':'BSBA'}
+#     semesters = {s["_id"]: s for s in semesters_col.find()}
+#     # students = {s["_id"]: s for s in students_col.find({}, {"Course": 1, "Name": 1})}
+#     # semesters = {s["_id"]: s for s in semesters_col.find({}, {"Semester": 1, "SchoolYear": 1})}
 
-    return students, semesters
+#     return students, semesters
 
-print("Loading metadata!", end = '')
-# students, semesters = load_all_data()
-print(" - Loaded!")
-# students = ['aaaa']
-# semesters = ['semesters']
-# aaa = students_col.find({}, {"Course": 1, "Name": 1})
-# print(aaa)
-# ------------------------------
-# Report Functions
-# ------------------------------
-# A. Student Performance Analytics
-# @st.cache_data(ttl=None)
 @cache_result()
 def get_top_performers(school_year=None, semester=None):
     pipeline = [
@@ -208,53 +197,6 @@ def get_top_performers(school_year=None, semester=None):
     result = list(grades_col.aggregate(pipeline))
     df = pd.DataFrame(result)
     return df
-
-# def get_top_performers(school_year=None, semester=None):
-#     # 🔹 Preload lookup dicts (better: do this once at startup, not inside function)
-
-#     print("Preload lookup semesters")
-#     semesters = {s["_id"]: s for s in db.semesters.find()}
-
-
-#     print("Preload lookup students")
-#     # students = {s["_id"]: s for s in db.students.find().limit(20)}
-#     students = {
-#         s["_id"]: {"Name": s.get("Name"), "Course": s.get("Course")}
-#         for s in list(db.students.find({}, {"Name": 1, "Course": 1}).limit(100000))
-#     }
-
-#     print("Loading records")
-#     data = []
-#     for g in grades_col.find():
-#         student = students.get(g["StudentID"])
-#         sem = semesters.get(g["SemesterID"])
-
-#         if not student or not sem:
-#             continue
-
-#         # 🔹 Apply filters
-#         if school_year and sem.get("SchoolYear") != school_year:
-#             continue
-#         if semester and sem.get("Semester") != semester:
-#             continue
-
-#         grades = g.get("Grades", [])
-#         if not grades:  # skip if no grades
-#             continue
-
-#         data.append({
-#             "Student": student.get("Name"),
-#             "Course": student.get("Course"),
-#             "YearLevel": student.get("YearLevel"),
-#             "Semester": sem.get("Semester"),
-#             "SchoolYear": sem.get("SchoolYear"),
-#             "Average": statistics.mean(grades)
-#         })
-
-#     df = pd.DataFrame(data)
-#     if df.empty:
-#         return df
-#     return df.sort_values("Average", ascending=False).head(10)
 
 
 @cache_result()
