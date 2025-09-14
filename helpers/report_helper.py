@@ -137,67 +137,55 @@ print("Initializing load_all_data!")
 
 @cache_result()
 def get_top_performers(school_year=None, semester=None):
-    pipeline = [
-        # Join with semesters
-        {
-            "$lookup": {
-                "from": "semesters",
-                "localField": "SemesterID",
-                "foreignField": "_id",
-                "as": "sem"
-            }
-        },
-        {"$unwind": "$sem"},  # flatten array
-        # Join with students
-        {
-            "$lookup": {
-                "from": "students",
-                "localField": "StudentID",
-                "foreignField": "_id",
-                "as": "student"
-            }
-        },
-        {"$unwind": "$student"},
+    # --- Step 1: Fetch everything in bulk ---
+    grades = list(grades_col.find({}))
+    semesters = {s["_id"]: s for s in db.semesters.find({})}
+    students = {st["_id"]: st for st in db.students.find({})}
+
+    total = len(grades)
+    data = []
+
+    for idx, g in enumerate(grades, start=1):
+        if not g.get("Grades"):  # Skip empty grades
+            continue
+
+        # --- Step 2: Join with semester ---
+        sem = semesters.get(g.get("SemesterID"))
+        if not sem:
+            continue
+
         # Apply filters
-        {
-            "$match": {
-                **({"sem.SchoolYear": school_year} if school_year else {}),
-                **({"sem.Semester": semester} if semester else {})
-            }
-        },
-        # Only include records with grades
-        {
-            "$match": {
-                "Grades.0": {"$exists": True}  # ensures Grades array is not empty
-            }
-        },
-        # Compute average grade
-        {
-            "$addFields": {
-                "Average": {"$avg": "$Grades"}
-            }
-        },
-        # Project only needed fields
-        {
-            "$project": {
-                "_id": 0,
-                "Student": "$student.Name",
-                "Course": "$student.Course",
-                "YearLevel": "$student.YearLevel",
-                "Semester": "$sem.Semester",
-                "SchoolYear": "$sem.SchoolYear",
-                "Average": 1
-            }
-        },
-        # Sort and limit
-        {"$sort": {"Average": -1}},
-        {"$limit": 10}
-    ]
+        if school_year and int(sem.get("SchoolYear")) != int(school_year):
+            continue
+        if semester and sem.get("Semester") != semester:
+            continue
 
-    result = list(grades_col.aggregate(pipeline))
-    df = pd.DataFrame(result)
-    return df
+        # --- Step 3: Join with student ---
+        student = students.get(g.get("StudentID"))
+        if not student:
+            continue
 
+        # --- Step 4: Compute average ---
+        avg_grade = sum(g["Grades"]) / len(g["Grades"])
+
+        data.append({
+            "Student": student.get("Name"),
+            "Course": student.get("Course"),
+            "YearLevel": student.get("YearLevel"),
+            "Semester": sem.get("Semester"),
+            "SchoolYear": sem.get("SchoolYear"),
+            "Average": avg_grade
+        })
+
+        # --- Step 5: Print progress ---
+        if idx % max(1, total // 5) == 0:  # every 20%
+            percent = (idx / total) * 100
+            print(f"Processing... ({percent:.0f}% done)")
+
+    # --- Step 6: Sort and limit ---
+    top10 = sorted(data, key=lambda x: x["Average"], reverse=True)[:10]
+
+    return pd.DataFrame(top10)
 
 @cache_result()
 def get_failing_students(school_year=None, semester=None):

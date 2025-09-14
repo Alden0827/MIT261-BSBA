@@ -34,6 +34,20 @@ def main():
     # ---------------- Sidebar ----------------
     with st.sidebar:
         st.markdown(
+        """
+            <style>
+            [data-testid="stSidebar"] {
+                background-image: url('https://sms.ndmu.edu.ph/storage/carousel/1749470855_ndmu.jpg');
+                background-repeat: no-repeat;       
+                background-size: auto 100%;         
+                background-position: center top;    
+            }
+            </style>
+        """,
+        unsafe_allow_html=True
+        )
+
+        st.markdown(
             """
                 <div style="text-align:center; margin-bottom:10px;">
                     <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjvoWxGatGPpCoUDlDd_tHUcWr92COSNaEE4-1rtDQ0aplkWFjqhUBjraQHKx-3AmVB224hNeZWZzt-fTZ8ZQvSA8Wlu-zCh3xZ5FCJTwhyaBkWAm4nYRn4GaPVYT5Kxsp785Cma5prdWRW/s1600/ndmu-seal1.png"
