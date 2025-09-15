@@ -99,7 +99,10 @@ def login_view():
                     else:
                         st.error("Invalid username or password.")
                 except ServerSelectionTimeoutError:
-                    st.error("Cannot connect to the database. Please try again later.")
+                    st.markdown(
+                        "<span style='color:red; font-weight:bold'>Cannot connect to the database. Please try again later.</span>",
+                        unsafe_allow_html=True
+                    )
                 except PyMongoError as e:
                     st.error("A database error occurred. Please contact support.")
                     st.exception(e)

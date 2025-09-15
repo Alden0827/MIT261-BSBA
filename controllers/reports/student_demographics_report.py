@@ -180,8 +180,8 @@ def report_page(st, db):
         # Prepare chart data
         year_levels = df["YearLevel"].tolist()
         averages = df["Average"].tolist()
-        min_avg = min(averages) - 100
-        max_avg = max(averages) + 100
+        min_avg = min(averages) - 0.2
+        max_avg = max(averages)
 
         st.subheader("📈 Performance by Year Level")
         st.markdown("""

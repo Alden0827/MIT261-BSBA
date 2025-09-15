@@ -284,6 +284,9 @@ def report_page(st, db):
                 "itemStyle": {"color": get_color(row["Mean"])}
             })
 
+        print('scatter_data:',scatter_data)
+        print('df:',df)
+
         xmin, xmax = df["Mean"].min(), df["Mean"].max()
         ymin, ymax = df["StdDev"].min(), df["StdDev"].max()
         margin = 1

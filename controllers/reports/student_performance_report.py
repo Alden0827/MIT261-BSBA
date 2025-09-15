@@ -135,6 +135,7 @@ def report_page(st, db):
             all_data = r.get_failing_students()
 
         if not all_data.empty:
+
             # --- Dropdown filters ---
             col1, col2 = st.columns([2, 2])
             with col1:
@@ -266,11 +267,10 @@ def report_page(st, db):
                         ],
                     }],
                 }
-                '''
+                st.markdown('''
                 The pie chart summarizes total failures by course, offering insights into which subjects consistently present challenges to students.
-                '''
+                ''')
                 st_echarts(options=options2, height="400px")
-
                 # --- Chart 3: Failure Rate Trend (Line) ---
                 trend_data = all_data.groupby(["SchoolYear", "Semester"]).agg(
                     {"Failures": "sum", "Subjects Taken": "sum"}
@@ -280,22 +280,30 @@ def report_page(st, db):
                 # Clean data
                 trend_data = trend_data.dropna(subset=["Semester", "SchoolYear"])
 
-                # Define semester order
-                semester_order = ["1st", "2nd", "Summer"]
+                # --- Map semester labels to desired short form ---
+                semester_map = {
+                    "FirstSem": "1st",
+                    "SecondSem": "2nd",
+                    "Summer": "Summer"
+                }
+                trend_data["Semester"] = trend_data["Semester"].map(semester_map)
+
+                # --- Define custom semester order (1st → Summer → 2nd) ---
+                semester_order = ["1st", "Summer", "2nd"]
                 trend_data["Semester"] = pd.Categorical(
                     trend_data["Semester"],
                     categories=semester_order,
                     ordered=True
                 )
 
-                # Create continuous X-axis: "2023 1st", "2023 2nd", ...
+                # --- Create continuous X-axis: "2023 1st", "2023 Summer", "2023 2nd" ---
                 trend_data["YearSemester"] = (
                     trend_data["SchoolYear"].astype(str) + " " + trend_data["Semester"].astype(str)
                 )
                 trend_data = trend_data.sort_values(["SchoolYear", "Semester"])
 
                 x_axis = trend_data["YearSemester"].tolist()
-                fail_rates = [round(v * 100, 1) for v in trend_data["FailureRate"]]
+                fail_rates = [round(v * 100, 1) for v in trend_data["FailureRate"]][:-1]  #[:-1] is for ommition of the last entry due to now submition yet
 
                 # --- Dynamic Y-axis range ---
                 val_min = float(min(fail_rates))
@@ -330,6 +338,7 @@ def report_page(st, db):
                     }],
                     "grid": {"bottom": 100},  # prevent label cutoff
                 }
+
                 st.markdown('''
                 The line chart illustrates the failure rate trend over time across different school years and semesters. 
                 By tracking changes in failure percentages, this visualization highlights patterns and helps in monitoring 

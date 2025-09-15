@@ -273,12 +273,16 @@ def report_page(st, db):
             cademic performance across faculty members. This provides a straightforward numerical 
             reference that can be used for record-keeping and further analysis.
         ''')
-        st.dataframe(df)
 
         # -------------------------
         # Find min & max averages
         # -------------------------
         if not df.empty:
+
+            df = df[df["Teacher"].notna() & ~df["Teacher"].isin(["Not Set", ""])] #remove entries that doesnt have assgned grades/teacher
+            st.dataframe(df)
+
+
             min_avg = df["Average Grade"].min()
             max_avg = df["Average Grade"].max()
 
@@ -376,9 +380,13 @@ def report_page(st, db):
         It provides a clear view of individual teacher performance in terms of student outcomes.
         """)
 
-        st.dataframe(df)
+        
 
         if not df.empty:
+            print('df:',df.iloc[0])
+            df = df[df["Teacher"].notna() & ~df["Teacher"].isin(["Not Set", ""])] #remove entries that doesnt have assgned grades/teacher
+            st.dataframe(df)
+            
             # -------------------------
             # Min & max failure rates
             # -------------------------

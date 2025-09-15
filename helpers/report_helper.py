@@ -853,16 +853,14 @@ def get_ge_vs_major(school_year=None):
 
 
 # D. Semester and Academic Year Analysis
+
 @cache_meta()
 def get_lowest_gpa_semester():
-    # Step 1: Find the semester with lowest GPA
+    # Step 1: Pull raw grades with semester info
     pipeline = [
-        {
-            "$project": {
-                "SemesterID": 1,
-                "Avg": {"$avg": "$Grades"}
-            }
-        },
+        {"$unwind": {"path": "$SubjectCodes", "includeArrayIndex": "idx1"}},
+        {"$unwind": {"path": "$Grades", "includeArrayIndex": "idx2"}},
+        {"$match": {"$expr": {"$eq": ["$idx1", "$idx2"]}}},
         {
             "$lookup": {
                 "from": "semesters",
@@ -873,64 +871,76 @@ def get_lowest_gpa_semester():
         },
         {"$unwind": "$sem"},
         {
-            "$group": {
-                "_id": {"SemesterID": "$SemesterID", "Semester": "$sem.Semester", "SchoolYear": "$sem.SchoolYear"},
-                "Avg": {"$avg": "$Avg"}
+            "$project": {
+                "SemesterID": "$SemesterID",
+                "Semester": "$sem.Semester",
+                "SchoolYear": "$sem.SchoolYear",
+                "SubjectCode": "$SubjectCodes",
+                "Grade": "$Grades"
             }
-        },
-        {"$sort": {"Avg": 1}},
-        {"$limit": 1}
+        }
     ]
 
-    lowest = list(grades_col.aggregate(pipeline))
-    if not lowest:
-        return pd.DataFrame()
+    result = list(grades_col.aggregate(pipeline))
+    df = pd.DataFrame(result)
 
-    sem_id = lowest[0]["_id"]["SemesterID"]
-    semester = lowest[0]["_id"]["Semester"]
-    school_year = lowest[0]["_id"]["SchoolYear"]
-    sem_avg = lowest[0]["Avg"]
+    if df.empty:
+        return pd.DataFrame(), pd.DataFrame()
 
-    # Step 2: Compute GPA per subject in that semester
-    pipeline_subjects = [
-        {"$match": {"SemesterID": sem_id}},
-        {"$unwind": {"path": "$SubjectCodes", "includeArrayIndex": "idx"}},
-        {"$unwind": {"path": "$Grades", "includeArrayIndex": "idx2"}},
-        {"$match": {"$expr": {"$eq": ["$idx", "$idx2"]}}},
-        {
-            "$group": {
-                "_id": "$SubjectCodes",
-                "GPA": {"$avg": "$Grades"},
-                "Count": {"$sum": 1}
-            }
-        },
-        {"$project": {"SubjectCode": "$_id", "GPA": 1, "Count": 1, "_id": 0}},
-        {"$sort": {"GPA": 1}}
-    ]
+    # Step 2: Compute GPA per semester (Python side)
+    sem_stats = (
+        df.groupby(["SemesterID", "Semester", "SchoolYear"])["Grade"]
+        .mean()
+        .reset_index(name="SemesterGPA")
+    )
 
-    subjects = list(grades_col.aggregate(pipeline_subjects))
+    # ✅ Exclude semesters with GPA < 50
+    sem_stats = sem_stats[sem_stats["SemesterGPA"] >= 50]
 
-    # Merge into a single DataFrame
+    if sem_stats.empty:
+        return pd.DataFrame(), pd.DataFrame()
+
+    # Pick the lowest GPA semester
+    best_row = sem_stats.loc[sem_stats["SemesterGPA"].idxmin()]
+
+    sem_id = best_row["SemesterID"]
+    semester = best_row["Semester"]
+    school_year = best_row["SchoolYear"]
+    sem_avg = best_row["SemesterGPA"]
+
+    # Step 3: Compute GPA per subject in that semester
+    subjects_df = (
+        df[df["SemesterID"] == sem_id]
+        .groupby("SubjectCode")["Grade"]
+        .agg(GPA="mean", Count="count")
+        .reset_index()
+    )
+
+    # ✅ Exclude subjects with GPA < 50
+    subjects_df = subjects_df[subjects_df["GPA"] >= 50]
+
+    # Sort subjects ascending (worst → best)
+    subjects_df = subjects_df.sort_values("GPA", ascending=True)
+
+    # Step 4: Build header DataFrame
     header = pd.DataFrame([{
         "Semester": semester,
         "SchoolYear": school_year,
         "SemesterGPA": sem_avg
     }])
-    subjects_df = pd.DataFrame(subjects)
 
     return header, subjects_df
+
+
 
 
 @cache_meta()
 def get_best_gpa_semester():
-    # Step 1: Find the semester with highest GPA
+    # Step 1: Pull raw grades with semester info
     pipeline = [
-        {
-            "$project": {
-                "SemesterID": 1,
-                "Avg": {"$avg": "$Grades"}
-            }
-        },
+        {"$unwind": {"path": "$SubjectCodes", "includeArrayIndex": "idx1"}},
+        {"$unwind": {"path": "$Grades", "includeArrayIndex": "idx2"}},
+        {"$match": {"$expr": {"$eq": ["$idx1", "$idx2"]}}},
         {
             "$lookup": {
                 "from": "semesters",
@@ -941,52 +951,55 @@ def get_best_gpa_semester():
         },
         {"$unwind": "$sem"},
         {
-            "$group": {
-                "_id": {"SemesterID": "$SemesterID", "Semester": "$sem.Semester", "SchoolYear": "$sem.SchoolYear"},
-                "Avg": {"$avg": "$Avg"}
+            "$project": {
+                "SemesterID": "$SemesterID",
+                "Semester": "$sem.Semester",
+                "SchoolYear": "$sem.SchoolYear",
+                "SubjectCode": "$SubjectCodes",
+                "Grade": "$Grades"
             }
-        },
-        {"$sort": {"Avg": -1}},   # ✅ sort descending for best GPA
-        {"$limit": 1}
+        }
     ]
 
-    best = list(grades_col.aggregate(pipeline))
-    if not best:
+    result = list(grades_col.aggregate(pipeline))
+    df = pd.DataFrame(result)
+
+    if df.empty:
         return pd.DataFrame(), pd.DataFrame()
 
-    sem_id = best[0]["_id"]["SemesterID"]
-    semester = best[0]["_id"]["Semester"]
-    school_year = best[0]["_id"]["SchoolYear"]
-    sem_avg = best[0]["Avg"]
+    # Step 2: Compute GPA per semester in Python
+    sem_stats = (
+        df.groupby(["SemesterID", "Semester", "SchoolYear"])["Grade"]
+        .mean()
+        .reset_index(name="SemesterGPA")
+    )
 
-    # Step 2: Compute GPA per subject in that semester
-    pipeline_subjects = [
-        {"$match": {"SemesterID": sem_id}},
-        {"$unwind": {"path": "$SubjectCodes", "includeArrayIndex": "idx"}},
-        {"$unwind": {"path": "$Grades", "includeArrayIndex": "idx2"}},
-        {"$match": {"$expr": {"$eq": ["$idx", "$idx2"]}}},
-        {
-            "$group": {
-                "_id": "$SubjectCodes",
-                "GPA": {"$avg": "$Grades"},
-                "Count": {"$sum": 1}
-            }
-        },
-        {"$project": {"SubjectCode": "$_id", "GPA": 1, "Count": 1, "_id": 0}},
-        {"$sort": {"GPA": -1}}   # ✅ sort subjects best → worst
-    ]
+    # Pick the best semester (highest GPA)
+    best_row = sem_stats.loc[sem_stats["SemesterGPA"].idxmax()]
 
-    subjects = list(grades_col.aggregate(pipeline_subjects))
+    sem_id = best_row["SemesterID"]
+    semester = best_row["Semester"]
+    school_year = best_row["SchoolYear"]
+    sem_avg = best_row["SemesterGPA"]
 
-    # Merge into DataFrames
+    # Step 3: Compute GPA per subject in that semester
+    subjects_df = (
+        df[df["SemesterID"] == sem_id]
+        .groupby("SubjectCode")["Grade"]
+        .agg(GPA="mean", Count="count")
+        .reset_index()
+        .sort_values("GPA", ascending=False)
+    )
+
+    # Step 4: Build header DataFrame
     header = pd.DataFrame([{
         "Semester": semester,
         "SchoolYear": school_year,
         "SemesterGPA": sem_avg
     }])
-    subjects_df = pd.DataFrame(subjects)
 
     return header, subjects_df
+
 
 @cache_result()
 def get_grade_deviation_across_semesters():
@@ -996,7 +1009,7 @@ def get_grade_deviation_across_semesters():
         {"$unwind": {"path": "$Grades", "includeArrayIndex": "idx2"}},
         {"$match": {"$expr": {"$eq": ["$idx1", "$idx2"]}}},
 
-        # Attach semester info (if needed later)
+        # Attach semester info
         {
             "$lookup": {
                 "from": "semesters",
@@ -1007,70 +1020,64 @@ def get_grade_deviation_across_semesters():
         },
         {"$unwind": "$sem"},
 
-        # Project only needed fields
+        # Project flat records (no $group)
         {
             "$project": {
                 "Subject": "$SubjectCodes",
                 "Semester": "$sem._id",
                 "Grade": "$Grades"
             }
-        },
-
-        # Group by subject and collect all grades
-        {
-            "$group": {
-                "_id": "$Subject",
-                "Grades": {"$push": "$Grade"}
-            }
         }
     ]
 
+    # Get flat records
     result = list(grades_col.aggregate(pipeline))
+    df = pd.DataFrame(result)
+
+    if df.empty:
+        return pd.DataFrame()
 
     # Compute stats in Python
-    data = []
-    for r in result:
-        grades = r["Grades"]
-        if not grades:
-            continue
-        mean = float(pd.Series(grades).mean())
-        stddev = float(pd.Series(grades).std())
-        count = len(grades)
-        data.append({
-            "Subject": r["_id"],
-            "Mean": mean,
-            "StdDev": stddev,
-            "Count": count
-        })
+    stats = (
+        df.groupby("Subject")["Grade"]
+        .agg(Mean="mean", StdDev="std", Count="count")
+        .reset_index()
+    )
 
-    return pd.DataFrame(data).sort_values("StdDev", ascending=False).reset_index(drop=True)
+    # Exclude subjects with mean < 50
+    stats = stats[stats["Mean"] >= 50]
+
+    # Sort by StdDev descending
+    stats = stats.sort_values("StdDev", ascending=False).reset_index(drop=True)
+
+    return stats
+
 
 
 # E. Student Demographics
 @cache_result()
 def get_year_level_distribution():
-    pipeline = [
-        {
-            "$group": {
-                "_id": "$YearLevel",  # Group by YearLevel
-                "Count": {"$sum": 1}  # Count number of students per YearLevel
-            }
-        },
-        {
-            "$project": {
-                "YearLevel": "$_id",
-                "Count": 1,
-                "_id": 0
-            }
-        },
-        {
-            "$sort": {"YearLevel": 1}  # Optional: sort by year level
-        }
-    ]
+    # Pull YearLevel only
+    cursor = students_col.find({}, {"YearLevel": 1, "_id": 0})
+    df = pd.DataFrame(list(cursor))
 
-    result = list(students_col.aggregate(pipeline))
-    df = pd.DataFrame(result)
+    # If YearLevel is missing, replace with "Unknown"
+    if "YearLevel" not in df.columns:
+        df["YearLevel"] = "Unknown"
+    else:
+        df["YearLevel"] = df["YearLevel"].fillna("Unknown")
+
+    # Count occurrences like Mongo $group
+    df = (
+        df.groupby("YearLevel")
+          .size()
+          .reset_index(name="Count")
+          .sort_values("YearLevel")
+          .reset_index(drop=True)
+    )
+
     return df
+
 
 @cache_result()
 def get_student_count_per_course():
