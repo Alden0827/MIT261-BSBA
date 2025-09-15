@@ -23,5 +23,5 @@ MONGODB_URI = (
 )
 
 # CACHING SETTINGS -------------------------------------------------------------
-CACHE_MAX_AGE = 999999999
+CACHE_MAX_AGE = 3600
 
