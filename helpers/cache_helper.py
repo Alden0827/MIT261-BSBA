@@ -8,7 +8,7 @@ import time
 from config.settings import CACHE_MAX_AGE
 CACHE_DIR = "./cache"
 
-def cache_result(ttl=600000000):  # default no expiration
+def cache_result(ttl=CACHE_MAX_AGE):  # default no expiration
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -50,7 +50,7 @@ def cache_result(ttl=600000000):  # default no expiration
         return wrapper
     return decorator
 
-def cache_meta(ttl=600000000):  # default no expiration
+def cache_meta(ttl=CACHE_MAX_AGE):  # default no expiration
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -112,3 +112,28 @@ def load_checkpoint(CHECKPOINT_FILE):
         with open(CHECKPOINT_FILE, "rb") as f:
             return pickle.load(f)
     return {"last_index": 0, "results": []}
+
+def set_locked(filename: str):
+    """Save the current datetime into a pickle file."""
+    filename = f"./cache/{filename}.lock"
+    now = datetime.datetime.now()
+    with open(filename, "wb") as f:
+        pickle.dump(now, f)
+
+def is_locked(filename: str) -> bool:
+    """Check if the datetime in the pickle file is less than 30 minutes old."""
+    filename = f"./cache/{filename}.lock"
+    if not os.path.exists(filename):
+        print("⚠️ File does not exist.")
+        return False
+
+    with open(filename, "rb") as f:
+        saved_time = pickle.load(f)
+
+    elapsed = datetime.datetime.now() - saved_time
+    minutes = elapsed.total_seconds() / 60
+
+    if minutes >= 30:
+        os.remove(filename)
+
+    return minutes < 30

@@ -15,7 +15,7 @@ import pickle
 import os
 import time
 from config.settings import MONGODB_URI
-from helpers.cache_helper import cache_result, load_checkpoint, save_checkpoint
+from helpers.cache_helper import cache_result, load_checkpoint, save_checkpoint,is_locked, set_locked
 
 CACHE_DIR = "./cache"
 
@@ -105,10 +105,12 @@ def get_students_batch_checkpoint(batch_size=1000):
         start_index, results = 0, []
 
     student_ids = db.students.distinct("_id")
-    # students_df = get_students_batch_checkpoint()
-    # if students_df.empty:
-    #     return pd.DataFrame()
-    # student_ids = students_df["_id"].tolist()
+
+    #handle locking status
+    func_name = get_students_batch_checkpoint.__name__
+    if is_locked(func_name):
+       return pd.DataFrame, True 
+    set_locked(func_name)
 
     # --- Process in batches ---
     for i in range(start_index, len(student_ids), batch_size):
@@ -130,7 +132,7 @@ def get_students_batch_checkpoint(batch_size=1000):
             pickle.dump({"last_index": i + batch_size, "results": results}, f)
 
     if not results:
-        return pd.DataFrame()
+        return pd.DataFrame(), False
 
     # --- Merge all batches ---
     final_df = pd.concat(results, ignore_index=True)
@@ -139,7 +141,7 @@ def get_students_batch_checkpoint(batch_size=1000):
     if os.path.exists(CHECKPOINT_FILE):
         os.remove(CHECKPOINT_FILE)
 
-    return final_df
+    return final_df, False
 
 
 
@@ -152,12 +154,10 @@ def get_students_batch_checkpoint(batch_size=1000):
 def get_deans_list(batch_size=1000, top_n=10):
     db = get_db()
 
-    print("Da 1")
-    students_df = get_students_batch_checkpoint()
+    students_df, locked = get_students_batch_checkpoint()
     if students_df.empty:
         return pd.DataFrame()
     student_ids = students_df["_id"].tolist()
-    print("Da 2")
 
     # 🔹 Load checkpoint
     CHECKPOINT_FILE = os.path.join(CACHE_DIR, "deans_list_checkpoint.pkl")
@@ -243,7 +243,7 @@ def get_academic_probation_batch_checkpoint(batch_size=10000, top_n=10):
     db = get_db()
 
     # 🔹 Load all students (cached)
-    students_df = get_students_batch_checkpoint()
+    students_df, locked = get_students_batch_checkpoint()
     if students_df.empty:
         return pd.DataFrame()
 
@@ -418,7 +418,7 @@ def get_enrollment_trend(batch_size=1000):
         start_index, results = 0, []
 
     # Load all students (with batching)
-    students_df = get_students_batch_checkpoint()
+    students_df, locked = get_students_batch_checkpoint()
     if students_df.empty:
         return pd.DataFrame()
     student_ids = students_df["_id"].tolist()
@@ -479,7 +479,7 @@ def get_incomplete_grades():
     db = get_db()
 
     # 🔹 Load collections
-    students = get_students_batch_checkpoint()
+    students_df, locked = get_students_batch_checkpoint()
     if students.empty:
         return pd.DataFrame()
 
@@ -553,7 +553,7 @@ def get_retention_rates(batch_size=1000):
     else:
         start_index, results = 0, []
 
-    students_df = get_students_batch_checkpoint()
+    students_df, locked = get_students_batch_checkpoint()
     if students_df.empty:
         return pd.DataFrame()
     student_ids = students_df["_id"].tolist()
@@ -638,7 +638,7 @@ def get_top_performers():
     db = get_db()
 
     # 1. Load students using batch checkpoint loader
-    students_df = get_students_batch_checkpoint()
+    students_df, locked = get_students_batch_checkpoint()
     if students_df.empty:
         return pd.DataFrame()
 
