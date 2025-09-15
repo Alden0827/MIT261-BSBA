@@ -12,9 +12,7 @@ collection = db[COLLECTION_NAME]
 
 # --- Example curriculum document ---
 new_curriculum = {
-    "_id": {
-      "$oid": "68b6a4a4b4ad4b9a7a79e496"
-    },
+    "_id": {"$oid": "68b6a4a4b4ad4b9a7a79e496"},
     "programCode": "BSBA",
     "programName": "BACHELOR OF SCIENCE IN BUSINESS ADMINISTRATION Major in Marketing Management",
     "curriculumYear": "2025-2026",

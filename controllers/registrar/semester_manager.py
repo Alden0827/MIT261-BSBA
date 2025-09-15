@@ -1,9 +1,9 @@
 import pandas as pd
-import streamlit as st
+import streamlit as stx
 
 # ----------------- Dialogs -----------------
-@st.dialog("Add Semester")
-def add_semester_dialog(db):
+@stx.dialog("Add Semester")
+def add_semester_dialog(st,db):
     st.write("### New Semester")
     sy = st.number_input("School Year", step=1, format="%d")
     sem = st.selectbox("Semester", ["FirstSem", "SecondSem", "Summer"])
@@ -30,7 +30,7 @@ def add_semester_dialog(db):
             st.success("Semester added")
             st.rerun()
 
-@st.dialog("Edit Semester")
+@stx.dialog("Edit Semester")
 def edit_semester_dialog(db, sem):
     st.write("### Edit Semester")
     new_sy = st.number_input("School Year", value=sem["SchoolYear"], step=1, format="%d")
@@ -46,7 +46,7 @@ def edit_semester_dialog(db, sem):
         st.success("Semester updated")
         st.rerun()
 
-@st.dialog("Delete Semester")
+@stx.dialog("Delete Semester")
 def delete_semester_dialog(db, sem):
     st.write(f"⚠️ Are you sure you want to delete **{sem['SchoolYear']} - {sem['Semester']}**?")
     if st.button("Yes, Delete"):

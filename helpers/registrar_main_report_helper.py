@@ -2,7 +2,8 @@
 # optimization:
 #    db.students.aggregate(pipeline, maxTimeMS=120000)
 
-import sys, os
+import sys
+import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -12,7 +13,6 @@ from pymongo import MongoClient
 from functools import wraps
 import hashlib
 import pickle
-import os
 import time
 from config.settings import MONGODB_URI
 from helpers.cache_helper import cache_result, load_checkpoint, save_checkpoint

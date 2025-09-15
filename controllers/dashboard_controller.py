@@ -1,5 +1,5 @@
 import pandas as pd
-import streamlit as st
+# import streamlit as st
 from streamlit_echarts import st_echarts #pip install streamlit-echarts
 import os, pickle, time
 from helpers.data_helper import get_students, get_grades, get_semesters, get_subjects

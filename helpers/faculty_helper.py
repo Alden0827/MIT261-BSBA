@@ -1,6 +1,7 @@
 # helpers/grade_helper.py
 from pymongo.collection import Collection
 from typing import List, Optional
+import pandas as pd
 
 def assign_teacher_to_subject(db, student_id: int, semester_id: int, subject_code: str, teacher_name: str) -> bool:
     """

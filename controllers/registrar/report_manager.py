@@ -1,10 +1,10 @@
-import streamlit as st
+# import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
 # --- Report Display Functions ---
 
-def display_enrollment_summary(db):
+def display_enrollment_summary(st,db):
     st.subheader("Enrollment Summary")
 
     # Fetch data

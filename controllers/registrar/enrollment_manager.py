@@ -1,4 +1,4 @@
-import streamlit as st
+# import streamlit as st
 import pandas as pd
 import sys
 import os
@@ -60,7 +60,10 @@ def enrollment_manager_page(st,db):
 
         if search_query.strip():
             students_col = db["students"]
-            matches = find_best_match(search_query, students_col)
+            # matches = find_best_match(search_query, students_col)
+            # matches = find_best_match(search_query, course=selected_course, collection=students_col)
+            matches = find_best_match(query=search_query, course="BSBA", collection=students_col)
+
 
             if matches:
                 st.session_state.search_results = matches
@@ -98,7 +101,9 @@ def enrollment_manager_page(st,db):
         # Get Curriculum & Grades
         curriculum_df = get_curriculum(student.get("Course"))
         student_grades_df = get_student_subjects_grades(student.get("_id"))
-
+        print('selected_semester:',selected_semester)
+        print("Curriculum columns:", curriculum_df.columns.tolist())
+        print("Student grades columns:", student_grades_df.columns.tolist())
         if not curriculum_df.empty:
             # ---------------------------
             # Passed subjects (>= 75)
@@ -110,10 +115,26 @@ def enrollment_manager_page(st,db):
                 ].tolist()
 
             # Filter curriculum for semester & year level
+            # print('curriculum_df:',curriculum_df.head(1))
+            # potential_subjects = curriculum_df[
+            #     (curriculum_df["semester"] == selected_semester.replace('Sem',''))
+            #     & (curriculum_df["year"] == student.get("YearLevel"))
+            #     & (~curriculum_df["Subject Code"].isin(student_grades_df["Subject Code"].tolist()))
+            # ].copy()
+
+            # normalize col names (good practice)
+            curriculum_df.columns = curriculum_df.columns.str.strip()
+
+            # handle if student_grades_df is empty
+            if not student_grades_df.empty and "Subject Code" in student_grades_df.columns:
+                taken_subjects = student_grades_df["Subject Code"].tolist()
+            else:
+                taken_subjects = []
+
             potential_subjects = curriculum_df[
-                (curriculum_df["semester"] == selected_semester.replace('Sem',''))
+                (curriculum_df["semester"].str.lower() == selected_semester.replace("Sem", "").lower())
                 & (curriculum_df["year"] == student.get("YearLevel"))
-                & (~curriculum_df["Subject Code"].isin(student_grades_df["Subject Code"].tolist()))
+                & (~curriculum_df["Subject Code"].isin(taken_subjects))
             ].copy()
 
             available_subjects, blocked_subjects = [], []

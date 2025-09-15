@@ -389,64 +389,52 @@ def get_student_subjects_grades(StudentID=None, limit=1000):
     Returns all subjects and grades for a specific student with:
     ["Subject Code", "Description", "Grade", "Semester", "SchoolYear"]
     """
-    cache_key = f"student_subjects_grades_{StudentID}"
+    cache_key = f"student_subjects_grades_{StudentID}x"
 
     def query():
         db = client["mit261"]
-        grades_col = db["grades"]
 
         if StudentID is not None:
-            student_id = int(StudentID)  # convert to native Python int
+            student_id = int(StudentID)
+            grade_doc = db.grades.find_one({"StudentID": student_id})
+            print(grade_doc)
         else:
-            student_id = None
+            return pd.DataFrame()
 
-        pipeline = []
+        if not grade_doc:
+            return pd.DataFrame()
 
-        if student_id is not None:
-            pipeline.append({"$match": {"StudentID": student_id}})
+        # Build rows manually
+        rows = []
+        subject_codes = grade_doc.get("SubjectCodes", [])
+        grades = grade_doc.get("Grades", [])
+        semester_id = grade_doc.get("SemesterID")
 
-        pipeline.extend([
-            {"$project": {
-                "SubjectsGrades": {"$zip": {"inputs": ["$SubjectCodes", "$Grades"]}},
-                "SemesterID": 1
-            }},
-            {"$unwind": "$SubjectsGrades"},
-            {"$project": {
-                "SubjectCode": {"$arrayElemAt": ["$SubjectsGrades", 0]},
-                "Grade": {"$arrayElemAt": ["$SubjectsGrades", 1]},
-                "SemesterID": 1
-            }},
-            {"$lookup": {
-                "from": "subjects",
-                "localField": "SubjectCode",
-                "foreignField": "_id",
-                "as": "subject_info"
-            }},
-            {"$unwind": "$subject_info"},
-            {"$lookup": {
-                "from": "semesters",
-                "localField": "SemesterID",
-                "foreignField": "_id",
-                "as": "semester_info"
-            }},
-            {"$unwind": "$semester_info"},
-            {"$project": {
-                "Subject Code": "$SubjectCode",
-                "Description": "$subject_info.Description",
-                "Grade": 1,
-                "Semester": "$semester_info.Semester",
-                "SchoolYear": "$semester_info.SchoolYear",
-                "_id": 0
-            }}
-        ])
 
+        # Lookup semester info once
+        sem = db.semesters.find_one({"_id": semester_id})
+        semester = sem["Semester"] if sem else None
+        school_year = sem["SchoolYear"] if sem else None
+
+        for code, grade in zip(subject_codes, grades):
+            subj = db.subjects.find_one({"_id": code})
+            desc = subj["Description"] if subj else None
+
+            rows.append({
+                "Subject Code": code,
+                "Description": desc,
+                "Grade": grade,
+                "Semester": semester,
+                "SchoolYear": school_year
+            })
+
+        # Apply limit
         if limit:
-            pipeline.append({"$limit": limit})
+            rows = rows[:limit]
 
-        return pd.DataFrame(list(grades_col.aggregate(pipeline, allowDiskUse=True)))
+        return pd.DataFrame(rows)
 
     return load_or_query(cache_key, query)
-
 
 def get_instructor_subjects(instructor_name=None, limit=1000):
     """
@@ -653,7 +641,7 @@ if __name__ == "__main__":
     
     # print( get_students_collection().head(1)) #   b'$2b$12$7gc.TcApIFGSEC3anIVHoufkm5L/vx.t0O5Vj8syaCAn7UOvW6Nyu'
 
-    # print(get_students(StudentID=500001))
+    print(get_student_subjects_grades(StudentID=500001))
     # print(get_subjects())
 
     pass
