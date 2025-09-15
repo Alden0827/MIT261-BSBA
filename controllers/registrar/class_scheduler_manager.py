@@ -1,5 +1,7 @@
 
-def class_scheduler_manager_page(st,db):
+import streamlit as st
+
+def class_scheduler_manager_page(db):
 
     st.subheader("Class Scheduling")
     with st.spinner(f"Loading metadata...", show_time=True):

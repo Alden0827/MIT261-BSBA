@@ -1,8 +1,8 @@
-# import streamlit as st
+import streamlit as st
 from bson.objectid import ObjectId
 from helpers.data_helper import get_students
 
-def student_records_manager_page(st, db):
+def student_records_manager_page(db):
     st.subheader("🧑‍🎓 Student Records Manager")
 
     # --- Dialog for adding/editing a student ---

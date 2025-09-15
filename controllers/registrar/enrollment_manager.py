@@ -1,4 +1,4 @@
-# import streamlit as st
+import streamlit as st
 import pandas as pd
 import sys
 import os
@@ -18,7 +18,7 @@ from helpers.registration_helper import find_best_match
 # ---------------------------
 # Main Enrollment Manager Page
 # ---------------------------
-def enrollment_manager_page(st,db):
+def enrollment_manager_page(db):
     st.title("Enrollment Manager")
 
     with st.spinner("Loading school years...", show_time=True):
@@ -62,7 +62,7 @@ def enrollment_manager_page(st,db):
             students_col = db["students"]
             # matches = find_best_match(search_query, students_col)
             # matches = find_best_match(search_query, course=selected_course, collection=students_col)
-            matches = find_best_match(query=search_query, course="BSBA", collection=students_col)
+            matches = find_best_match(query=search_query, course=selected_course, collection=students_col)
 
 
             if matches:

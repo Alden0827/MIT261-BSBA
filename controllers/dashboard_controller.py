@@ -1,5 +1,5 @@
 import pandas as pd
-# import streamlit as st
+import streamlit as st
 from streamlit_echarts import st_echarts #pip install streamlit-echarts
 import os, pickle, time
 from helpers.data_helper import get_students, get_grades, get_semesters, get_subjects
@@ -7,7 +7,7 @@ from helpers.data_helper import get_students, get_grades, get_semesters, get_sub
 CACHE_FILE = "./cache/dashboard_cache.pkl"
 CACHE_TTL = 3600  # 1 hour in seconds
 
-def dasboard_view(st):
+def dasboard_view():
 
 
     with st.spinner("Loading students...", show_time = True):

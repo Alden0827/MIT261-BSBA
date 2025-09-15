@@ -1,7 +1,8 @@
 from helpers.data_helper import get_instructor_subjects
 import pandas as pd
+import streamlit as st
 
-def faculty_view(st):
+def faculty_view():
 
     st.title("👨‍🏫 Faculty & Subjects")
 

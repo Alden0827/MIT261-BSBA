@@ -1,6 +1,6 @@
 
 
-# import streamlit as st
+import streamlit as st
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 from streamlit_echarts import st_echarts, JsCode
@@ -10,7 +10,7 @@ import helpers.report_helper as r
 # from helpers.report_helper import db
 from helpers.report_helper import get_Schoolyear_options, get_course_options
 
-def report_page(st, db):
+def report_page(db):
     # ------------------------------
     # Streamlit App
     # ------------------------------

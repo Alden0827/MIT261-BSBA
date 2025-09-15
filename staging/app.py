@@ -3,7 +3,7 @@ import streamlit as st
 import pandas as pd
 import registrar_report_hepler as r
 
-def report_page(st, db):
+def report_page(db):
     st.set_page_config(page_title="Academic Reports", layout="wide")
     st.title("📊 Student Academic Analytics & Insights")
 

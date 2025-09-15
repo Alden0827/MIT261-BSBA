@@ -1,7 +1,8 @@
+import streamlit as st
 import pandas as pd
 from helpers.data_helper import get_subjects
 
-def curriculum_manager_page(st, db):
+def curriculum_manager_page(db):
     # --- Custom button CSS ---
     st.markdown(
         """

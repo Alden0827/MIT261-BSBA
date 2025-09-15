@@ -1,8 +1,8 @@
-# import streamlit as st
+import streamlit as st
 from streamlit_option_menu import option_menu
 from controllers.dashboard_controller import dasboard_view
 
-def registrar_view(st, db):
+def registrar_view(db):
     # Sidebar Menu
     with st.sidebar:
         st.markdown(

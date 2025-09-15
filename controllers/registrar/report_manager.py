@@ -1,10 +1,10 @@
-# import streamlit as st
+import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
 # --- Report Display Functions ---
 
-def display_enrollment_summary(st,db):
+def display_enrollment_summary(db):
     st.subheader("Enrollment Summary")
 
     # Fetch data
@@ -55,7 +55,7 @@ def get_letter_grade(score):
     else:
         return 'F'
 
-def display_grade_distribution(db):
+def display_grade_distribution(st,db):
     st.subheader("Grade Distribution Report")
 
     # Fetch all grades from enrollments
@@ -95,7 +95,7 @@ def display_grade_distribution(db):
         grades_df = pd.DataFrame(grade_data)
         st.dataframe(grades_df)
 
-def display_faculty_workload(db):
+def display_faculty_workload(st,db):
     st.subheader("Faculty Workload Report")
 
     # Aggregate pipeline to get workload
@@ -164,7 +164,7 @@ def display_faculty_workload(db):
                 st.write(f"- {subject}")
         st.markdown("---")
 
-def display_class_schedule(db):
+def display_class_schedule(st,db):
     st.subheader("Class Schedule Report")
 
     pipeline = [

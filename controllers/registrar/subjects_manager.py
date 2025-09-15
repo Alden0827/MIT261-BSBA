@@ -1,8 +1,8 @@
-# import streamlit as st
+import streamlit as st
 from helpers.data_helper import get_subjects
 import pandas as pd
 
-def subjects_manager_page(st, db):
+def subjects_manager_page(db):
     st.subheader("📚 Subjects Manager")
 
     # --- Dialog for adding/editing a subject ---

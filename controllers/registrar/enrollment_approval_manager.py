@@ -1,4 +1,5 @@
-def enrollment_approval_manager_page(db,st):
+import streamlit as st
+def enrollment_approval_manager_page(db):
     st.subheader("Enrollment Approvals")
     with st.spinner(f"Loading metadata...", show_time=True):
         pending = list(db.enrollments.find({"status": "Pending"}))

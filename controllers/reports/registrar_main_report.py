@@ -1,14 +1,12 @@
 # report_page.py
-# import streamlit as st
-import pandas as pd
+import streamlit as st
 import helpers.registrar_main_report_helper as r
 from helpers.data_helper import student_find    
 from streamlit_echarts import st_echarts
-# from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
-import pandas as pd
 
 
-def report_page(st, db):
+
+def report_page(db):
     st.set_page_config(page_title="Academic Reports", layout="wide")
     st.title("📊 Academic Analytics & Insights")
 

@@ -1,9 +1,9 @@
-# import streamlit as st
+import streamlit as st
 from helpers.data_helper import get_user, verify_password
 from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 from config.settings import APP_TITLE
 
-def login_view(st):
+def login_view():
     """
     Displays the login form in the sidebar with a tiled background image and handles
     user authentication, while showing the school info and logo on the main page.

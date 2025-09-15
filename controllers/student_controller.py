@@ -1,4 +1,4 @@
-# import streamlit as st
+import streamlit as st
 import pandas as pd
 from helpers.data_helper import get_student_subjects_grades, get_curriculum, get_students, get_students_collection
 from io import BytesIO
@@ -9,7 +9,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 import matplotlib.pyplot as plt
 import numpy as np
 
-def student_view(st):
+def student_view():
     # students = get_students_collection()
 
     StudentID = st.session_state['uid']

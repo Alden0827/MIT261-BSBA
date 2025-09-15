@@ -28,66 +28,6 @@ def student_find(query, collection, course=None, limit=10):
 
     return list(collection.find(regex_query, {"Name": 1, "Course": 1, "YearLevel": 1}).limit(limit))
 
-# def load_or_query(cache_file, query_func):
-#     cache_file = f"./cache/{cache_file}"
-#     """Load DataFrame from cache or run query function."""
-#     if os.path.exists(cache_file):
-#         file_age = time.time() - os.path.getmtime(cache_file)
-#         if file_age < CACHE_MAX_AGE:
-#             print('Load from cache!')
-#             return pd.read_pickle(cache_file)
-
-
-#     df = query_func()
-#     if not df.empty:
-#         df.to_pickle(cache_file)
-#         pass
-#     return df
-
-
-
-# def fetch_students_bulk(
-#     mongo_uri: str,
-#     db_name: str,
-#     collection_name: str,
-#     batch_size: int = 5000,
-#     query: Optional[dict] = None,
-# ) -> pd.DataFrame:
-#     """
-#     Fetch documents from a MongoDB collection in batches and return as a single DataFrame.
-
-#     Args:
-#         mongo_uri (str): MongoDB connection URI.
-#         db_name (str): Database name.
-#         collection_name (str): Collection name.
-#         batch_size (int): Number of documents per batch.
-#         query (dict, optional): MongoDB filter query. Defaults to {}.
-
-#     Returns:
-#         pd.DataFrame: Consolidated DataFrame with all fetched documents.
-#     """
-#     client = MongoClient(mongo_uri)
-#     collection = client[db_name][collection_name]
-
-#     if query is None:
-#         query = {}
-
-#     total_docs = collection.count_documents(query)
-#     all_data = []
-
-#     print(f"Fetching {total_docs} documents in batches of {batch_size}...")
-
-#     cursor = collection.find(query, batch_size=batch_size)
-#     for i, doc in enumerate(cursor, 1):
-#         all_data.append(doc)
-#         if i % batch_size == 0 or i == total_docs:
-#             print(f"Fetched {i}/{total_docs} documents...")
-
-#     print("All documents fetched. Converting to DataFrame.")
-#     df = pd.DataFrame(all_data)
-#     return df
-
-
 def get_students_collection(StudentID=None, limit=100000000):
     def query():
         db = client["mit261"]
@@ -157,7 +97,7 @@ def get_students_collection(StudentID=None, limit=100000000):
 def get_students(StudentID=None, limit=1000):
     # def query():
     db = client["mit261"]
-    students_col = db["students"]
+    # students_col = db["students"]
     grades_col = db["grades"]
 
     # Start pipeline from grades, since only students with grades matter

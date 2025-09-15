@@ -1,4 +1,5 @@
-def grade_manager_page(st,db):
+import streamlit as st
+def grade_manager_page(db):
     st.markdown('''
     Receiving and officially recording grades submitted by faculty.
     Maintaining the official academic records (transcripts, report cards, etc.).

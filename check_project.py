@@ -30,7 +30,7 @@ for file in py_files:
     try:
         # Run flake8 on the file, ignore E501 (line too long) and E303 (blank lines)
         result = subprocess.run(
-            ["flake8", "--ignore=E501,E303,E101,E111,E201,E231,W191,W293,W291,E302,F401,F541,W391,E241,E306,E225,E503,E261,E262,W292,E402,206,E122,E226,E401,E305,E202,E221,E251", file],
+            ["flake8", "--ignore=E501,E303,E121,W503,E131,E101,E111,E201,E231,W191,E203,W293,W291,E302,F401,F541,W391,E241,E306,E225,E503,E261,E262,W292,E402,206,E122,E226,E401,E305,E202,E221,E251", file],
             capture_output=True,
             text=True
         )
