@@ -1,4 +1,6 @@
 import bcrypt
+import pandas as pd
+import helpers.user_helper as uh
 
 class user_helper(object):
     """docstring for user_helper"""
@@ -6,6 +8,7 @@ class user_helper(object):
         super(user_helper, self).__init__()
         self.arg = arg
         self.db = arg['db']
+        self.r = uh.data_helper({"db": self.db})
 
 
     def get_user(self,username):
@@ -38,7 +41,7 @@ class user_helper(object):
             return False, "User already exists."
 
         # Generate password hash
-        password_hash = generate_password_hash(password)
+        password_hash = self.r.generate_password_hash(password)
 
         # Create new user document
         # For simplicity, UID is set to username. In a real-world scenario,
@@ -104,7 +107,7 @@ class user_helper(object):
         """
 
 
-        password_hash = generate_password_hash(new_password)
+        password_hash = self.r.generate_password_hash(new_password)
         result = self.db.userAccounts.update_one(
             {"username": username},
             {"$set": {"passwordHash": password_hash}}

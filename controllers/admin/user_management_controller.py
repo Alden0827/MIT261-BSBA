@@ -82,7 +82,7 @@ def user_management_view(db):
                         st.error(update_message)
 
                     if new_password:
-                        pw_success, pw_message = change_password(user_to_edit['username'], new_password)
+                        pw_success, pw_message = r.change_password(user_to_edit['username'], new_password)
                         if pw_success:
                             st.success(pw_message)
                         else:

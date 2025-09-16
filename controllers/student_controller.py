@@ -10,7 +10,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 import matplotlib.pyplot as plt
 import numpy as np
 
-def student_view():
+def student_view(db):
     r = dh.data_helper({"db": db})
 
     StudentID = st.session_state['uid']

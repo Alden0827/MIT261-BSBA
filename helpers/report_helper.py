@@ -9,41 +9,7 @@ import pickle
 import time
 from functools import wraps
 import statistics
-# from config.settings import MONGODB_URI, MONGODB_DATABASE
-from helpers.cache_helper import cache_meta, cache_meta
-
-# print('Connecting to db..', end = '')
-
-# ------------------------------
-# Mongodb Connection/timeout
-# ------------------------------
-# client = MongoClient(
-#     MONGODB_URI,
-#     # serverSelectionTimeoutMS=30000,  # 5 seconds for server selection
-#     # connectTimeoutMS=30000,          # 5 seconds to establish connection
-#     # socketTimeoutMS=30000           # 10 seconds for queries
-# )
-
-# db = client[MONGODB_DATABASE]
-
-# students_col = db["students"]
-# self.db.grades = db["grades"]
-# subjects_col = db["subjects"]
-# semesters_col = db["semesters"]
-
-# print(' - success')
-
-
-# # # test connection
-# try:
-#     client.admin.command("ping")
-#     print("✅ Connected successfully")
-# except Exception as e:
-#     print("❌ Connection failed:", e)
-
-# ------------------------------
-# Helper Functions
-# ------------------------------
+from helpers.cache_helper import cache_meta
 
 class report_helper(object):
     print("Initializing load_all_data!")

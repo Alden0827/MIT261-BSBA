@@ -104,11 +104,11 @@ def main():
 
     # ---------------- Pages ----------------
     if menu == "Dashboard":
-        dasboard_view()
+        dasboard_view(db)
     elif menu == "Student Evaluation":
-        student_view()
+        student_view(db)
     elif menu == "Faculty":
-        faculty_view()
+        faculty_view(db)
     elif menu == "Registrar":
         registrar_view(db)
     elif menu == "Admin":
