@@ -29,13 +29,14 @@ def registrar_view(db):
                 "Semester Control",
                 # "Class Scheduling",
                 "Enrollment",
+                "Registration Approvals",
                 "Enrolled Students",
                 "Reports",
                 "Data Analysis"
             ],
             icons=[
                 "bar-chart-line", "book", "book-half", "people",
-                "calendar", "calendar-check", "file-earmark-text", "graph-up"
+                "calendar", "calendar-check", "person-check", "file-earmark-text", "graph-up"
             ],
             menu_icon="cast",
             default_index=0,
@@ -124,6 +125,9 @@ def registrar_view(db):
     elif menu == "Enrollment":
         from .registrar.enrollment_manager import enrollment_manager_page
         enrollment_manager_page(db)
+    elif menu == "Registration Approvals":
+        from .registrar.registration_approval_manager import registration_approval_manager_page
+        registration_approval_manager_page(db)
     elif menu == "Enrolled Students":
         from .registrar.enrolled_students_manager import enrolled_students_manager_page
         enrolled_students_manager_page(db)
