@@ -15,7 +15,7 @@ def cache_result(ttl=600000000):  # default no expiration
             print(f'Func: {func.__name__}', end='')
 
             ttl_minutes = kwargs.pop('ttl', ttl)
-
+            
             # Exclude db objects from args and kwargs
             filtered_args = tuple(a for a in args if not hasattr(a, "client") and not hasattr(a, "command"))
             filtered_kwargs = {k: v for k, v in kwargs.items() if not hasattr(v, "client") and not hasattr(v, "command")}
@@ -58,7 +58,8 @@ def cache_meta(ttl=600000000):  # default no expiration
             print(f'Func: {func.__name__}', end = '')
 
             ttl_minutes = kwargs.pop('ttl', ttl)
-            args_tuple = tuple(arg for arg in args)
+            # args_tuple = tuple(arg for arg in args)
+            args_tuple = tuple(arg for arg in args if not hasattr(arg, "__class__"))
             kwargs_tuple = tuple(sorted(kwargs.items()))
             cache_key = hashlib.md5(pickle.dumps((args_tuple, kwargs_tuple))).hexdigest()
             cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"

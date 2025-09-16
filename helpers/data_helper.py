@@ -192,8 +192,8 @@ def get_semesters(batch_size=1000):
 def get_school_years():
     db = client["mit261"]
     collection = db["semesters"]
-    return collection.distinct("SchoolYear")
-
+    years = collection.distinct("SchoolYear")
+    return sorted(years, reverse=True)
 
 @cache_meta(ttl=600000) #60 minutes
 def get_courses():

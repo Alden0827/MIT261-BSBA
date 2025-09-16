@@ -10,3 +10,4 @@ streamlit-echarts==0.4.0
 reportlab==4.0.4
 rapidfuzz==3.2.0
 streamlit-option-menu
+flake8

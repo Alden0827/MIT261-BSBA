@@ -6,11 +6,12 @@ import matplotlib.ticker as mtick
 from streamlit_echarts import st_echarts, JsCode
 import pandas as pd
 # import report_helper as r
-import helpers.report_helper as r
+import helpers.report_helper as rh
 # from helpers.report_helper import db
-from helpers.report_helper import get_Schoolyear_options, get_course_options
+# from helpers.report_helper import get_Schoolyear_options, get_course_options
 
 def report_page(db):
+    r = rh.report_helper({"db": db})
     # ------------------------------
     # Streamlit App
     # ------------------------------
@@ -82,8 +83,8 @@ def report_page(db):
         col1, col2 = st.columns([2, 2])
 
         with st.spinner(f"Loading courses and school year...", show_time=True):
-            courses = sorted(get_course_options())
-            school_years = sorted(get_Schoolyear_options())
+            courses = sorted(r.get_course_options())
+            school_years = sorted(r.get_Schoolyear_options())
 
         with col1:
             course_selected = st.selectbox("Course", ["All"] + courses)
@@ -167,8 +168,8 @@ def report_page(db):
         col1, col2 = st.columns([2, 2])
 
         with st.spinner(f"Loading courses and school year...", show_time=True):
-            courses = sorted(get_course_options())
-            school_years = sorted(get_Schoolyear_options())
+            courses = sorted(r.get_course_options())
+            school_years = sorted(r.get_Schoolyear_options())
 
         with col1:
             course_selected = st.selectbox("Course", ["All"] + courses)

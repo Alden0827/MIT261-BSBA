@@ -104,15 +104,15 @@ def main():
 
     # ---------------- Pages ----------------
     if menu == "Dashboard":
-        dasboard_view(st)
+        dasboard_view()
     elif menu == "Student Evaluation":
-        student_view(st)
+        student_view()
     elif menu == "Faculty":
-        faculty_view(st)
+        faculty_view()
     elif menu == "Registrar":
-        registrar_view(st, db)
+        registrar_view(db)
     elif menu == "Admin":
-        admin_view(st, db)
+        admin_view(db)
     elif menu == "Logout":
         st.session_state["logged_in"] = False
         st.session_state["user_role"] = None
@@ -139,4 +139,4 @@ def main():
 if st.session_state["logged_in"]:
     main()
 else:
-    login_view(st)
+    login_view()

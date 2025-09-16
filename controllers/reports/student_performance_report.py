@@ -6,11 +6,13 @@ import matplotlib.ticker as mtick
 from streamlit_echarts import st_echarts, JsCode
 import pandas as pd
 # import report_helper as r
-import helpers.report_helper as r
+import helpers.report_helper as rh
 # from helpers.report_helper import db
-from helpers.report_helper import get_Schoolyear_options, get_course_options
+# from helpers.report_helper import get_Schoolyear_options, get_course_options
+
 
 def report_page(db):
+    r = rh.report_helper({"db": db})
     # ------------------------------
     # Streamlit App
     # ------------------------------

@@ -27,7 +27,7 @@ def registrar_view(db):
                 "Subjects",
                 "Student Records",
                 "Semester Control",
-                "Class Scheduling",
+                # "Class Scheduling",
                 "Enrollment",
                 "Reports",
                 "Data Analysis"
@@ -104,46 +104,46 @@ def registrar_view(db):
 
     # --- Routing (works for all menus) ---
     if menu == "Dashboard":
-        dasboard_view(st)
+        dasboard_view()
     elif menu == "Curriculum Manager":
         from .registrar.curriculum_manager import curriculum_manager_page
-        curriculum_manager_page(st, db)
+        curriculum_manager_page(db)
     elif menu == "Subjects":
         from .registrar.subjects_manager import subjects_manager_page
-        subjects_manager_page(st, db)
+        subjects_manager_page(db)
     elif menu == "Student Records":
         from .registrar.student_records_manager import student_records_manager_page
-        student_records_manager_page(st, db)
+        student_records_manager_page(db)
     elif menu == "Semester Control":
         from .registrar.semester_manager import semester_manager_page
-        semester_manager_page(st, db)
-    elif menu == "Class Scheduling":
-        from .registrar.class_scheduler_manager import class_scheduler_manager_page
-        class_scheduler_manager_page(st, db)
+        semester_manager_page(db)
+    # elif menu == "Class Scheduling":
+    #     from .registrar.class_scheduler_manager import class_scheduler_manager_page
+    #     class_scheduler_manager_page(db)
     elif menu == "Enrollment":
         from .registrar.enrollment_manager import enrollment_manager_page
-        enrollment_manager_page(st, db)
+        enrollment_manager_page(db)
     elif menu == "Enrollment Approvals":
         from .registrar.enrollment_approval_manager import enrollment_approval_manager_page
-        enrollment_approval_manager_page(st, db)
+        enrollment_approval_manager_page(db)
     elif menu == "Student Performance":
         from .reports.student_performance_report import report_page
-        report_page(st, db)
+        report_page(db)
     elif menu == "Teacher & Subject":
         from .reports.subject_and_teacher_report import report_page
-        report_page(st, db)
+        report_page(db)
     elif menu == "Course & Curriculum":
         from .reports.course_and_curriculum_report import report_page
-        report_page(st, db)
+        report_page(db)
     elif menu == "Sem & Academic Year":
         from .reports.semester_and_academic_year_report import report_page
-        report_page(st, db)
+        report_page(db)
     elif menu == "Student Demographic":
         from .reports.student_demographics_report import report_page
-        report_page(st, db)
+        report_page(db)
     elif menu == "Prospectus":
         from .registrar.prospectus_manager import prospectus_page
-        prospectus_page(st)
+        prospectus_page()
     elif menu == "Reports":
         from .reports.registrar_main_report import report_page
-        report_page(st, db)
+        report_page(db)
