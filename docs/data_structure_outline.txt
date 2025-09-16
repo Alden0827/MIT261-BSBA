@@ -2,133 +2,588 @@
 ### uri -------------------------------------------------------------------------------
 uri = "mongodb+srv://{username}:{password}@cluster0.l7fdbmf.mongodb.net/mit261"
 
-### helpers ---------------------------------------------------------------------------
-link to helpers: https://drive.google.com/drive/folders/1ur1fB7jEjsAgV_Kib-rm1Gq_0VLxANfh?usp=sharing
 
-//para sa login page nyo, use the verify password helper under data_helper.py
-example:
-
-import streamlit as st
-from data_helper import get_user, verify_password
-from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
-
-def login_view():
-    """
-    Displays the login form and handles user authentication with error handling.
-    """
-    st.title("Login")
-
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-
-    if st.button("Login"):
-        if not username or not password:
-            st.error("Please enter both username and password.")
-            return
-
-        try:
-            user = get_user(username)  # This may raise a PyMongoError if DB is down
-
-            if user and verify_password(password, user["passwordHash"]):
-                st.session_state["logged_in"] = True
-                st.session_state["user_role"] = user["role"]
-                st.session_state["username"] = user["username"]
-                st.success("Logged in successfully!")
-                st.rerun()
-            else:
-                st.error("Invalid username or password.")
-
-        except ServerSelectionTimeoutError as e:
-            st.error("Cannot connect to the database. Please try again later.")
-            # st.exception(e)
-        except PyMongoError as e:
-            st.error("A database error occurred. Please contact support.")
-            st.exception(e)
-        except Exception as e:
-            st.error("An unexpected error occurred.")
-            st.exception(e)
-
-
-
-### current collection with sample data (default from maam brenda)---------------------
-collection: grades | sample data:  {'_id': 1, 'StudentID': 1, 'SubjectCodes': ['IT304'], 'Grades': [79], 'Teachers': ['Prof. Henry Dologuin'], 'SemesterID': 1}
-collection: semesters | sample data:  {'_id': 1, 'Semester': 'FirstSem', 'SchoolYear': 2020}
-collection: students | sample data:  {'_id': 1, 'Name': 'Lejeune, Niel Alfred F.', 'Course': 'Information Technology', 'YearLevel': 1}
-collection: subjects | sample data:  {'_id': 'IT101', 'Description': 'Introduction to Information Technology', 'Units': 3, 'Teacher': 'Prof. Jeorge Ortega'}
-
-### additional collections ------------------------------------------------------------
-# prospectus collection
+### mongodb structure with sample data ------------------------------------------------
+students:
 {
   "_id": 1,
-  "studentId": 1,                      // reference to student._id
-  "programCode": "BSBA",               // reference to curriculum.programCode
-  "curriculumYear": "2025-2026",       // reference to curriculum.curriculumYear
+  "Name": "Lejeune, Niel Alfred F.",
+  "Course": "Information Technology",
+  "YearLevel": 1
+}
+
+semesters:
+{
+  "_id": 3,
+  "Semester": "Summer",
+  "SchoolYear": 2020
+}
+
+grades:
+{
+  "_id": 1,
+  "StudentID": 1,
+  "SubjectCodes": [
+    "IT304"
+  ],
+  "Grades": [
+    79
+  ],
+  "Teachers": [
+    "Prof. Henry Dologuin"
+  ],
+  "SemesterID": 1,
+  "Status": [
+    ""
+  ]
+}
+
+subjects:
+{
+  "_id": "IT103",
+  "Description": "Web Development 1 (HTML/CSS/JS)",
+  "Units": 3,
+  "Teacher": "Prof. Jake Guinto"
+}
+
+userAccounts:
+{
+  "_id": {
+    "$oid": "68b664698519ad27d3877a87"
+  },
+  "username": "faculty",
+  "role": "faculty",
+  "linkedId": null,
+  "passwordHash": {
+    "$binary": {
+      "base64": "JDJiJDEyJDRhTW1DLnk2a2VmQ2pKeEUxZk5YaXUvSkMyajI5MjUzWHY0SkNtUk1HTmZXMnJmUldMM2hD",
+      "subType": "00"
+    }
+  },
+  "fullName": "",
+  "UID": 0
+}
+
+curriculum:
+{
+  "_id": {
+    "$oid": "68b6a4a4b4ad4b9a7a79e496"
+  },
+  "programCode": "BSBA",
+  "programName": "BACHELOR OF SCIENCE IN BUSINESS ADMINISTRATION Major in Marketing Management",
+  "curriculumYear": "2025-2026",
   "subjects": [
     {
-      "code": "GS01",
-      "name": "General Science 1",
+      "year": 1,
+      "semester": "First",
+      "code": "GE 200",
+      "name": "Understanding the Sell",
       "lec": 3,
       "lab": 0,
       "unit": 3,
-      "semester": "First", #First/Second/Summer
-      "preRequisites": [1, 2, 3, 4, 5],
-      "status": "PASSED",              // INC | FAILED | PASSED
-      "grade": 2.00
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 203",
+      "name": "Life and Works of Rizal",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 204",
+      "name": "Gender and Society",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 201",
+      "name": "Reading in Philippine History",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "GE 303",
+      "name": "Philippine Popular Culture",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "BACC 1",
+      "name": "Basic Microeconomics",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "PE 1",
+      "name": "Physical Activities Towards Health and Fitness 1 - Movement Competency Training",
+      "lec": 2,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "First",
+      "code": "NSTP 1",
+      "name": "Civic Welfare Training Services 1",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "GE 402",
+      "name": "Mathematics in the Modern World",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "GE 302",
+      "name": "Ethics",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "GE 403",
+      "name": "Science, Technology and Society",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "GE 301",
+      "name": "Arts Appreciation",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "GE 501",
+      "name": "Living in the IT Era",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "Mktg 1",
+      "name": "Principles of Marketing",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "PE 2",
+      "name": "Physical Activities Towards Health and Fitness 2 - Excercise-based Fitness Activities",
+      "lec": 2,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": [
+        "PE 1"
+      ]
+    },
+    {
+      "year": 1,
+      "semester": "Second",
+      "code": "NSTP 2",
+      "name": "Civic Welfare Training Services 2",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "NSTP 1"
+      ]
+    },
+    {
+      "year": 2,
+      "semester": "First",
+      "code": "GE 104",
+      "name": "Purposive Communication",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 2,
+      "semester": "First",
+      "code": "GE 102",
+      "name": "The Contemporary World",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 2,
+      "semester": "First",
+      "code": "MM 1",
+      "name": "Marketing Management",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "Mktg 1"
+      ]
+    },
+    {
+      "year": 2,
+      "semester": "First",
+      "code": "MM 2",
+      "name": "Product Management",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "Mktg 1"
+      ]
+    },
+    {
+      "year": 2,
+      "semester": "First",
+      "code": "BACC 2",
+      "name": "International Business & Trade",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "Mktg 1"
+      ]
+    },
+    {
+      "year": 2,
+      "semester": "First",
+      "code": "ELEC 1",
+      "name": "E-Commerce & Internet Marketing",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "Mktg 1"
+      ]
+    },
+    {
+      "year": 2,
+      "semester": "First",
+      "code": "PE 3",
+      "name": "Physical Activities Towards Health and Fitness 3 - Dance",
+      "lec": 2,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": [
+        "PE 1"
+      ]
+    },
+    {
+      "year": 2,
+      "semester": "Second",
+      "code": "ACCTG 11",
+      "name": "Fundamentals of Accounting 1",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 2,
+      "semester": "Second",
+      "code": "Math 201",
+      "name": "Business Statistics",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "GE 402"
+      ]
+    },
+    {
+      "year": 2,
+      "semester": "Second",
+      "code": "BACC 3",
+      "name": "Human Resource Management",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 2,
+      "semester": "Second",
+      "code": "BACC 4",
+      "name": "Business Law (Obligation and Contracts)",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 2,
+      "semester": "Second",
+      "code": "MM 3",
+      "name": "Distribution Management",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "MM 1",
+        "MM 2"
+      ]
+    },
+    {
+      "year": 2,
+      "semester": "Second",
+      "code": "MM 4",
+      "name": "Marketing Research",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "MM 1",
+        "MM 2"
+      ]
+    },
+    {
+      "year": 2,
+      "semester": "Second",
+      "code": "PE 4",
+      "name": "Physical Activities Towards Health and Fitness 4 - Sports",
+      "lec": 2,
+      "lab": 0,
+      "unit": 2,
+      "preRequisites": [
+        "PE 3"
+      ]
+    },
+    {
+      "year": 3,
+      "semester": "First",
+      "code": "Thesis 1",
+      "name": "Methods of Business Research Writing",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "Math 201"
+      ]
+    },
+    {
+      "year": 3,
+      "semester": "First",
+      "code": "BACC 5",
+      "name": "Social Responsibility & Good Governance",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 3,
+      "semester": "First",
+      "code": "MM 5",
+      "name": "Advertising",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "ELEC 1"
+      ]
+    },
+    {
+      "year": 3,
+      "semester": "First",
+      "code": "MM 6",
+      "name": "Retail Management",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "MM 3"
+      ]
+    },
+    {
+      "year": 3,
+      "semester": "First",
+      "code": "BACC 6",
+      "name": "Income Taxation",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "ACCTG 11"
+      ]
+    },
+    {
+      "year": 3,
+      "semester": "Second",
+      "code": "Thesis 2",
+      "name": "Business Research",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "Thesis 1"
+      ]
+    },
+    {
+      "year": 3,
+      "semester": "Second",
+      "code": "Math 202",
+      "name": "Qualitative Techniques in Business",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 3,
+      "semester": "Second",
+      "code": "ELEC 2",
+      "name": "Franchising",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "ELEC 1"
+      ]
+    },
+    {
+      "year": 3,
+      "semester": "Second",
+      "code": "MM 7",
+      "name": "Pricing Strategy",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "MM 4"
+      ]
+    },
+    {
+      "year": 3,
+      "semester": "Second",
+      "code": "CBMEC 1",
+      "name": "Operations Management (TQM)",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": []
+    },
+    {
+      "year": 4,
+      "semester": "First",
+      "code": "CBMEC 2",
+      "name": "Strategic Management",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "CBMEC 1"
+      ]
+    },
+    {
+      "year": 4,
+      "semester": "First",
+      "code": "BACC 7",
+      "name": "Feasibility Study",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "ACCTG 11"
+      ]
+    },
+    {
+      "year": 4,
+      "semester": "First",
+      "code": "MM 8",
+      "name": "Professional Salesmanship",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "Mktg 1"
+      ]
+    },
+    {
+      "year": 4,
+      "semester": "First",
+      "code": "ELEC 3",
+      "name": "Entrepreneurial Management",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "CBMEC 1"
+      ]
+    },
+    {
+      "year": 4,
+      "semester": "First",
+      "code": "ELEC 4",
+      "name": "New Market Development",
+      "lec": 3,
+      "lab": 0,
+      "unit": 3,
+      "preRequisites": [
+        "MM2"
+      ]
+    },
+    {
+      "year": 4,
+      "semester": "Second",
+      "code": "MM 9",
+      "name": "Internship / Work Integrated Learning (600 hrs)",
+      "lec": 6,
+      "lab": 0,
+      "unit": 6,
+      "preRequisites": [
+        "Graduating"
+      ]
     }
   ]
 }
-
-# faculty (who teaches)
-{
-  "_id": 1,
-  "facultyName": "Prof. Juan Cruz",
-  "sex": "Male",
-  "department": "Business Administration",
-  "email": "jcruz@example.com"
-}
-
-# semester (To track which academic term the student is enrolled.)
-{
-  "_id": 1,
-  "schoolYear": "2025-2026",
-  "term": "1st Semester",
-  "startDate": "2025-08-01",
-  "endDate": "2025-12-15",
-  "enrollmentStart": "2025-07-01",
-  "enrollmentEnd": "2025-07-20",
-  "status": "OPEN"   // "OPEN", "CLOSED", "ONGOING", "COMPLETED"
-}
-
-classSchedule (When a subject is offered, who teaches, and where.)
-{
-  "_id": 1,
-  "subjectId": 1,                 // references subjects._id
-  "facultyId": 1,                 // references faculty._id
-  "semesterId": 1,                // references semester._id
-  "section": "BSBA-1A",
-  "schedule": [
-    { "day": "Mon", "time": "08:00-10:00", "room": "101" },
-    { "day": "Wed", "time": "08:00-10:00", "room": "101" }
-  ]
-}
-
-# enrollments (Tracks which student enrolled in which subject offering.)
-{
-  "_id": 1,
-  "studentId": 1,
-  "classOfferingId": 1,
-  "status": "Enrolled",   // Enrolled | Dropped | Completed
-  "grade": null
-}
-
-#userAccounts (If the system will have login (student portal, registrar, faculty).)
-{
-  "_id": 1,
-  "username": "student1",
-  "passwordHash": "hashedpw", #user 
-  "role": "student",    // student | faculty | registrar | admin
-  "linkedId": 1         // points to student._id or faculty._id
-}
-
 
 
