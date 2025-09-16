@@ -1,7 +1,24 @@
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+
 # helpers/grade_helper.py
 from pymongo.collection import Collection
 from typing import List, Optional
 import pandas as pd
+
+
+from pymongo import MongoClient
+
+# MongoDB Connection
+try:
+    client = MongoClient("mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net") # Or your connection string
+    db = client['mit261']
+    print("Successfully connected to MongoDB!")
+except Exception as e:
+    print(f"Error connecting to MongoDB: {e}")
+    sys.exit()
+
 
 def assign_teacher_to_subject(db, student_id: int, semester_id: int, subject_code: str, teacher_name: str) -> bool:
     """
@@ -71,19 +88,25 @@ def get_student_grades(db, student_id: int, semester_id: int) -> Optional[dict]:
     """
     return db["grades"].find_one({"StudentID": student_id, "SemesterID": semester_id})
 
-
-def get_teachers(db):
+def get_teachers(course: str = None):
     """
-    Fetch all teachers who taught subjects to BSBA students.
+    Fetches all teachers who taught subjects to students of a specific course.
+    If no course is specified, it fetches all teachers.
     Returns a DataFrame with columns: ['Teacher', 'Subject Code', 'Subject Description', 'Student Count']
     """
 
-    # 1. Get all BSBA student IDs
-    bsba_students = list(db.students.find({"Course": "BSBA"}, {"_id": 1}))
-    if not bsba_students:
-        return pd.DataFrame()
+    # Build the filter based on whether a course is provided
+    query_filter = {}
+    if course:
+        query_filter["Course"] = course
 
-    student_ids = [s["_id"] for s in bsba_students]
+    # 1. Get student IDs based on the filter
+    students_cursor = db.students.find(query_filter, {"_id": 1})
+    student_ids = [s["_id"] for s in students_cursor]
+
+    # If no students are found (either for the specific course or in general)
+    if not student_ids:
+        return pd.DataFrame()
 
     # 2. Get all grades for these students
     grades_cursor = db.grades.find(
@@ -93,18 +116,21 @@ def get_teachers(db):
 
     rows = []
     for doc in grades_cursor:
+        # The zip function handles cases where the arrays are of unequal length or empty.
         for code, teacher in zip(doc.get("SubjectCodes", []), doc.get("Teachers", [])):
-            rows.append({"Subject Code": code, "Teacher": teacher, "StudentID": doc["StudentID"]})
+            if code and teacher:  # Ensure both code and teacher exist
+                rows.append({"Subject Code": code, "Teacher": teacher, "StudentID": doc["StudentID"]})
 
     if not rows:
         return pd.DataFrame()
 
     df = pd.DataFrame(rows)
 
-    # 3. Optional: join with subjects collection to get subject description
+    # 3. Join with subjects collection to get subject description
     subjects = db.subjects.find({}, {"_id": 1, "Description": 1})
     subj_map = {s["_id"]: s.get("Description", "") for s in subjects}
     df["Subject Description"] = df["Subject Code"].map(subj_map)
+    
 
     # 4. Aggregate by teacher + subject
     summary = df.groupby(["Teacher", "Subject Code", "Subject Description"]).agg(
@@ -112,7 +138,6 @@ def get_teachers(db):
     ).reset_index()
 
     return summary
-
 
 if __name__ == "__main__":
 
@@ -129,5 +154,5 @@ if __name__ == "__main__":
     # doc = get_student_grades(db, student_id=1, semester_id=6)
     # print(doc["SubjectCodes"], doc["Grades"], doc["Teachers"], doc["Status"])
 
-    data = get_teachers()
+    data = get_teachers('Computer Science')
     print(data)

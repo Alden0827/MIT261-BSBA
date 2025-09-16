@@ -1,5 +1,5 @@
 # 📝 Python Project Lint Report (flake8)
-Generated on: 2025-09-16 17:12:45
+Generated on: 2025-09-16 23:21:15
 
 ## 🔍 Lint Results
 
@@ -35,7 +35,7 @@ Generated on: 2025-09-16 17:12:45
 | `helpers\cache_helper.py` | ✅ OK |  |
 | `helpers\data_helper.py` | ✅ OK |  |
 | `helpers\faculty_helper.py` | ✅ OK |  |
-| `helpers\registrar_main_report_helper.py` | ⚠️ Issues | F:\dev_2024\MIT261-BSBA\helpers\registrar_main_report_helper.py:365:26: F841 local variable 'results' is assigned to but never used |
+| `helpers\registrar_main_report_helper.py` | ⚠️ Issues | C:\MIT261-BSBA\helpers\registrar_main_report_helper.py:365:26: F841 local variable 'results' is assigned to but never used |
 | `helpers\registration_helper.py` | ✅ OK |  |
 | `helpers\report_helper.py` | ✅ OK |  |
 | `helpers\user_helper.py` | ✅ OK |  |

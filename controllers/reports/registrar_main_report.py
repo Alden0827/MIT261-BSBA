@@ -55,15 +55,67 @@ def report_page(db):
     # ------------------------------
     # 1. Student Academic Stand
     # ------------------------------
+
     elif report == "1. Student Academic Stand":
         st.subheader("🎓 Student Academic Stand Report")
 
         st.markdown("### A. Dean's List (Top 10 Students)")
         st.markdown("**Criteria:** No grade < 85% & GPA >= 90%")
         
-        with st.spinner(f"Preparing data for {report}.", show_time = True):
+        with st.spinner(f"Preparing data for {report}.", show_time=True):
             df_deans = r.get_deans_list()  # fetch data
-        st.dataframe(df_deans)
+
+        # --- Tabs for Data / Chart ---
+        tab1, tab2 = st.tabs(["📋 Table", "📊 Chart"])
+
+        with tab1:
+            st.dataframe(df_deans, use_container_width=True)
+
+        with tab2:
+            names = df_deans["Name"].tolist()
+            gpas = df_deans["GPA"].tolist()
+            progs = df_deans["Prog"].tolist()
+
+            option = {
+                "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+                "xAxis": {
+                    "type": "value",
+                    "name": "GPA",
+                    "min": 90,  # cutoff
+                },
+                "yAxis": {
+                    "type": "category",
+                    "data": names[::-1],  # reverse for top-down
+                },
+                "series": [
+                    {
+                        "name": "GPA",
+                        "type": "bar",
+                        "data": gpas[::-1],
+                        "label": {
+                            "show": True,
+                            "position": "right",
+                            "formatter": "{c}"
+                        },
+                        "itemStyle": {
+                            "color": {
+                                "type": "linear",
+                                "x": 0,
+                                "y": 0,
+                                "x2": 1,
+                                "y2": 0,
+                                "colorStops": [
+                                    {"offset": 0, "color": "#3b82f6"},
+                                    {"offset": 1, "color": "#10b981"},
+                                ],
+                            }
+                        },
+                    }
+                ],
+            }
+
+            st_echarts(option, height="500px")
+
 
         st.markdown("### B. Academic Probation (10 Students)")
         st.markdown("**Criteria:** No grade < 75 OR >= 30% FAILS")
