@@ -1,6 +1,19 @@
 
 ### uri -------------------------------------------------------------------------------
-uri = "mongodb+srv://{username}:{password}@cluster0.l7fdbmf.mongodb.net/mit261"
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from pymongo import MongoClient
+
+# MongoDB Connection
+try:
+    client = MongoClient("mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net") # Or your connection string
+    db = client['mit261']
+    print("Successfully connected to MongoDB!")
+except Exception as e:
+    print(f"Error connecting to MongoDB: {e}")
+    sys.exit()
+
 
 
 ### mongodb structure with sample data ------------------------------------------------
