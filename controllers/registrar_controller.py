@@ -105,7 +105,7 @@ def registrar_view(db):
 
     # --- Routing (works for all menus) ---
     if menu == "Dashboard":
-        dasboard_view()
+        dasboard_view(db)
     elif menu == "Curriculum Manager":
         from .registrar.curriculum_manager import curriculum_manager_page
         curriculum_manager_page(db)

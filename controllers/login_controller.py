@@ -1,9 +1,12 @@
 import streamlit as st
-from helpers.data_helper import get_user, verify_password
+import helpers.user_helper as uh #import get_user, verify_password
 from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 from config.settings import APP_TITLE
+import helpers.user_helper as uh
 
-def login_view():
+def login_view(db):
+    r1 = uh.user_helper({"db": db})
+    # r2 = dh.data_helper({"db": db})
     """
     Displays the login form in the sidebar with a tiled background image and handles
     user authentication, while showing the school info and logo on the main page.
@@ -87,8 +90,8 @@ def login_view():
                 st.error("Please enter both username and password.")
             else:
                 try:
-                    user = get_user(username)  # DB query
-                    if user and verify_password(password, user["passwordHash"]):
+                    user = r1.get_user(username)  # DB query
+                    if user and r1.verify_password(password, user["passwordHash"]):
                         st.session_state["logged_in"] = True
                         st.session_state["user_role"] = user["role"]
                         st.session_state["username"] = user["username"]

@@ -1061,15 +1061,15 @@ class report_helper(object):
 
     @cache_meta()
     def get_Schoolyear_options(self):
-        return db.semesters.distinct("SchoolYear")
+        return self.db.semesters.distinct("SchoolYear")
 
     @cache_meta()
     def get_course_options(self):
-        return db.students.distinct("Course")
+        return self.db.students.distinct("Course")
 
     @cache_meta()
     def get_semester_options(self):
-        return db.semesters.distinct("Semester")
+        return self.db.semesters.distinct("Semester")
 
 
 if __name__ == "__main__":

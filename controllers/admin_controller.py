@@ -10,6 +10,6 @@ def admin_view(db):
     )
 
     if menu == "User Management":
-        user_management_view(st, db)
+        user_management_view(db)
     elif menu == "System Settings":
         st.write("System Settings Page (to be implemented)")

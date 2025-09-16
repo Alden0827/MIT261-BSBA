@@ -1,8 +1,10 @@
 import streamlit as st
-from helpers.data_helper import get_subjects
+# from helpers.data_helper import get_subjects
+import helpers.data_helper as dh
 import pandas as pd
 
 def subjects_manager_page(db):
+    r = dh.data_helper({"db": db})
     st.subheader("📚 Subjects Manager")
 
     # --- Dialog for adding/editing a subject ---
@@ -47,7 +49,7 @@ def subjects_manager_page(db):
 
     # --- Fetch all subjects ---
     with st.spinner(f"Loading subject list...", show_time=True):
-        subjects = get_subjects().to_dict("records")
+        subjects = r.get_subjects().to_dict("records")
     
     if not subjects:
         st.info("No subjects found. Add a new subject to get started.")

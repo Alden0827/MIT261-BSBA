@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-from helpers.data_helper import get_student_subjects_grades, get_curriculum, get_students, get_students_collection
+# from helpers.data_helper import get_student_subjects_grades, get_curriculum, get_students
+import helpers.data_helper as dh
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -10,12 +11,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def student_view():
-    # students = get_students_collection()
+    r = dh.data_helper({"db": db})
 
     StudentID = st.session_state['uid']
     print(f"StudentID in student_view: {StudentID}")
 
-    students = get_students(StudentID=StudentID)
+    students = r.get_students(StudentID=StudentID)
 
     st.title("🧑‍🎓 Student Prospectus & GPA")
 
@@ -45,8 +46,8 @@ def student_view():
     student_id = student_row["_id"]
     program_code = student_row['Course']
 
-    curriculum_df = get_curriculum(program_code)
-    stud_grades = get_student_subjects_grades(StudentID=student_id)
+    curriculum_df = r.get_curriculum(program_code)
+    stud_grades = r.get_student_subjects_grades(StudentID=student_id)
 
     if curriculum_df.empty:
         st.warning(f"No curriculum found for the program: {program_code}")

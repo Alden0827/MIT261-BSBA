@@ -1,8 +1,11 @@
 import streamlit as st
 import pandas as pd
-from helpers.data_helper import get_subjects
+# from helpers.data_helper import get_subjects
+import helpers.data_helper as dh
+
 
 def curriculum_manager_page(db):
+    r = dh.data_helper({"db": db})
     # --- Custom button CSS ---
     st.markdown(
         """
@@ -50,7 +53,7 @@ def curriculum_manager_page(db):
     def add_subject_dialog(program_doc):
         # --- Fetch subjects for dropdown ---
         with st.spinner(f"Loading metadata...", show_time=True):
-            subjects_df = get_subjects()
+            subjects_df = r.get_subjects()
             
         if subjects_df.empty:
             st.warning("⚠️ No subjects found in the database. Please add subjects first.")

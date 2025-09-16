@@ -2,25 +2,26 @@ import pandas as pd
 import streamlit as st
 from streamlit_echarts import st_echarts #pip install streamlit-echarts
 import os, pickle, time
-from helpers.data_helper import get_students, get_grades, get_semesters, get_subjects
+# from helpers.data_helper import get_students, get_grades, get_semesters, get_subjects
+import helpers.data_helper as dh
 
 CACHE_FILE = "./cache/dashboard_cache.pkl"
 CACHE_TTL = 3600  # 1 hour in seconds
 
-def dasboard_view():
-
+def dasboard_view(db):
+    r = dh.data_helper({"db": db})
 
     with st.spinner("Loading students...", show_time = True):
-        students = get_students()
+        students = r.get_students()
         time.sleep(1)
     with st.spinner("Loading grades...", show_time = True):
-        grades = get_grades()
+        grades = r.get_grades()
         time.sleep(1)
     with st.spinner("Loading semesters...", show_time = True):
-        semesters = get_semesters()
+        semesters = r.get_semesters()
         time.sleep(1)
     with st.spinner("Loading subjects...", show_time = True):
-        subjects = get_subjects()
+        subjects = r.get_subjects()
         time.sleep(1)
         
     st.title("🎓 University Dashboard")

@@ -4,13 +4,14 @@ import streamlit as st
 # import helpers.registrar_main_report_helper as r
 import helpers.registrar_main_report_helper as rh
 
-from helpers.data_helper import student_find    
+# from helpers.data_helper import student_find    
 from streamlit_echarts import st_echarts
-
+import helpers.data_helper as dh
 
 
 def report_page(db):
     r = rh.report_helper({"db": db})
+    r2 = dh.data_helper({"db": db})
     st.set_page_config(page_title="Academic Reports", layout="wide")
     st.title("📊 Academic Analytics & Insights")
 
@@ -213,7 +214,7 @@ def report_page(db):
         if search_trigger:
             if search_name.strip():
                 with st.spinner("Searching please wait...",show_time=True):
-                    results = student_find(search_name, db.students, course=selected_course)
+                    results = r2.student_find(search_name, db.students, course=selected_course)
                 if results:
                     st.session_state.search_results = results
                 else:

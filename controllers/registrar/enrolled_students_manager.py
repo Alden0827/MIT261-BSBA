@@ -1,49 +1,60 @@
 import streamlit as st
 import pandas as pd
 from streamlit_echarts import st_echarts
-from helpers.data_helper import get_students, get_school_years, get_semester_names, get_courses, get_grades, get_semesters
+# from helpers.data_helper import get_students, get_school_years, get_semester_names, get_courses, get_grades, get_semesters
+import helpers.data_helper as dh
 
 def enrolled_students_manager_page(db):
+    r = dh.data_helper({"db": db})
     st.subheader("🎓 Enrolled Students")
 
     # --- Filters ---
-    school_years = ["All"] + get_school_years()
-    semesters = ["All"] + get_semester_names()
-    courses = ["All"] + get_courses()
+    with st.spinner("Preparing data.. Please wait!", show_time = True):
+        school_years = r.get_current_school_year()
+        semesters = r.get_semester_names()
+        courses = r.get_courses()
+
+    if not school_years or not semesters or not courses:
+        st.warning("⚠️ No school years, semesters, or courses available.")
+        return
 
     col1, col2, col3 = st.columns(3)
     with col1:
+        # school_years = sorted(school_years, reverse=True)
         selected_year = st.selectbox("Filter by Year", school_years)
     with col2:
+        semesters = sorted(semesters, reverse=True)
         selected_semester = st.selectbox("Filter by Semester", semesters)
     with col3:
         selected_course = st.selectbox("Filter by Course", courses)
 
     # --- Fetch data ---
     with st.spinner("Loading student list..."):
-        students_df = get_students()
-        grades_df = get_grades()
-        semesters_df = get_semesters()
+        students_df = r.get_students()
+        grades_df = r.get_grades()
+        semesters_df = r.get_semesters()
+        student_ids = grades_df['StudentID'].unique()
+        filtered_students = students_df[students_df['_id'].isin(student_ids)].copy()
 
     # --- Filtering logic ---
-    filtered_students = students_df.copy()
-
     # Merge grades and semesters to get semester info for each student enrollment
     grades_with_semester_info = pd.merge(grades_df, semesters_df, left_on='SemesterID', right_on='_id', how='left')
 
-    # Filter by Year
-    if selected_year != "All":
-        student_ids_in_year = grades_with_semester_info[grades_with_semester_info['SchoolYear'] == selected_year]['StudentID'].unique()
-        filtered_students = filtered_students[filtered_students['_id'].isin(student_ids_in_year)]
+    # Always filter by selected year
+    student_ids_in_year = grades_with_semester_info[
+        grades_with_semester_info['SchoolYear'] == selected_year
+    ]['StudentID'].unique()
+    filtered_students = filtered_students[filtered_students['_id'].isin(student_ids_in_year)]
 
-    # Filter by Semester
-    if selected_semester != "All":
-        student_ids_in_semester = grades_with_semester_info[grades_with_semester_info['Semester'] == selected_semester]['StudentID'].unique()
-        filtered_students = filtered_students[filtered_students['_id'].isin(student_ids_in_semester)]
+    # Always filter by selected semester
+    student_ids_in_semester = grades_with_semester_info[
+        grades_with_semester_info['Semester'] == selected_semester
+    ]['StudentID'].unique()
+    filtered_students = filtered_students[filtered_students['_id'].isin(student_ids_in_semester)]
 
-    # Filter by Course
-    if selected_course != "All":
-        filtered_students = filtered_students[filtered_students["Course"] == selected_course]
+    # Always filter by selected course
+    filtered_students = filtered_students[filtered_students["Course"] == selected_course]
+
 
     # --- Summary and Charts ---
     if filtered_students.empty:
@@ -129,8 +140,8 @@ def enrolled_students_manager_page(db):
                     with st.expander("Discard"):
                         st.warning(f"This will discard the student's enrollment for {selected_semester} {selected_year}.")
                         if st.button("Confirm Discard", key=f"confirm_discard_{student_id}"):
-                            db.grades.delete_one({"StudentID": student_id, "SemesterID": semester_id})
-                            st.experimental_rerun()
+                            db.grades.delete_one({"StudentID": int(student_id), "SemesterID": int(semester_id)})
+                            st.rerun()
                 else:
                     st.caption("Select a semester to enable discard.")
 

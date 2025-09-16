@@ -6,27 +6,32 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Helpers
-from helpers.data_helper import (
-    get_school_years,
-    get_semester_names,
-    get_courses,
-    get_curriculum,
-    get_student_subjects_grades,
-)
+# from helpers.data_helper import (
+#     get_school_years,
+#     get_semester_names,
+#     get_courses,
+#     get_curriculum,
+#     get_student_subjects_grades,
+# )
+
+import helpers.data_helper as dh
+
+
 from helpers.registration_helper import find_best_match
     
 # ---------------------------
 # Main Enrollment Manager Page
 # ---------------------------
 def enrollment_manager_page(db):
+    r = dh.data_helper({"db": db})
     st.title("Enrollment Manager")
 
     with st.spinner("Loading school years...", show_time=True):
-        school_years = get_school_years()
+        school_years = r.get_school_years()
     with st.spinner("Loading semesters...", show_time=True):
-        semester_names = get_semester_names()
+        semester_names = r.get_semester_names()
     with st.spinner("Loading Courses...", show_time=True):
-        courses = get_courses()
+        courses = r.get_courses()
 
     # Initialize session state variables
     if "confirm_enrollment" not in st.session_state:
@@ -99,8 +104,8 @@ def enrollment_manager_page(db):
         st.write(f"**Year Level:** {student.get('YearLevel', 'N/A')}")
 
         # Get Curriculum & Grades
-        curriculum_df = get_curriculum(student.get("Course"))
-        student_grades_df = get_student_subjects_grades(student.get("_id"))
+        curriculum_df = r.get_curriculum(student.get("Course"))
+        student_grades_df = r.get_student_subjects_grades(student.get("_id"))
         print('selected_semester:',selected_semester)
         print("Curriculum columns:", curriculum_df.columns.tolist())
         print("Student grades columns:", student_grades_df.columns.tolist())
@@ -261,7 +266,8 @@ def enrollment_manager_page(db):
             # ⛔ Blocked Subjects
             st.subheader("⛔ Blocked Subjects")
             if not blocked_subjects_df.empty:
-                st.dataframe(blocked_subjects_df[["Subject Code", "Description", "Units", "preRequisites"]])
+                print('blocked_subjects_df:',blocked_subjects_df)
+                st.dataframe(blocked_subjects_df[["Subject Code", "Description", "unit", "preRequisites"]])
             else:
                 st.info("No blocked subjects.")
         else:
@@ -271,10 +277,5 @@ def enrollment_manager_page(db):
 
 
 if __name__ == "__main__":
-    from pymongo import MongoClient
-    from config.settings import MONGODB_URI, CACHE_MAX_AGE
 
-    client = MongoClient(MONGODB_URI)
-    db = client["mit261"]
-
-    enrollment_manager_page(db)
+    pass

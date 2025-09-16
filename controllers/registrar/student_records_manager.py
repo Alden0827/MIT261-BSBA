@@ -1,8 +1,10 @@
 import streamlit as st
 from bson.objectid import ObjectId
-from helpers.data_helper import get_students
+# from helpers.data_helper import get_students
+import helpers.data_helper as dh
 
 def student_records_manager_page(db):
+    r = dh.data_helper({"db": db})
     st.subheader("🧑‍🎓 Student Records Manager")
 
     # --- Dialog for adding/editing a student ---
@@ -45,7 +47,7 @@ def student_records_manager_page(db):
     # students = list(db.students.find())
 
     with st.spinner(f"Loading student list...", show_time=True):
-        students = get_students().to_dict("records")
+        students = r.get_students().to_dict("records")
 
     if not students:
         st.info("No students found. Add a new student to get started.")

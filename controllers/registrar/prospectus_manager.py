@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
-from helpers.data_helper import get_student_subjects_grades, get_curriculum, get_students, get_students_collection
+
+# from helpers.data_helper import get_student_subjects_grades, get_curriculum, get_students, get_students_collection
+import helpers.data_helper as dh
 from io import BytesIO
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -9,10 +11,10 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 import matplotlib.pyplot as plt
 import numpy as np
 
-def prospectus_page():
-
+def prospectus_page(db):
+    r = dh.data_helper({"db": db})
     with st.spinner(f"Fetching student list.", show_time=True):
-        students = get_students_collection()
+        students = r.get_students_collection()
 
     st.title("🧑‍🎓 Student Prospectus & GPA")
 
@@ -44,8 +46,8 @@ def prospectus_page():
 
 
     with st.spinner(f"Fetching curriculum and student grades.", show_time = True):
-        curriculum_df = get_curriculum(program_code)
-        stud_grades = get_student_subjects_grades(StudentID=student_id)
+        curriculum_df = r.get_curriculum(program_code)
+        stud_grades = r.get_student_subjects_grades(StudentID=student_id)
 
     if curriculum_df.empty:
         st.warning(f"No curriculum found for the program: {program_code}")

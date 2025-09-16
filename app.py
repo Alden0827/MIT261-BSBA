@@ -139,4 +139,4 @@ def main():
 if st.session_state["logged_in"]:
     main()
 else:
-    login_view()
+    login_view(db)

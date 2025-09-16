@@ -1,15 +1,15 @@
-# import streamlit as st
+import streamlit as st
+import helpers.user_helper as uh
 import pandas as pd
-from helpers.data_helper import get_all_users, add_user, delete_user, update_user, change_password
-
-def user_management_view(st, db):
+def user_management_view(db):
+    r = uh.data_helper({"db": db})
     st.header("User Management")
 
     # --- User List ---
     st.subheader("Existing Users")
 
     def refresh_users():
-        st.session_state.users_df = get_all_users()
+        st.session_state.users_df = r.get_all_users()
 
     if 'users_df' not in st.session_state:
         refresh_users()
@@ -45,7 +45,7 @@ def user_management_view(st, db):
                         st.session_state.edit_user = row
                 with delete_col:
                     if st.button("Delete", key=f"delete_{row['username']}"):
-                        success, message = delete_user(row['username'])
+                        success, message = r.delete_user(row['username'])
                         if success:
                             st.success(message)
                             refresh_users()
@@ -75,7 +75,7 @@ def user_management_view(st, db):
 
                 submitted = st.form_submit_button("Save Changes")
                 if submitted:
-                    update_success, update_message = update_user(user_to_edit['username'], fullname, role)
+                    update_success, update_message = r.update_user(user_to_edit['username'], fullname, role)
                     if update_success:
                         st.success(update_message)
                     else:
@@ -111,7 +111,7 @@ def user_management_view(st, db):
                     if not all([new_username, new_password, new_fullname, new_role]):
                         st.warning("Please fill out all fields.")
                     else:
-                        success, message = add_user(new_username, new_password, new_role, new_fullname)
+                        success, message = r.add_user(new_username, new_password, new_role, new_fullname)
                         if success:
                             st.success(message)
                             refresh_users()
