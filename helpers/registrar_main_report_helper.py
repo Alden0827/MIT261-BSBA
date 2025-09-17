@@ -42,7 +42,7 @@ class report_helper(object):
         
 
     @cache_meta()
-    def get_students_batch_checkpoint(self,batch_size=1000):
+    def get_students_batch_checkpoint(self,batch_size=1000, course=None, year_level=None):
         
         CACHE_DIR = "./cache"
         CHECKPOINT_FILE = os.path.join(CACHE_DIR, "students_checkpoint.pkl")
@@ -57,7 +57,13 @@ class report_helper(object):
         else:
             start_index, results = 0, []
 
-        student_ids = self.db.students.distinct("_id")
+        query = {}
+        if course:
+            query["Course"] = course
+        if year_level:
+            query["YearLevel"] = year_level
+
+        student_ids = self.db.students.distinct("_id", query)
 
         # --- Process in batches ---
         for i in range(start_index, len(student_ids), batch_size):
@@ -96,11 +102,11 @@ class report_helper(object):
     # ------------------------------
 
     @cache_meta()
-    def get_deans_list(self,batch_size=1000, top_n=10):
+    def get_deans_list(self,batch_size=1000, top_n=10, course=None, year_level=None):
         
 
         print("Da 1")
-        students_df = self.get_students_batch_checkpoint()
+        students_df = self.get_students_batch_checkpoint(course=course, year_level=year_level)
         if students_df.empty:
             return pd.DataFrame()
         student_ids = students_df["_id"].tolist()
@@ -185,12 +191,12 @@ class report_helper(object):
     # 1b. Academic Probation
     # ------------------------------
     @cache_meta()
-    def get_academic_probation_batch_checkpoint(self,batch_size=10000, top_n=10):
+    def get_academic_probation_batch_checkpoint(self,batch_size=10000, top_n=10, course=None, year_level=None):
         CHECKPOINT_FILE = os.path.join(CACHE_DIR, "get_academic_probation_batch_checkpoint.pkl")
         
 
         # 🔹 Load all students (cached)
-        students_df = self.get_students_batch_checkpoint()
+        students_df = self.get_students_batch_checkpoint(course=course, year_level=year_level)
         if students_df.empty:
             return pd.DataFrame()
 
@@ -286,11 +292,15 @@ class report_helper(object):
     # 2. Subject Pass/Fail Distribution
     # ------------------------------
     @cache_meta()
-    def get_subject_pass_fail(self):
+    def get_subject_pass_fail(self, course=None, year_level=None):
         
+        students_df = self.get_students_batch_checkpoint(course=course, year_level=year_level)
+        if students_df.empty:
+            return pd.DataFrame()
+        student_ids = students_df["_id"].tolist()
 
         # 🔹 Load required collections
-        grades = list(self.db.grades.find({}, {"SubjectCodes": 1, "Grades": 1, "SemesterID": 1}))
+        grades = list(self.db.grades.find({"StudentID": {"$in": student_ids}}, {"SubjectCodes": 1, "Grades": 1, "SemesterID": 1}))
         subjects = pd.DataFrame(list(self.db.subjects.find({}, {"_id": 1, "Description": 1})))
         semesters = pd.DataFrame(list(self.db.semesters.find({}, {"_id": 1, "Semester": 1})))
 
@@ -349,7 +359,7 @@ class report_helper(object):
     # 3. Enrollment trend An analysis
     # ------------------------------
 
-    def get_enrollment_trend(self,batch_size=1000):
+    def get_enrollment_trend(self,batch_size=1000, course=None, year_level=None):
         
         CACHE_DIR = "./cache"
         CHECKPOINT_FILE = os.path.join(CACHE_DIR, "enrollment_trend_checkpoint.pkl")
@@ -365,7 +375,7 @@ class report_helper(object):
             start_index, results = 0, []
 
         # Load all students (with batching)
-        students_df = self.get_students_batch_checkpoint()
+        students_df = self.get_students_batch_checkpoint(course=course, year_level=year_level)
         if students_df.empty:
             return pd.DataFrame()
         student_ids = students_df["_id"].tolist()
@@ -422,19 +432,19 @@ class report_helper(object):
     # ------------------------------
 
     @cache_meta()
-    def get_incomplete_grades(self):
+    def get_incomplete_grades(self, course=None, year_level=None):
         
+        students_df = self.get_students_batch_checkpoint(course=course, year_level=year_level)
+        if students_df.empty:
+            return pd.DataFrame()
+        student_ids = students_df["_id"].tolist()
 
         # 🔹 Load collections
-        students = self.get_students_batch_checkpoint()
-        if students.empty:
-            return pd.DataFrame()
-
-        grades = list(self.db.grades.find({}, {"StudentID": 1, "SubjectCodes": 1, "Grades": 1, "SemesterID": 1, "Status": 1}))
+        grades = list(self.db.grades.find({"StudentID": {"$in": student_ids}}, {"StudentID": 1, "SubjectCodes": 1, "Grades": 1, "SemesterID": 1, "Status": 1}))
         subjects = pd.DataFrame(list(self.db.subjects.find({}, {"_id": 1, "Description": 1})))
         semesters = pd.DataFrame(list(self.db.semesters.find({}, {"_id": 1, "Semester": 1})))
 
-        if not grades or students.empty or subjects.empty or semesters.empty:
+        if not grades or subjects.empty or semesters.empty:
             return pd.DataFrame()
 
         # 🔹 Flatten grades (expand arrays)
@@ -461,8 +471,8 @@ class report_helper(object):
             return df
 
         # 🔹 Merge student info
-        students.rename(columns={"_id": "Student ID"}, inplace=True)
-        df = df.merge(students, on="Student ID", how="left")
+        students_df.rename(columns={"_id": "Student ID"}, inplace=True)
+        df = df.merge(students_df, on="Student ID", how="left")
 
         # 🔹 Merge subject info
         subjects.rename(columns={"_id": "Course Code", "Description": "Course Title"}, inplace=True)
@@ -484,9 +494,8 @@ class report_helper(object):
     # ------------------------------
 
     @cache_meta()
-    def get_retention_rates(self,batch_size=1000):
+    def get_retention_rates(self,batch_size=1000, course=None, year_level=None):
         
-
         
         CHECKPOINT_FILE = os.path.join(CACHE_DIR, "retention_checkpoint.pkl")
 
@@ -500,7 +509,7 @@ class report_helper(object):
         else:
             start_index, results = 0, []
 
-        students_df = self.get_students_batch_checkpoint()
+        students_df = self.get_students_batch_checkpoint(course=course, year_level=year_level)
         if students_df.empty:
             return pd.DataFrame()
         student_ids = students_df["_id"].tolist()
@@ -582,16 +591,16 @@ class report_helper(object):
     # ------------------------------
 
     @cache_meta()
-    def get_top_performers(self):
+    def get_top_performers(self, course=None, year_level=None):
         
-
         # 1. Load students using batch checkpoint loader
-        students_df = self.get_students_batch_checkpoint()
+        students_df = self.get_students_batch_checkpoint(course=course, year_level=year_level)
         if students_df.empty:
             return pd.DataFrame()
 
+        student_ids = students_df["_id"].tolist()
         # 2. Load grades (StudentID + Grades + SemesterID)
-        grades = list(self.db.grades.find({}, {"StudentID": 1, "Grades": 1, "SemesterID": 1}))
+        grades = list(self.db.grades.find({"StudentID": {"$in": student_ids}}, {"StudentID": 1, "Grades": 1, "SemesterID": 1}))
         if not grades:
             return pd.DataFrame()
 
@@ -708,4 +717,3 @@ if __name__ == "__main__":
     # curriculum = get_curriculum_progress() #7. Curriculum Progress Viewer
     # print(curriculum.iloc[0])
     pass
-

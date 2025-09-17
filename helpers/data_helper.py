@@ -166,6 +166,10 @@ class data_helper(object):
         return self.db.students.distinct("Course")
 
     @cache_meta(ttl=600000) #60 minutes
+    def get_year_levels(self):
+        return self.db.students.distinct("YearLevel")
+
+    @cache_meta(ttl=600000) #60 minutes
     def get_grades(self,student_id: int | None = None, batch_size: int = 1000):
         print("Fetching data", end="")
         # 🔹 Build query filter

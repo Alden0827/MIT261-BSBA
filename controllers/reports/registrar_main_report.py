@@ -62,6 +62,21 @@ def report_page(db):
         **Insight:**  
         Quickly identify **high achievers** for recognition, and **students needing support** for early interventions. This view helps in academic counseling and program-level performance assessment.
         """)
+
+        # --- Filters ---
+        courses = ["All"] + r2.get_courses()
+        year_levels = ["All"] + r2.get_year_levels()
+
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_course = st.selectbox("Filter by Course", courses)
+        with col2:
+            selected_year_level = st.selectbox("Filter by Year Level", year_levels)
+
+        # --- Apply filters ---
+        course_filter = selected_course if selected_course != "All" else None
+        year_level_filter = selected_year_level if selected_year_level != "All" else None
+
         # -------------------------------
         # A. Dean's List
         # -------------------------------
@@ -69,7 +84,7 @@ def report_page(db):
         st.markdown("**Criteria:** No grade < 85% & GPA >= 90%")
 
         with st.spinner(f"Preparing data for {report}.", show_time=True):
-            df_deans = r.get_deans_list()  # fetch data
+            df_deans = r.get_deans_list(course=course_filter, year_level=year_level_filter)  # fetch data
 
         # Display table
         st.dataframe(df_deans, use_container_width=True)
@@ -112,7 +127,7 @@ def report_page(db):
         st.markdown("**Criteria:** No grade < 75 OR >= 30% FAILS")
 
         with st.spinner(f"Preparing data for {report}.", show_time=True):
-            df_probation = r.get_academic_probation_batch_checkpoint()
+            df_probation = r.get_academic_probation_batch_checkpoint(course=course_filter, year_level=year_level_filter)
 
         # Display table
         st.dataframe(df_probation, use_container_width=True)
@@ -178,8 +193,22 @@ def report_page(db):
     elif report == "2. Subject Pass/Fail Distribution":
         st.subheader("📊 Subject Pass/Fail Distribution")
         
+        # --- Filters ---
+        courses = ["All"] + r2.get_courses()
+        year_levels = ["All"] + r2.get_year_levels()
+
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_course = st.selectbox("Filter by Course", courses)
+        with col2:
+            selected_year_level = st.selectbox("Filter by Year Level", year_levels)
+
+        # --- Apply filters ---
+        course_filter = selected_course if selected_course != "All" else None
+        year_level_filter = selected_year_level if selected_year_level != "All" else None
+
         with st.spinner(f"Preparing data for {report}.", show_time = True):
-            df_subjects = r.get_subject_pass_fail()  # columns: ['Subject Code', 'Subject Name', 'Semester', 'Pass Count', 'Fail Count', 'Pass %', 'Fail %']
+            df_subjects = r.get_subject_pass_fail(course=course_filter, year_level=year_level_filter)  # columns: ['Subject Code', 'Subject Name', 'Semester', 'Pass Count', 'Fail Count', 'Pass %', 'Fail %']
         st.dataframe(df_subjects)
 
         st.markdown("""
@@ -226,8 +255,22 @@ def report_page(db):
     elif report == "3. Enrollment Trend Analysis":
         st.subheader("📈 Enrollment Trend Analysis")
 
+        # --- Filters ---
+        courses = ["All"] + r2.get_courses()
+        year_levels = ["All"] + r2.get_year_levels()
+
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_course = st.selectbox("Filter by Course", courses)
+        with col2:
+            selected_year_level = st.selectbox("Filter by Year Level", year_levels)
+
+        # --- Apply filters ---
+        course_filter = selected_course if selected_course != "All" else None
+        year_level_filter = selected_year_level if selected_year_level != "All" else None
+
         with st.spinner(f"Preparing data for {report}.", show_time = True):
-            df_enrollment = r.get_enrollment_trend()  # columns: ['Semester', 'Total Enrollment', 'New Enrollees', 'Dropouts', 'Retention Rate (%)']
+            df_enrollment = r.get_enrollment_trend(course=course_filter, year_level=year_level_filter)  # columns: ['Semester', 'Total Enrollment', 'New Enrollees', 'Dropouts', 'Retention Rate (%)']
         st.dataframe(df_enrollment)
 
         st.markdown("""
@@ -279,8 +322,22 @@ def report_page(db):
     elif report == "4. Incomplete Grades":
         st.subheader("⚠️ Incomplete Grades Report")
 
+        # --- Filters ---
+        courses = ["All"] + r2.get_courses()
+        year_levels = ["All"] + r2.get_year_levels()
+
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_course = st.selectbox("Filter by Course", courses)
+        with col2:
+            selected_year_level = st.selectbox("Filter by Year Level", year_levels)
+
+        # --- Apply filters ---
+        course_filter = selected_course if selected_course != "All" else None
+        year_level_filter = selected_year_level if selected_year_level != "All" else None
+
         with st.spinner(f"Preparing data for {report}.", show_time = True):
-            df_incomplete = r.get_incomplete_grades()  # columns: ['Student ID', 'Name', 'Course Code', 'Course Title', 'Term', 'Grade Status']
+            df_incomplete = r.get_incomplete_grades(course=course_filter, year_level=year_level_filter)  # columns: ['Student ID', 'Name', 'Course Code', 'Course Title', 'Term', 'Grade Status']
         st.dataframe(df_incomplete)
 
         st.markdown("""
@@ -321,8 +378,22 @@ def report_page(db):
     elif report == "5. Retention and Dropout Rates":
         st.subheader("📊 Retention and Dropout Rates")
 
+        # --- Filters ---
+        courses = ["All"] + r2.get_courses()
+        year_levels = ["All"] + r2.get_year_levels()
+
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_course = st.selectbox("Filter by Course", courses)
+        with col2:
+            selected_year_level = st.selectbox("Filter by Year Level", year_levels)
+
+        # --- Apply filters ---
+        course_filter = selected_course if selected_course != "All" else None
+        year_level_filter = selected_year_level if selected_year_level != "All" else None
+
         with st.spinner(f"Preparing data for {report}.", show_time = True):
-            df_retention = r.get_retention_rates()  # columns: ['Semester to Semester', 'Retained', 'Dropped Out', 'Retention Rate (%)']
+            df_retention = r.get_retention_rates(course=course_filter, year_level=year_level_filter)  # columns: ['Semester to Semester', 'Retained', 'Dropped Out', 'Retention Rate (%)']
         
         st.dataframe(df_retention)
 
@@ -378,8 +449,22 @@ def report_page(db):
     elif report == "6. Top Performers per Program":
         st.subheader("🏆 Top Performers per Program")
         
+        # --- Filters ---
+        courses = ["All"] + r2.get_courses()
+        year_levels = ["All"] + r2.get_year_levels()
+
+        col1, col2 = st.columns(2)
+        with col1:
+            selected_course = st.selectbox("Filter by Course", courses)
+        with col2:
+            selected_year_level = st.selectbox("Filter by Year Level", year_levels)
+
+        # --- Apply filters ---
+        course_filter = selected_course if selected_course != "All" else None
+        year_level_filter = selected_year_level if selected_year_level != "All" else None
+
         with st.spinner(f"Preparing data for {report}.", show_time = True):
-            df_top = r.get_top_performers()  # columns: ['Program', 'Semester', 'Student ID', 'Student Name', 'GPA', 'Rank']
+            df_top = r.get_top_performers(course=course_filter, year_level=year_level_filter)  # columns: ['Program', 'Semester', 'Student ID', 'Student Name', 'GPA', 'Rank']
         
         st.dataframe(df_top)
 
