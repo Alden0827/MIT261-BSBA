@@ -20,25 +20,34 @@ except Exception as e:
     print(f"Error connecting to MongoDB: {e}")
     sys.exit()
 
-
-def assign_teacher_to_subject(student_id: int, semester_id: int, subject_code: str, teacher_name: str) -> bool:
+def assign_teacher_to_subject(subject_code: str, teacher_name: str) -> bool:
     """
-    Assign a teacher to a specific subject of a student in the grades collection.
-    Returns True if the update was successful, False if subject not found.
+    Assign a teacher to a subject in the subjects collection,
+    and propagate the teacher name to grades if it's currently blank/null.
     """
+    subjects_col: Collection = db["subjects"]
     grades_col: Collection = db["grades"]
 
-    grade_doc = grades_col.find_one({"StudentID": student_id, "SemesterID": semester_id})
-    if not grade_doc or subject_code not in grade_doc.get("SubjectCodes", []):
-        return False
-
-    index = grade_doc["SubjectCodes"].index(subject_code)
-    grades_col.update_one(
-        {"_id": grade_doc["_id"]},
-        {"$set": {f"Teachers.{index}": teacher_name}}
+    # Step 1: Update in subjects
+    result = subjects_col.update_one(
+        {"_id": subject_code},   # subject_code is stored in _id
+        {"$set": {"Teacher": teacher_name}}
     )
-    return True
 
+    # Step 2: Propagate to grades only if blank/null
+    grades_col.update_many(
+        {
+            "SubjectCodes": subject_code,
+            "$or": [
+                {f"Teachers": {"$exists": False}},
+                {f"Teachers": None},
+                {f"Teachers": ""},
+            ]
+        },
+        {"$set": {"Teachers.$": teacher_name}}  # update matching subject entry
+    )
+
+    return result.modified_count > 0
 
 def set_student_grade(student_id: int, semester_id: int, subject_code: str, grade: int) -> bool:
     """
@@ -140,109 +149,7 @@ def get_teachers(course: str = None):
 
     return summary
 
-# @cache_meta(ttl==3)
-def get_enrolled_for_approval(course=None, semester_id=None, avg_grades_lte=None):
-    """
-    Fetches students registered in a specified or the latest semester,
-    with optional filters for course and average grades.
 
-    Args:
-        db: The MongoDB database object.
-        course (str, optional): The course name to filter by. Defaults to None.
-        semester_id (int, optional): The ID of the semester to fetch students from. 
-                                     If None, the latest semester is used.
-        avg_grades_lte (int, optional): The maximum average grade a student can have.
-                                        Students with an average grade less than or equal to this
-                                        value will be included.
-
-    Returns:
-        pd.DataFrame: A DataFrame with student information or an empty DataFrame if no
-                      students are found. Columns are [StudentID, Name, Year Level, Total Units].
-    """
-    students_df = pd.DataFrame(columns=['StudentID', 'Name', 'Year Level', 'Total Units'])
-
-    try:
-        # Determine the semester to use
-        if semester_id is None:
-            latest_semester_doc = db['semesters'].find_one(sort=[('_id', -1)])
-            if not latest_semester_doc:
-                print("No semesters found.")
-                return students_df
-            semester_id_to_use = latest_semester_doc['_id']
-        else:
-            semester_id_to_use = semester_id
-        
-        # Get all grades documents for the specified or latest semester
-        grades_cursor = db['grades'].find({'SemesterID': semester_id_to_use})
-        grades_docs = list(grades_cursor)
-        
-        if not grades_docs:
-            print(f"No students found registered in semester ID {semester_id_to_use}.")
-            return students_df
-
-        # Calculate total grades, number of subjects, and total units for each student
-        student_data_temp = {}
-        subject_units_cache = {}
-
-        for doc in grades_docs:
-            student_id = doc['StudentID']
-            if student_id not in student_data_temp:
-                student_data_temp[student_id] = {'TotalGrades': 0, 'NumSubjects': 0, 'TotalUnits': 0, 'SubjectCodes': set()}
-            
-            # Sum up grades for the student
-            student_data_temp[student_id]['TotalGrades'] += sum(doc.get('Grades', []))
-            student_data_temp[student_id]['NumSubjects'] += len(doc.get('SubjectCodes', []))
-
-            # Collect subject codes to fetch units later
-            student_data_temp[student_id]['SubjectCodes'].update(doc.get('SubjectCodes', []))
-
-        # Fetch units for all unique subjects at once
-        all_subject_codes = set()
-        for student_info in student_data_temp.values():
-            all_subject_codes.update(student_info['SubjectCodes'])
-
-        subjects_cursor = db['subjects'].find({'_id': {'$in': list(all_subject_codes)}})
-        for subject in subjects_cursor:
-            subject_units_cache[subject['_id']] = subject.get('Units', 0)
-
-        # Calculate total units and average grades
-        student_ids_to_fetch = []
-        for student_id, student_info in student_data_temp.items():
-            total_units = sum(subject_units_cache.get(code, 0) for code in student_info['SubjectCodes'])
-            student_data_temp[student_id]['TotalUnits'] = total_units
-
-            average_grade = student_info['TotalGrades'] / student_info['NumSubjects'] if student_info['NumSubjects'] > 0 else 0
-            student_data_temp[student_id]['AverageGrade'] = average_grade
-
-            # Apply the new avg_grades_lte condition
-            if avg_grades_lte is None or average_grade <= avg_grades_lte:
-                student_ids_to_fetch.append(student_id)
-
-        if not student_ids_to_fetch:
-            print("No students found matching the average grade filter.")
-            return students_df
-
-        query = {'_id': {'$in': student_ids_to_fetch}}
-        if course:
-            query['Course'] = course
-
-        # Fetch student details and build the DataFrame
-        students_cursor = db['students'].find(query)
-        students_data = []
-        for student in students_cursor:
-            student_id = student['_id']
-            students_data.append({
-                'StudentID': student_id,
-                'Name': student.get('Name'),
-                'Year Level': student.get('YearLevel'),
-                'Total Units': student_data_temp.get(student_id, {}).get('TotalUnits', 0)
-            })
-        
-        students_df = pd.DataFrame(students_data)
-        
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    
     
     return students_df
 if __name__ == "__main__":

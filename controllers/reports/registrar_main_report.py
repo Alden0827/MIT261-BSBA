@@ -7,7 +7,7 @@ import helpers.registrar_main_report_helper as rh
 # from helpers.data_helper import student_find    
 from streamlit_echarts import st_echarts
 import helpers.data_helper as dh
-
+import pandas as pd
 
 def report_page(db):
     r = rh.report_helper({"db": db})
@@ -58,78 +58,119 @@ def report_page(db):
 
     elif report == "1. Student Academic Stand":
         st.subheader("🎓 Student Academic Stand Report")
-
-        st.markdown("### A. Dean's List (Top 10 Students)")
+        st.markdown("""
+        **Insight:**  
+        Quickly identify **high achievers** for recognition, and **students needing support** for early interventions. This view helps in academic counseling and program-level performance assessment.
+        """)
+        # -------------------------------
+        # A. Dean's List
+        # -------------------------------
+        st.markdown("### A. Dean's List (:rainbow[Top 10 Students])")
         st.markdown("**Criteria:** No grade < 85% & GPA >= 90%")
-        
+
         with st.spinner(f"Preparing data for {report}.", show_time=True):
             df_deans = r.get_deans_list()  # fetch data
 
-        # --- Tabs for Data / Chart ---
-        tab1, tab2 = st.tabs(["📋 Table", "📊 Chart"])
+        # Display table
+        st.dataframe(df_deans, use_container_width=True)
 
-        with tab1:
-            st.dataframe(df_deans, use_container_width=True)
+        # Chart data
+        names_deans = df_deans["Name"].tolist()
+        gpas_deans = df_deans["GPA"].tolist()
 
-        with tab2:
-            names = df_deans["Name"].tolist()
-            gpas = df_deans["GPA"].tolist()
-            progs = df_deans["Prog"].tolist()
-
-            option = {
-                "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
-                "xAxis": {
-                    "type": "value",
+        option_deans = {
+            "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+            "xAxis": {"type": "value", "name": "GPA", "min": 90},
+            "yAxis": {"type": "category", "data": names_deans[::-1]},
+            "series": [
+                {
                     "name": "GPA",
-                    "min": 90,  # cutoff
-                },
-                "yAxis": {
-                    "type": "category",
-                    "data": names[::-1],  # reverse for top-down
-                },
+                    "type": "bar",
+                    "data": gpas_deans[::-1],
+                    "label": {"show": True, "position": "right", "formatter": "{c}"},
+                    "itemStyle": {
+                        "color": {
+                            "type": "linear",
+                            "x": 0,
+                            "y": 0,
+                            "x2": 1,
+                            "y2": 0,
+                            "colorStops": [
+                                {"offset": 0, "color": "#3b82f6"},
+                                {"offset": 1, "color": "#10b981"},
+                            ],
+                        }
+                    },
+                }
+            ],
+        }
+
+        # -------------------------------
+        # B. Academic Probation
+        # -------------------------------
+        st.markdown("### B. Academic Probation (10 Students)")
+        st.markdown("**Criteria:** No grade < 75 OR >= 30% FAILS")
+
+        with st.spinner(f"Preparing data for {report}.", show_time=True):
+            df_probation = r.get_academic_probation_batch_checkpoint()
+
+        # Display table
+        st.dataframe(df_probation, use_container_width=True)
+
+        # Chart data (safe conversion)
+        required_cols = ["Name", "GPA", "Fail%"]
+        if not all(col in df_probation.columns for col in required_cols):
+            st.error(f"❌ Missing required columns: {required_cols}")
+            st.write("Available columns:", df_probation.columns.tolist())
+        else:
+            df_probation["GPA"] = pd.to_numeric(df_probation["GPA"], errors="coerce")
+            df_probation["Fail%"] = pd.to_numeric(df_probation["Fail%"], errors="coerce")
+
+            names_prob = df_probation["Name"].astype(str).tolist()
+            gpas_prob = df_probation["GPA"].fillna(0).tolist()
+            fails_prob = df_probation["Fail%"].fillna(0).tolist()
+
+            option_prob = {
+                "tooltip": {"trigger": "axis"},
+                "legend": {"data": ["GPA", "Fail%"]},
+                "xAxis": [{"type": "value", "name": "Score"}],
+                "yAxis": [{"type": "category", "data": names_prob[::-1]}],
                 "series": [
                     {
                         "name": "GPA",
                         "type": "bar",
-                        "data": gpas[::-1],
-                        "label": {
-                            "show": True,
-                            "position": "right",
-                            "formatter": "{c}"
-                        },
-                        "itemStyle": {
-                            "color": {
-                                "type": "linear",
-                                "x": 0,
-                                "y": 0,
-                                "x2": 1,
-                                "y2": 0,
-                                "colorStops": [
-                                    {"offset": 0, "color": "#3b82f6"},
-                                    {"offset": 1, "color": "#10b981"},
-                                ],
-                            }
-                        },
-                    }
+                        "data": gpas_prob[::-1],
+                        "label": {"show": True, "position": "right"},
+                        "itemStyle": {"color": "#ef4444"},
+                    },
+                    {
+                        "name": "Fail%",
+                        "type": "line",
+                        "data": fails_prob[::-1],
+                        "label": {"show": True, "position": "top"},
+                        "lineStyle": {"color": "#f59e0b", "width": 2},
+                        "symbol": "circle",
+                        "symbolSize": 8,
+                    },
                 ],
             }
 
-            st_echarts(option, height="500px")
 
+            # -------------------------------
+            # Show Charts Side by Side
+            # -------------------------------
+            st.markdown("### 📊 Visual Comparison")
 
-        st.markdown("### B. Academic Probation (10 Students)")
-        st.markdown("**Criteria:** No grade < 75 OR >= 30% FAILS")
+            col1, col2 = st.columns(2)
 
-        with st.spinner(f"Preparing data for {report}.", show_time = True):
-            df_probation = r.get_academic_probation_batch_checkpoint()  # expected columns: ['#', 'ID', 'Name', 'Prog', 'Yr', 'GPA', 'Units', 'High', 'LOW']
-        
-        st.dataframe(df_probation)
+            with col1:
+                st.markdown("#### 🏅 Dean's List")
+                st_echarts(option_deans, height="500px", key="deans_chart")
 
-        st.markdown("""
-        **Insight:**  
-        Quickly identify **high achievers** for recognition, and **students needing support** for early interventions. 
-        This view helps in academic counseling and program-level performance assessment.
-        """)
+            with col2:
+                st.markdown("#### ⚠️ Academic Probation")
+                st_echarts(option_prob, height="500px", key="probation_chart")
+
 
     # ------------------------------
     # 2. Subject Pass/Fail Distribution

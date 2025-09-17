@@ -2,13 +2,35 @@ import streamlit as st
 import pandas as pd
 import sys
 import os
-
+from bson import ObjectId
+import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 # Helpers
 import helpers.data_helper as dh
 import helpers.registration_helper as rh
 
+def normalize_enrollees(docs):
+    rows = []
+    for d in docs:
+        row = {}
+        for k, v in d.items():
+            # Convert ObjectId → str
+            if isinstance(v, ObjectId):
+                row[k] = str(v)
+            # Convert numpy scalars → Python native
+            elif isinstance(v, (np.generic,)):
+                row[k] = v.item()
+            # Convert list of dicts (like subjects) → comma separated string
+            elif isinstance(v, list):
+                row[k] = ", ".join([str(x) for x in v])
+            # Convert dict (like registeredBy, discardedBy) → JSON string
+            elif isinstance(v, dict):
+                row[k] = ", ".join(f"{kk}: {vv}" for kk, vv in v.items())
+            else:
+                row[k] = v
+        rows.append(row)
+    return pd.DataFrame(rows)
 def enrollment_manager_page(db):
     st.title("Enrollment Manager")
 
@@ -216,7 +238,7 @@ def enrollment_manager_page(db):
                         approver_user = {"_id": "approver1", "fullName": "Approver User"} # Dummy user
 
                         # We need all subject codes for the approval
-                        enrollment_doc = db.enrollments.find_one({"studentId": selected_student_id, "semesterId": semester_id, "status": "Pending"})
+                        enrollment_doc = db.enrollments.find_one({"studentId": int(selected_student_id), "semesterId": int(semester_id), "status": "Pending"})
                         if enrollment_doc:
                             subject_codes = [s['subjectCode'] for s in enrollment_doc.get('subjects', [])]
                             approved_id = rh.approve_enrollee(
@@ -340,7 +362,8 @@ def enrollment_manager_page(db):
         semester_doc = db.semesters.find_one({"SchoolYear": sy_discarded, "Semester": sem_discarded})
         if semester_doc:
             semester_id = semester_doc["_id"]
-            discarded_df = rh.get_discarded_enrollees(semester_id=semester_id)
+            discarded_docs = list(db.enrollments.find({"semesterId": semester_id, "status": "Discarded"}))
+            discarded_df = normalize_enrollees(discarded_docs)
 
             if not discarded_df.empty:
                 st.dataframe(discarded_df)

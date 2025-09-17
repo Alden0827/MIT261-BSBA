@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from pymongo.collection import Collection
 import pandas as pd
-from cache_helper import cache_meta
+from helpers.cache_helper import cache_meta
 from datetime import datetime
 from typing import List
 import sys, os
@@ -112,12 +112,65 @@ def get_enrolled_students(course=None, semester_id=None):
 
     return students_df
 
+# def approve_enrollee(student_id: str, semester_id: int, subject_codes: List[str], approved_by_user: dict):
+#     """
+#     Approves a pending enrollment, moves status to 'Enrolled',
+#     and creates a single grade entry (with arrays) for the semester.
+#     """
+#     enrollment = db.enrollments.find_one({"studentId": int(student_id), "semesterId": int(semester_id)})
+
+#     if not enrollment or enrollment.get("status") != "Pending":
+#         print(f"❌ No pending enrollment found for student {student_id} in semester {semester_id}.")
+#         return None
+
+#     # ✅ Mark enrollment as Enrolled
+#     db.enrollments.update_one(
+#         {"_id": enrollment["_id"]},
+#         {
+#             "$set": {
+#                 "status": "Enrolled",
+#                 "approvedBy": {
+#                     "id": approved_by_user["_id"],
+#                     "fullName": approved_by_user["fullName"]
+#                 },
+#                 "approvedAt": datetime.utcnow(),
+#             }
+#         }
+#     )
+
+#     # ✅ Prepare grade document
+#     subjects = enrollment.get("subjects", [])
+#     subject_codes_list = [subj["subjectCode"] for subj in subjects]
+#     grades_list = [0] * len(subjects)
+#     teachers_list = [""] * len(subjects) # this should be populated base on then  subj["subjectCode"], data is from db.subjects.Teacher where db.subjects._id =  subj["subjectCode"]
+#     status_list = [""] * len(subjects)
+
+#     grade_doc = {
+#         "StudentID": int(student_id),
+#         "SubjectCodes": subject_codes_list,
+#         "Grades": grades_list,
+#         "Teachers": teachers_list,
+#         "SemesterID": int(semester_id),
+#         "Status": status_list
+#     }
+
+#     # ✅ Auto-increment `_id` for grades
+#     last_grade = db.grades.find_one(sort=[("_id", -1)])
+#     next_id = (last_grade["_id"] + 1) if last_grade else 1
+#     grade_doc["_id"] = next_id
+
+#     # ✅ Insert single grade entry
+#     db.grades.insert_one(grade_doc)
+
+#     print(f"✅ Enrollment approved and grade record created for {len(subjects)} subjects.")
+#     return enrollment["_id"]
+
 def approve_enrollee(student_id: str, semester_id: int, subject_codes: List[str], approved_by_user: dict):
     """
     Approves a pending enrollment, moves status to 'Enrolled',
     and creates a single grade entry (with arrays) for the semester.
     """
-    enrollment = db.enrollments.find_one({"studentId": student_id, "semesterId": semester_id})
+    enrollment = db.enrollments.find_one({"studentId": int(student_id), "semesterId": int(semester_id)})
 
     if not enrollment or enrollment.get("status") != "Pending":
         print(f"❌ No pending enrollment found for student {student_id} in semester {semester_id}.")
@@ -142,22 +195,23 @@ def approve_enrollee(student_id: str, semester_id: int, subject_codes: List[str]
     subjects = enrollment.get("subjects", [])
     subject_codes_list = [subj["subjectCode"] for subj in subjects]
     grades_list = [0] * len(subjects)
-    teachers_list = [""] * len(subjects)
     status_list = [""] * len(subjects)
 
+    # 🔎 Get teachers for each subject from db.subjects
+    teachers_list = []
+    for subj_code in subject_codes_list:
+        subject_doc = db.subjects.find_one({"_id": subj_code}, {"Teacher": 1})
+        teachers_list.append(subject_doc.get("Teacher", "") if subject_doc else "")
+
     grade_doc = {
-        "StudentID": student_id,
+        "_id": (db.grades.find_one(sort=[("_id", -1)])["_id"] + 1) if db.grades.count_documents({}) else 1,
+        "StudentID": int(student_id),
         "SubjectCodes": subject_codes_list,
         "Grades": grades_list,
         "Teachers": teachers_list,
-        "SemesterID": semester_id,
+        "SemesterID": int(semester_id),
         "Status": status_list
     }
-
-    # ✅ Auto-increment `_id` for grades
-    last_grade = db.grades.find_one(sort=[("_id", -1)])
-    next_id = (last_grade["_id"] + 1) if last_grade else 1
-    grade_doc["_id"] = next_id
 
     # ✅ Insert single grade entry
     db.grades.insert_one(grade_doc)
@@ -228,8 +282,8 @@ def discard_pending_enrollee(student_id, semester_id, discarded_by_user=None, re
     try:
         result = db.enrollments.update_one(
             {
-                "studentId": student_id,
-                "semesterId": semester_id,
+                "studentId": int(student_id),
+                "semesterId": int(semester_id),
                 "status": "Pending"   # Only discard if still pending
             },
             {
