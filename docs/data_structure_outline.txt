@@ -17,6 +17,55 @@ except Exception as e:
 
 
 ### mongodb structure with sample data ------------------------------------------------
+
+enrollments:
+{
+  "_id": {
+    "$oid": "68ca2102b184ab6d79c7f3cc"
+  },
+  "studentId": 500001,
+  "semesterId": 17,
+  "schoolYear": 2025,
+  "status": "Enrolled",
+  "registrationDate": {
+    "$date": "2025-09-17T02:46:26.663Z"
+  },
+  "subjects": [
+    {
+      "subjectCode": "GE 302",
+      "description": "Ethics",
+      "Units": 3,
+      "teacher": null,
+      "status": "Pending"
+    },
+    {
+      "subjectCode": "GE 403",
+      "description": "Science, Technology and Society",
+      "Units": 3,
+      "teacher": null,
+      "status": "Enrolled"
+    }
+  ],
+  "registeredBy": {
+    "userId": 1,
+    "name": "Registrar Test"
+  },
+  "approvedAt": {
+    "$date": "2025-09-17T02:49:10.396Z"
+  },
+  "approvedBy": {
+    "id": 2,
+    "fullName": "Dean Approver"
+  },
+  "lastUpdated": {
+    "$date": "2025-09-17T02:52:41.777Z"
+  },
+  "updatedBy": {
+    "userId": 2,
+    "name": "Dean Approver"
+  }
+}
+
 students:
 {
   "_id": 1,

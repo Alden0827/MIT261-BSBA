@@ -140,8 +140,8 @@ def get_teachers(course: str = None):
 
     return summary
 
-# @cache_meta()
-def get_latest_semester_students(course=None, semester_id=None, avg_grades_lte=None):
+# @cache_meta(ttl==3)
+def get_enrolled_for_approval(course=None, semester_id=None, avg_grades_lte=None):
     """
     Fetches students registered in a specified or the latest semester,
     with optional filters for course and average grades.
@@ -265,7 +265,7 @@ if __name__ == "__main__":
     # data = get_teachers('BSBA')
     # print(data)
     
-    df_filtered = get_latest_semester_students(course="BSBA",semester_id=17,avg_grades_lte=85)
+    df_filtered = get_enrolled_for_approval(course="BSBA",semester_id=17,avg_grades_lte=85)
     print(df_filtered)
 
     
