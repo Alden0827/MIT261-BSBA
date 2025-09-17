@@ -590,66 +590,157 @@ class report_helper(object):
     # 6. Top Performers per Program
     # ------------------------------
 
-    @cache_meta()
-    def get_top_performers(self, course=None, year_level=None):
+    # @cache_meta()
+    # def get_top_performers(self, course=None, year_level=None):
         
-        # 1. Load students using batch checkpoint loader
-        students_df = self.get_students_batch_checkpoint(course=course, year_level=year_level)
-        if students_df.empty:
-            return pd.DataFrame()
+    #     # 1. Load students using batch checkpoint loader
+    #     students_df = self.get_students_batch_checkpoint(course=course, year_level=year_level)
+    #     if students_df.empty:
+    #         return pd.DataFrame()
 
-        student_ids = students_df["_id"].tolist()
-        # 2. Load grades (StudentID + Grades + SemesterID)
-        grades = list(self.db.grades.find({"StudentID": {"$in": student_ids}}, {"StudentID": 1, "Grades": 1, "SemesterID": 1}))
-        if not grades:
-            return pd.DataFrame()
+    #     student_ids = students_df["_id"].tolist()
+    #     # 2. Load grades (StudentID + Grades + SemesterID)
+    #     grades = list(self.db.grades.find({"StudentID": {"$in": student_ids}}, {"StudentID": 1, "Grades": 1, "SemesterID": 1}))
+    #     if not grades:
+    #         return pd.DataFrame()
 
-        grades_df = pd.DataFrame(grades)
+    #     grades_df = pd.DataFrame(grades)
 
-        # 3. Compute GPA per student/semester
-        def safe_avg(grades):
-            if isinstance(grades, list) and grades:
-                valid = [g for g in grades if g is not None]
-                return sum(valid) / len(valid) if valid else None
-            return None
+    #     # 3. Compute GPA per student/semester
+    #     def safe_avg(grades):
+    #         if isinstance(grades, list) and grades:
+    #             valid = [g for g in grades if g is not None]
+    #             return sum(valid) / len(valid) if valid else None
+    #         return None
 
-        grades_df["GPA"] = grades_df["Grades"].apply(safe_avg)
-        grades_df = grades_df.dropna(subset=["GPA"])
+    #     grades_df["GPA"] = grades_df["Grades"].apply(safe_avg)
+    #     grades_df = grades_df.dropna(subset=["GPA"])
 
-        # Keep the *latest* semester per student (if multiple exist)
-        grades_df = grades_df.sort_values("SemesterID").drop_duplicates("StudentID", keep="last")
+    #     # Keep the *latest* semester per student (if multiple exist)
+    #     grades_df = grades_df.sort_values("SemesterID").drop_duplicates("StudentID", keep="last")
 
-        # 4. Join with students
-        merged = students_df.merge(
-            grades_df[["StudentID", "GPA", "SemesterID"]],
-            left_on="_id", right_on="StudentID", how="inner"
+    #     # 4. Join with students
+    #     merged = students_df.merge(
+    #         grades_df[["StudentID", "GPA", "SemesterID"]],
+    #         left_on="_id", right_on="StudentID", how="inner"
+    #     )
+
+    #     # 5. Attach semester info (SchoolYear + Semester)
+    #     sem_ids = merged["SemesterID"].unique().tolist()
+    #     sem_map = {
+    #         s["_id"]: f"{s.get('SchoolYear', '')} - {s['Semester']}"
+    #         for s in self.db.semesters.find({"_id": {"$in": sem_ids}}, {"SchoolYear": 1, "Semester": 1})
+    #     }
+    #     merged["Semester"] = merged["SemesterID"].map(sem_map)
+
+    #     # 6. Rank within each Course
+    #     merged["Rank"] = merged.groupby("Course")["GPA"].rank("dense", ascending=False)
+
+    #     # 7. Sort results
+    #     merged.sort_values(["Course", "Rank"], inplace=True)
+
+    #     # 8. Final clean DataFrame
+    #     result = merged.rename(columns={
+    #         "_id": "Student ID",
+    #         "Name": "Student Name",
+    #         "Course": "Program",
+    #         "YearLevel": "Year Level"
+    #     })[["Program", "Year Level", "Semester", "Student ID", "Student Name", "GPA", "Rank"]]
+
+    #     result["GPA"] = result["GPA"].round(2)
+
+    #     return result
+
+@cache_meta()
+def get_retention_rates(self, batch_size=1000, course=None, year_level=None):
+    import os, pickle
+    import pandas as pd
+
+    CHECKPOINT_FILE = os.path.join(CACHE_DIR, "retention_checkpoint.pkl")
+
+    # --- Load checkpoint ---
+    if os.path.exists(CHECKPOINT_FILE):
+        with open(CHECKPOINT_FILE, "rb") as f:
+            checkpoint = pickle.load(f)
+        start_index = checkpoint["last_index"]
+        results = checkpoint["results"]
+        print(f"Resuming retention from index {start_index}...")
+    else:
+        start_index, results = 0, []
+
+    # --- Load students ---
+    students_df = self.get_students_batch_checkpoint(course=course, year_level=year_level)
+    if students_df.empty:
+        return pd.DataFrame()
+    student_ids = students_df["_id"].tolist()
+
+    # --- Process students in batches ---
+    for i in range(start_index, len(student_ids), batch_size):
+        batch_ids = student_ids[i:i + batch_size]
+        print(f"Processing retention for students {i+1}-{min(i+batch_size, len(student_ids))}")
+
+        grades_cursor = self.db.grades.find(
+            {"StudentID": {"$in": batch_ids}},
+            {"StudentID": 1, "SemesterID": 1}
         )
+        grades_df = pd.DataFrame(list(grades_cursor))
+        if grades_df.empty:
+            continue
 
-        # 5. Attach semester info (SchoolYear + Semester)
-        sem_ids = merged["SemesterID"].unique().tolist()
+        # Map SemesterID → formatted string
+        sem_ids = grades_df["SemesterID"].unique().tolist()
         sem_map = {
-            s["_id"]: f"{s.get('SchoolYear', '')} - {s['Semester']}"
-            for s in self.db.semesters.find({"_id": {"$in": sem_ids}}, {"SchoolYear": 1, "Semester": 1})
+            s["_id"]: f"{s['Semester']} {s['SchoolYear']}"
+            for s in self.db.semesters.find(
+                {"_id": {"$in": sem_ids}},
+                {"Semester": 1, "SchoolYear": 1}
+            )
         }
-        merged["Semester"] = merged["SemesterID"].map(sem_map)
+        grades_df["Semester"] = grades_df["SemesterID"].map(sem_map)
+        results.append(grades_df)
 
-        # 6. Rank within each Course
-        merged["Rank"] = merged.groupby("Course")["GPA"].rank("dense", ascending=False)
+        # --- Save checkpoint ---
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        with open(CHECKPOINT_FILE, "wb") as f:
+            pickle.dump({"last_index": i + batch_size, "results": results}, f)
 
-        # 7. Sort results
-        merged.sort_values(["Course", "Rank"], inplace=True)
+    if not results:
+        return pd.DataFrame()
 
-        # 8. Final clean DataFrame
-        result = merged.rename(columns={
-            "_id": "Student ID",
-            "Name": "Student Name",
-            "Course": "Program",
-            "YearLevel": "Year Level"
-        })[["Program", "Year Level", "Semester", "Student ID", "Student Name", "GPA", "Rank"]]
+    df = pd.concat(results, ignore_index=True)
 
-        result["GPA"] = result["GPA"].round(2)
+    # --- Sort semesters properly ---
+    def sem_sort_key(val):
+        if not isinstance(val, str):
+            return (9999, 99)
+        sem, year = val.split()
+        order_map = {"FirstSem": 1, "SecondSem": 2, "Summer": 3}
+        return (int(year), order_map.get(sem, 99))
 
-        return result
+    df = df.sort_values(by=["StudentID", "Semester"])
+    df["Next_Semester"] = df.groupby("StudentID")["Semester"].shift(-1)
+    df["Retained"] = df["Next_Semester"].notnull().astype(int)
+
+    # --- Exclude the latest semester entirely ---
+    latest_semester = df["Semester"].max()
+    retention_df = df[df["Semester"] != latest_semester].copy()
+
+    # --- Aggregate retention per semester ---
+    summary = retention_df.groupby("Semester").agg(
+        Retained=("Retained", "sum"),
+        Total=("StudentID", "count")
+    ).reset_index()
+
+    summary["Dropped Out"] = summary["Total"] - summary["Retained"]
+    summary["Retention Rate (%)"] = (summary["Retained"] / summary["Total"] * 100).round(2)
+
+    # --- Delete checkpoint ---
+    if os.path.exists(CHECKPOINT_FILE):
+        os.remove(CHECKPOINT_FILE)
+
+    return summary[["Semester", "Retained", "Dropped Out", "Retention Rate (%)"]]
+
+
 
     # ------------------------------
     # 7. Curriculum Progress Viewer
@@ -712,8 +803,9 @@ if __name__ == "__main__":
     # probation = get_academic_probation_batch_checkpoint(top_n=10) #2. Academic Probation
     # pass_fail = get_subject_pass_fail() # 3. Subject Pass/Fail Distribution
     # incomplete = get_incomplete_grades() #4. Incomplete Grades Report
-    # retention = get_retention_rates() #5. Retention and Dropout Rates
+    retention = get_retention_rates(batch_size=1000, course=None, year_level=None) #5. Retention and Dropout Rates
     # top_performers = get_top_performers() #6. Top Performers per Program
     # curriculum = get_curriculum_progress() #7. Curriculum Progress Viewer
     # print(curriculum.iloc[0])
+    
     pass

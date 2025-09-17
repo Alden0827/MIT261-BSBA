@@ -83,42 +83,46 @@ def report_page(db):
         st.markdown("### A. Dean's List (:rainbow[Top 10 Students])")
         st.markdown("**Criteria:** No grade < 85% & GPA >= 90%")
 
-        with st.spinner(f"Preparing data for {report}.", show_time=True):
+        with st.spinner(f"Preparing data for student' academic Stand Reporting - Dean's List.", show_time=True):
             df_deans = r.get_deans_list(course=course_filter, year_level=year_level_filter)  # fetch data
 
-        # Display table
-        st.dataframe(df_deans, use_container_width=True)
+        if not df_deans.empty:
+            st.info("No Dean’s List entries found for the chosen semester/year. This means no students met the GPA and grade requirements with the applied filters.")
+        else:
 
-        # Chart data
-        names_deans = df_deans["Name"].tolist()
-        gpas_deans = df_deans["GPA"].tolist()
+            # Display table
+            st.dataframe(df_deans, use_container_width=True)
 
-        option_deans = {
-            "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
-            "xAxis": {"type": "value", "name": "GPA", "min": 90},
-            "yAxis": {"type": "category", "data": names_deans[::-1]},
-            "series": [
-                {
-                    "name": "GPA",
-                    "type": "bar",
-                    "data": gpas_deans[::-1],
-                    "label": {"show": True, "position": "right", "formatter": "{c}"},
-                    "itemStyle": {
-                        "color": {
-                            "type": "linear",
-                            "x": 0,
-                            "y": 0,
-                            "x2": 1,
-                            "y2": 0,
-                            "colorStops": [
-                                {"offset": 0, "color": "#3b82f6"},
-                                {"offset": 1, "color": "#10b981"},
-                            ],
-                        }
-                    },
-                }
-            ],
-        }
+            # Chart data
+            names_deans = df_deans["Name"].tolist()
+            gpas_deans = df_deans["GPA"].tolist()
+
+            option_deans = {
+                "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+                "xAxis": {"type": "value", "name": "GPA", "min": 90},
+                "yAxis": {"type": "category", "data": names_deans[::-1]},
+                "series": [
+                    {
+                        "name": "GPA",
+                        "type": "bar",
+                        "data": gpas_deans[::-1],
+                        "label": {"show": True, "position": "right", "formatter": "{c}"},
+                        "itemStyle": {
+                            "color": {
+                                "type": "linear",
+                                "x": 0,
+                                "y": 0,
+                                "x2": 1,
+                                "y2": 0,
+                                "colorStops": [
+                                    {"offset": 0, "color": "#3b82f6"},
+                                    {"offset": 1, "color": "#10b981"},
+                                ],
+                            }
+                        },
+                    }
+                ],
+            }
 
         # -------------------------------
         # B. Academic Probation
@@ -126,55 +130,57 @@ def report_page(db):
         st.markdown("### B. Academic Probation (10 Students)")
         st.markdown("**Criteria:** No grade < 75 OR >= 30% FAILS")
 
-        with st.spinner(f"Preparing data for {report}.", show_time=True):
+        with st.spinner(f"Preparing data for academic probation.", show_time=True):
             df_probation = r.get_academic_probation_batch_checkpoint(course=course_filter, year_level=year_level_filter)
 
-        # Display table
-        st.dataframe(df_probation, use_container_width=True)
+        if not df_probation.empty:
 
-        # Chart data (safe conversion)
-        required_cols = ["Name", "GPA", "Fail%"]
-        if not all(col in df_probation.columns for col in required_cols):
-            st.error(f"❌ Missing required columns: {required_cols}")
-            st.write("Available columns:", df_probation.columns.tolist())
-        else:
-            df_probation["GPA"] = pd.to_numeric(df_probation["GPA"], errors="coerce")
-            df_probation["Fail%"] = pd.to_numeric(df_probation["Fail%"], errors="coerce")
+            # Display table
+            st.dataframe(df_probation, use_container_width=True)
 
-            names_prob = df_probation["Name"].astype(str).tolist()
-            gpas_prob = df_probation["GPA"].fillna(0).tolist()
-            fails_prob = df_probation["Fail%"].fillna(0).tolist()
+            # Chart data (safe conversion)
+            required_cols = ["Name", "GPA", "Fail%"]
+            if not all(col in df_probation.columns for col in required_cols):
+                st.error(f"❌ Missing required columns: {required_cols}")
+                st.write("Available columns:", df_probation.columns.tolist())
+            else:
+                df_probation["GPA"] = pd.to_numeric(df_probation["GPA"], errors="coerce")
+                df_probation["Fail%"] = pd.to_numeric(df_probation["Fail%"], errors="coerce")
 
-            option_prob = {
-                "tooltip": {"trigger": "axis"},
-                "legend": {"data": ["GPA", "Fail%"]},
-                "xAxis": [{"type": "value", "name": "Score"}],
-                "yAxis": [{"type": "category", "data": names_prob[::-1]}],
-                "series": [
-                    {
-                        "name": "GPA",
-                        "type": "bar",
-                        "data": gpas_prob[::-1],
-                        "label": {"show": True, "position": "right"},
-                        "itemStyle": {"color": "#ef4444"},
-                    },
-                    {
-                        "name": "Fail%",
-                        "type": "line",
-                        "data": fails_prob[::-1],
-                        "label": {"show": True, "position": "top"},
-                        "lineStyle": {"color": "#f59e0b", "width": 2},
-                        "symbol": "circle",
-                        "symbolSize": 8,
-                    },
-                ],
-            }
+                names_prob = df_probation["Name"].astype(str).tolist()
+                gpas_prob = df_probation["GPA"].fillna(0).tolist()
+                fails_prob = df_probation["Fail%"].fillna(0).tolist()
+
+                option_prob = {
+                    "tooltip": {"trigger": "axis"},
+                    "legend": {"data": ["GPA", "Fail%"]},
+                    "xAxis": [{"type": "value", "name": "Score"}],
+                    "yAxis": [{"type": "category", "data": names_prob[::-1]}],
+                    "series": [
+                        {
+                            "name": "GPA",
+                            "type": "bar",
+                            "data": gpas_prob[::-1],
+                            "label": {"show": True, "position": "right"},
+                            "itemStyle": {"color": "#ef4444"},
+                        },
+                        {
+                            "name": "Fail%",
+                            "type": "line",
+                            "data": fails_prob[::-1],
+                            "label": {"show": True, "position": "top"},
+                            "lineStyle": {"color": "#f59e0b", "width": 2},
+                            "symbol": "circle",
+                            "symbolSize": 8,
+                        },
+                    ],
+                }
 
 
-            # -------------------------------
-            # Show Charts Side by Side
-            # -------------------------------
-            st.markdown("### 📊 Visual Comparison")
+                # -------------------------------
+                # Show Charts Side by Side
+                # -------------------------------
+                st.markdown("### 📊 Visual Comparison")
 
             col1, col2 = st.columns(2)
 
@@ -218,33 +224,45 @@ def report_page(db):
         """)
 
         if not df_subjects.empty:
-            # Prepare ECharts options
+            # Aggregate data by Subject Code and Subject Name
+            df_chart = df_subjects.groupby(['Subject Code', 'Subject Name']).agg(
+                {'Pass Count': 'sum', 'Fail Count': 'sum'}
+            ).reset_index()
+
+            # Calculate totals and percentages (good practice)
+            df_chart['Total Count'] = df_chart['Pass Count'] + df_chart['Fail Count']
+            df_chart['Pass %'] = (df_chart['Pass Count'] / df_chart['Total Count']) * 100
+            df_chart['Fail %'] = (df_chart['Fail Count'] / df_chart['Total Count']) * 100
+            
+            # Stacked ECharts
             option = {
-                "tooltip": {"trigger": "axis"},
-                "legend": {
-                    "data": ["Pass Count", "Fail Count"]
-                },
+                "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+                "legend": {"data": ["Pass Count", "Fail Count"]},  # optional order for legend
                 "xAxis": [
                     {
                         "type": "category",
-                        "data": df_subjects["Subject Name"].tolist(),
+                        "data": df_chart["Subject Name"].tolist(),
                         "axisLabel": {"interval": 0, "rotate": 30},
                     }
                 ],
                 "yAxis": [{"type": "value", "name": "Students"}],
                 "series": [
                     {
-                        "name": "Pass Count",
-                        "type": "bar",
-                        "data": df_subjects["Pass Count"].tolist(),
-                        "itemStyle": {"color": "#3b82f6"},
-                    },
-                    {
                         "name": "Fail Count",
                         "type": "bar",
-                        "data": df_subjects["Fail Count"].tolist(),
+                        "stack": "total",
+                        "emphasis": {"focus": "series"},
+                        "data": df_chart["Fail Count"].tolist(),
                         "itemStyle": {"color": "#ef4444"},
                     },
+                    {
+                        "name": "Pass Count",
+                        "type": "bar",
+                        "stack": "total",
+                        "emphasis": {"focus": "series"},
+                        "data": df_chart["Pass Count"].tolist(),
+                        "itemStyle": {"color": "#3b82f6"},
+                    }
                 ],
             }
             st_echarts(options=option, height="500px")
