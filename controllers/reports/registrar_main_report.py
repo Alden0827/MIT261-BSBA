@@ -176,7 +176,7 @@ def report_page(db):
     # 2. Subject Pass/Fail Distribution
     # ------------------------------
     elif report == "2. Subject Pass/Fail Distribution":
-        st.subheader("📊 Subject Pass/Fail Distributionx")
+        st.subheader("📊 Subject Pass/Fail Distribution")
         
         with st.spinner(f"Preparing data for {report}.", show_time = True):
             df_subjects = r.get_subject_pass_fail()  # columns: ['Subject Code', 'Subject Name', 'Semester', 'Pass Count', 'Fail Count', 'Pass %', 'Fail %']
@@ -187,6 +187,38 @@ def report_page(db):
         Provides a clear picture of **subject-level performance per semester**, enabling targeted support for subjects 
         with higher failure rates. Administrators can plan remediation programs effectively.
         """)
+
+        if not df_subjects.empty:
+            # Prepare ECharts options
+            option = {
+                "tooltip": {"trigger": "axis"},
+                "legend": {
+                    "data": ["Pass Count", "Fail Count"]
+                },
+                "xAxis": [
+                    {
+                        "type": "category",
+                        "data": df_subjects["Subject Name"].tolist(),
+                        "axisLabel": {"interval": 0, "rotate": 30},
+                    }
+                ],
+                "yAxis": [{"type": "value", "name": "Students"}],
+                "series": [
+                    {
+                        "name": "Pass Count",
+                        "type": "bar",
+                        "data": df_subjects["Pass Count"].tolist(),
+                        "itemStyle": {"color": "#3b82f6"},
+                    },
+                    {
+                        "name": "Fail Count",
+                        "type": "bar",
+                        "data": df_subjects["Fail Count"].tolist(),
+                        "itemStyle": {"color": "#ef4444"},
+                    },
+                ],
+            }
+            st_echarts(options=option, height="500px")
 
     # ------------------------------
     # 3. Enrollment Trend Analysis
@@ -208,7 +240,7 @@ def report_page(db):
         # Prepare ECharts options
         option = {
             "tooltip": {"trigger": "axis"},
-            "legend": ["Total Enrollment", "New Enrollees", "Dropouts", "Retention Rate (%)"],
+            "legend": {"data": ["Total Enrollment", "New Enrollees", "Dropouts", "Retention Rate (%)"]},
             "xAxis": {"type": "category", "data": df_enrollment["Semester"].tolist()},
             "yAxis": [
                 {"type": "value", "name": "Students"},
@@ -257,6 +289,32 @@ def report_page(db):
         ensuring timely grade submissions.
         """)
 
+        if not df_incomplete.empty:
+            # --- Chart ---
+            st.markdown("### 📊 Incomplete Grades per Course")
+
+            # Group by course and count
+            incomplete_counts = df_incomplete.groupby("Course Title").size().reset_index(name="Count")
+            incomplete_counts = incomplete_counts.sort_values("Count", ascending=False)
+
+            option = {
+                "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+                "xAxis": {
+                    "type": "category",
+                    "data": incomplete_counts["Course Title"].tolist(),
+                    "axisLabel": {"interval": 0, "rotate": 30},
+                },
+                "yAxis": {"type": "value", "name": "Number of Incomplete Grades"},
+                "series": [{
+                    "name": "Incomplete Grades",
+                    "type": "bar",
+                    "data": incomplete_counts["Count"].tolist(),
+                    "itemStyle": {"color": "#f59e0b"},
+                    "label": {"show": True, "position": "top"}
+                }]
+            }
+            st_echarts(options=option, height="500px")
+
     # ------------------------------
     # 5. Retention and Dropout Rates
     # ------------------------------
@@ -274,6 +332,46 @@ def report_page(db):
         providing actionable data for academic planning and intervention programs.
         """)
 
+        if not df_retention.empty:
+            # --- Chart ---
+            st.markdown("### 📊 Retention vs. Dropout")
+
+            option = {
+                "tooltip": {"trigger": "axis"},
+                "legend": {"data": ["Retained", "Dropped Out", "Retention Rate (%)"]},
+                "xAxis": {
+                    "type": "category",
+                    "data": df_retention["Semester"].tolist(),
+                    "axisLabel": {"interval": 0, "rotate": 30},
+                },
+                "yAxis": [
+                    {"type": "value", "name": "Number of Students"},
+                    {"type": "value", "name": "Rate (%)", "min": 0, "max": 100}
+                ],
+                "series": [
+                    {
+                        "name": "Retained",
+                        "type": "bar",
+                        "data": df_retention["Retained"].tolist(),
+                        "itemStyle": {"color": "#10b981"}
+                    },
+                    {
+                        "name": "Dropped Out",
+                        "type": "bar",
+                        "data": df_retention["Dropped Out"].tolist(),
+                        "itemStyle": {"color": "#ef4444"}
+                    },
+                    {
+                        "name": "Retention Rate (%)",
+                        "type": "line",
+                        "yAxisIndex": 1,
+                        "data": df_retention["Retention Rate (%)"].tolist(),
+                        "itemStyle": {"color": "#3b82f6"}
+                    }
+                ]
+            }
+            st_echarts(options=option, height="500px")
+
     # ------------------------------
     # 6. Top Performers per Program
     # ------------------------------
@@ -289,6 +387,45 @@ def report_page(db):
         **Insight:**  
         Highlights **high-achieving students** in each program. Useful for **recognition, awards, and program benchmarking**.
         """)
+
+        if not df_top.empty:
+            # --- Chart ---
+            st.markdown("### 📊 Top 5 Performers by GPA per Program")
+
+            # Filter for top 5 in each program
+            df_top_5 = df_top[df_top['Rank'] <= 5]
+
+            # Create a chart for each program
+            programs = df_top_5['Program'].unique()
+            for program in programs:
+                st.markdown(f"#### {program}")
+                program_data = df_top_5[df_top_5['Program'] == program]
+
+                option = {
+                    "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+                    "xAxis": {
+                        "type": "category",
+                        "data": program_data["Student Name"].tolist(),
+                        "axisLabel": {"interval": 0, "rotate": 30},
+                    },
+                    "yAxis": {"type": "value", "name": "GPA", "min": 85},
+                    "series": [{
+                        "name": "GPA",
+                        "type": "bar",
+                        "data": program_data["GPA"].tolist(),
+                        "label": {"show": True, "position": "top"},
+                        "itemStyle": {
+                            "color": {
+                                "type": "linear", "x": 0, "y": 0, "x2": 0, "y2": 1,
+                                "colorStops": [
+                                    {"offset": 0, "color": "#10b981"},
+                                    {"offset": 1, "color": "#3b82f6"}
+                                ]
+                            }
+                        }
+                    }]
+                }
+                st_echarts(options=option, height="400px", key=f"top_performers_{program}")
 
     # ------------------------------
     # 7. Curriculum Progress Viewer
@@ -366,6 +503,31 @@ def report_page(db):
                                 st.dataframe(sem_display, use_container_width=True)
                                 total_units = sem_data["Units"].sum()
                                 st.markdown(f"**Total Units:** {total_units}")
+
+                # --- Chart for Curriculum ---
+                st.markdown("### 📊 Curriculum Workload Distribution")
+
+                # Group by Year and Semester to sum units
+                workload = df_curriculum.groupby(['Year', 'Semester'])['Units'].sum().reset_index()
+                workload['Term'] = workload['Year'].astype(str) + ' - ' + workload['Semester'].astype(str)
+
+                option = {
+                    "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+                    "xAxis": {
+                        "type": "category",
+                        "data": workload["Term"].tolist(),
+                        "name": "Term"
+                    },
+                    "yAxis": {"type": "value", "name": "Total Units"},
+                    "series": [{
+                        "name": "Total Units",
+                        "type": "bar",
+                        "data": workload["Units"].tolist(),
+                        "label": {"show": True, "position": "top"},
+                        "itemStyle": {"color": "#8369CF"}
+                    }]
+                }
+                st_echarts(options=option, height="400px")
 
 
         st.markdown("""
