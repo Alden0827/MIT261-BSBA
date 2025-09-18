@@ -590,66 +590,66 @@ class report_helper(object):
     # 6. Top Performers per Program
     # ------------------------------
 
-    # @cache_meta()
-    # def get_top_performers(self, course=None, year_level=None):
+    @cache_meta()
+    def get_top_performers(self, course=None, year_level=None):
         
-    #     # 1. Load students using batch checkpoint loader
-    #     students_df = self.get_students_batch_checkpoint(course=course, year_level=year_level)
-    #     if students_df.empty:
-    #         return pd.DataFrame()
+        # 1. Load students using batch checkpoint loader
+        students_df = self.get_students_batch_checkpoint(course=course, year_level=year_level)
+        if students_df.empty:
+            return pd.DataFrame()
 
-    #     student_ids = students_df["_id"].tolist()
-    #     # 2. Load grades (StudentID + Grades + SemesterID)
-    #     grades = list(self.db.grades.find({"StudentID": {"$in": student_ids}}, {"StudentID": 1, "Grades": 1, "SemesterID": 1}))
-    #     if not grades:
-    #         return pd.DataFrame()
+        student_ids = students_df["_id"].tolist()
+        # 2. Load grades (StudentID + Grades + SemesterID)
+        grades = list(self.db.grades.find({"StudentID": {"$in": student_ids}}, {"StudentID": 1, "Grades": 1, "SemesterID": 1}))
+        if not grades:
+            return pd.DataFrame()
 
-    #     grades_df = pd.DataFrame(grades)
+        grades_df = pd.DataFrame(grades)
 
-    #     # 3. Compute GPA per student/semester
-    #     def safe_avg(grades):
-    #         if isinstance(grades, list) and grades:
-    #             valid = [g for g in grades if g is not None]
-    #             return sum(valid) / len(valid) if valid else None
-    #         return None
+        # 3. Compute GPA per student/semester
+        def safe_avg(grades):
+            if isinstance(grades, list) and grades:
+                valid = [g for g in grades if g is not None]
+                return sum(valid) / len(valid) if valid else None
+            return None
 
-    #     grades_df["GPA"] = grades_df["Grades"].apply(safe_avg)
-    #     grades_df = grades_df.dropna(subset=["GPA"])
+        grades_df["GPA"] = grades_df["Grades"].apply(safe_avg)
+        grades_df = grades_df.dropna(subset=["GPA"])
 
-    #     # Keep the *latest* semester per student (if multiple exist)
-    #     grades_df = grades_df.sort_values("SemesterID").drop_duplicates("StudentID", keep="last")
+        # Keep the *latest* semester per student (if multiple exist)
+        grades_df = grades_df.sort_values("SemesterID").drop_duplicates("StudentID", keep="last")
 
-    #     # 4. Join with students
-    #     merged = students_df.merge(
-    #         grades_df[["StudentID", "GPA", "SemesterID"]],
-    #         left_on="_id", right_on="StudentID", how="inner"
-    #     )
+        # 4. Join with students
+        merged = students_df.merge(
+            grades_df[["StudentID", "GPA", "SemesterID"]],
+            left_on="_id", right_on="StudentID", how="inner"
+        )
 
-    #     # 5. Attach semester info (SchoolYear + Semester)
-    #     sem_ids = merged["SemesterID"].unique().tolist()
-    #     sem_map = {
-    #         s["_id"]: f"{s.get('SchoolYear', '')} - {s['Semester']}"
-    #         for s in self.db.semesters.find({"_id": {"$in": sem_ids}}, {"SchoolYear": 1, "Semester": 1})
-    #     }
-    #     merged["Semester"] = merged["SemesterID"].map(sem_map)
+        # 5. Attach semester info (SchoolYear + Semester)
+        sem_ids = merged["SemesterID"].unique().tolist()
+        sem_map = {
+            s["_id"]: f"{s.get('SchoolYear', '')} - {s['Semester']}"
+            for s in self.db.semesters.find({"_id": {"$in": sem_ids}}, {"SchoolYear": 1, "Semester": 1})
+        }
+        merged["Semester"] = merged["SemesterID"].map(sem_map)
 
-    #     # 6. Rank within each Course
-    #     merged["Rank"] = merged.groupby("Course")["GPA"].rank("dense", ascending=False)
+        # 6. Rank within each Course
+        merged["Rank"] = merged.groupby("Course")["GPA"].rank("dense", ascending=False)
 
-    #     # 7. Sort results
-    #     merged.sort_values(["Course", "Rank"], inplace=True)
+        # 7. Sort results
+        merged.sort_values(["Course", "Rank"], inplace=True)
 
-    #     # 8. Final clean DataFrame
-    #     result = merged.rename(columns={
-    #         "_id": "Student ID",
-    #         "Name": "Student Name",
-    #         "Course": "Program",
-    #         "YearLevel": "Year Level"
-    #     })[["Program", "Year Level", "Semester", "Student ID", "Student Name", "GPA", "Rank"]]
+        # 8. Final clean DataFrame
+        result = merged.rename(columns={
+            "_id": "Student ID",
+            "Name": "Student Name",
+            "Course": "Program",
+            "YearLevel": "Year Level"
+        })[["Program", "Year Level", "Semester", "Student ID", "Student Name", "GPA", "Rank"]]
 
-    #     result["GPA"] = result["GPA"].round(2)
+        result["GPA"] = result["GPA"].round(2)
 
-    #     return result
+        return result
 
 @cache_meta()
 def get_retention_rates(self, batch_size=1000, course=None, year_level=None):

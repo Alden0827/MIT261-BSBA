@@ -16,7 +16,7 @@ except Exception as e:
 
 
 
-def populate(TARGET_SEMESTER_ID,TARGET_PROGRAM = "BSBA"):
+def populate(TARGET_SEMESTER_ID,TARGET_PROGRAM = "BSBA", school_year=1, semester_label ="second"):
     # -------------------------------------------------------------------
     # Parameters
     # -------------------------------------------------------------------
@@ -55,7 +55,7 @@ def populate(TARGET_SEMESTER_ID,TARGET_PROGRAM = "BSBA"):
     # ✅ Keep only Year 1, First Semester subjects
     subjects = [
         s for s in all_subjects 
-        if s.get("year") == 1 and s.get("semester", "").lower() == "second"
+        if s.get("year") == school_year and s.get("semester", "").lower() == semester_label
     ]
 
     print(f"📚 Loaded {len(subjects)} subjects for Year 1 - First Semester (BSBA).")
@@ -130,10 +130,7 @@ def populate(TARGET_SEMESTER_ID,TARGET_PROGRAM = "BSBA"):
     print("🎉 Done populating BSBA enrollments and grades with dummy values for semesterId = 16.")
 
 
-def roll_back(TARGET_SEMESTER_ID):
-    db.enrollments.delete_many({"semesterId": TARGET_SEMESTER_ID})
-    db.grades.delete_many({"SemesterID": TARGET_SEMESTER_ID})
-    print('roll_back')
+
 
 def assign_random_teachers_to_subjects():
     """
@@ -185,7 +182,37 @@ def assign_random_teachers_to_subjects():
     print(f"🎉 Done! {count} subjects updated with random teachers.")
     return count
 
+def roll_back(TARGET_SEMESTER_ID):
+    data2 = db.enrollments.delete_many({"semesterId": TARGET_SEMESTER_ID,"studentId": {"$gte":500001}})
+    data = db.grades.delete_many({"semesterId": TARGET_SEMESTER_ID,"studentId": {"$gte":500001}})
+    print('roll_back',data,data2)
+
 if __name__ == "__main__":
+    # # assign_random_teachers_to_subjects()
+
+
+    # roll_back(TARGET_SEMESTER_ID=7)
+    # roll_back(TARGET_SEMESTER_ID=8)
+    # roll_back(TARGET_SEMESTER_ID=9)
+    # roll_back(TARGET_SEMESTER_ID=10)
+    # roll_back(TARGET_SEMESTER_ID=11)
+    # roll_back(TARGET_SEMESTER_ID=12)
+    # roll_back(TARGET_SEMESTER_ID=13)
+    # roll_back(TARGET_SEMESTER_ID=14)
+    # roll_back(TARGET_SEMESTER_ID=15)
+    # roll_back(TARGET_SEMESTER_ID=16)
     # roll_back(TARGET_SEMESTER_ID=17)
-    # assign_random_teachers_to_subjects()
-    populate(TARGET_SEMESTER_ID=17) 
+
+    # populate(TARGET_SEMESTER_ID=7, school_year=1, semester_label ="first") #first 2022
+    # populate(TARGET_SEMESTER_ID=8, school_year=1, semester_label ="second") #second 2022
+    # populate(TARGET_SEMESTER_ID=9, school_year=1, semester_label ="summer") #summer 2022
+
+    # populate(TARGET_SEMESTER_ID=10, school_year=2, semester_label ="first") #first 2023
+    # populate(TARGET_SEMESTER_ID=11, school_year=2, semester_label ="second") #second 2023
+    # populate(TARGET_SEMESTER_ID=12, school_year=2, semester_label ="summer") #summer 2023
+
+    populate(TARGET_SEMESTER_ID=13, school_year=3, semester_label ="first") #first 2024
+    # populate(TARGET_SEMESTER_ID=14, school_year=3, semester_label ="second") #second 2024
+    # populate(TARGET_SEMESTER_ID=15, school_year=3, semester_label ="summer") #summer 2024
+
+    # populate(TARGET_SEMESTER_ID=16, school_year=4, semester_label ="first") #first 2025

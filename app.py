@@ -22,6 +22,39 @@ if "logged_in" not in st.session_state:
     st.session_state["username"] = None
     st.session_state["fullname"] = ""
 
+
+def download_kml_button():
+    db = get_db()
+    locations = list(db.locations.find())
+
+    if not locations:
+        st.warning("⚠️ No locations to export.")
+        return
+
+    # Create KML
+    kml = simplekml.Kml()
+    for loc in locations:
+        name = loc.get("name", "Unknown")
+        hhid = loc.get("hhid", "N/A")
+        lat = loc.get("latitude")
+        lng = loc.get("longitude")
+
+        if lat is not None and lng is not None:
+            kml.newpoint(name=f"{name} ({hhid})", coords=[(lng, lat)])
+
+    # Save to memory
+    kml_bytes = io.BytesIO()
+    kml.save(kml_bytes)
+    kml_bytes.seek(0)
+
+    # Download button
+    st.download_button(
+        label="📥 Download Locations as KML",
+        data=kml_bytes,
+        file_name="locations.kml",
+        mime="application/vnd.google-earth.kml+xml"
+    )
+
 # Main app
 def main():
     # ---------------- Header ----------------

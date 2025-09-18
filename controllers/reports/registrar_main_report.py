@@ -64,8 +64,8 @@ def report_page(db):
         """)
 
         # --- Filters ---
-        courses = ["All"] + r2.get_courses()
-        year_levels = ["All"] + r2.get_year_levels()
+        courses = r2.get_courses() + ["All"] 
+        year_levels = r2.get_year_levels() + ["All"]
 
         col1, col2 = st.columns(2)
         with col1:
@@ -83,13 +83,15 @@ def report_page(db):
         st.markdown("### A. Dean's List (:rainbow[Top 10 Students])")
         st.markdown("**Criteria:** No grade < 85% & GPA >= 90%")
 
-        with st.spinner(f"Preparing data for student' academic Stand Reporting - Dean's List.", show_time=True):
+        with st.spinner(f"Preparing data for student academic Stand Reporting - Dean's List.", show_time=True):
             df_deans = r.get_deans_list(course=course_filter, year_level=year_level_filter)  # fetch data
 
-        if not df_deans.empty:
-            st.info("No Dean’s List entries found for the chosen semester/year. This means no students met the GPA and grade requirements with the applied filters.")
-        else:
+        option_deans = None  # ensure variable always exists
 
+        if df_deans.empty:
+            st.info("No Dean’s List entries found for the chosen semester/year. "
+                    "This means no students met the GPA and grade requirements with the applied filters.")
+        else:
             # Display table
             st.dataframe(df_deans, use_container_width=True)
 
@@ -110,10 +112,7 @@ def report_page(db):
                         "itemStyle": {
                             "color": {
                                 "type": "linear",
-                                "x": 0,
-                                "y": 0,
-                                "x2": 1,
-                                "y2": 0,
+                                "x": 0, "y": 0, "x2": 1, "y2": 0,
                                 "colorStops": [
                                     {"offset": 0, "color": "#3b82f6"},
                                     {"offset": 1, "color": "#10b981"},
@@ -133,8 +132,11 @@ def report_page(db):
         with st.spinner(f"Preparing data for academic probation.", show_time=True):
             df_probation = r.get_academic_probation_batch_checkpoint(course=course_filter, year_level=year_level_filter)
 
-        if not df_probation.empty:
+        option_prob = None  # ensure variable always exists
 
+        if df_probation.empty:
+            st.info("No students are under academic probation with the applied filters.")
+        else:
             # Display table
             st.dataframe(df_probation, use_container_width=True)
 
@@ -176,20 +178,20 @@ def report_page(db):
                     ],
                 }
 
+        # -------------------------------
+        # Show Charts Side by Side
+        # -------------------------------
+        st.markdown("### 📊 Visual Comparison")
+        col1, col2 = st.columns(2)
 
-                # -------------------------------
-                # Show Charts Side by Side
-                # -------------------------------
-                st.markdown("### 📊 Visual Comparison")
-
-            col1, col2 = st.columns(2)
-
-            with col1:
-                st.markdown("#### 🏅 Dean's List")
+        with col1:
+            st.markdown("#### 🏅 Dean's List")
+            if option_deans:
                 st_echarts(option_deans, height="500px", key="deans_chart")
 
-            with col2:
-                st.markdown("#### ⚠️ Academic Probation")
+        with col2:
+            st.markdown("#### ⚠️ Academic Probation")
+            if option_prob:
                 st_echarts(option_prob, height="500px", key="probation_chart")
 
 
@@ -200,8 +202,8 @@ def report_page(db):
         st.subheader("📊 Subject Pass/Fail Distribution")
         
         # --- Filters ---
-        courses = ["All"] + r2.get_courses()
-        year_levels = ["All"] + r2.get_year_levels()
+        courses =  r2.get_courses() + ["All"]
+        year_levels =  r2.get_year_levels() + ["All"]
 
         col1, col2 = st.columns(2)
         with col1:
@@ -274,8 +276,8 @@ def report_page(db):
         st.subheader("📈 Enrollment Trend Analysis")
 
         # --- Filters ---
-        courses = ["All"] + r2.get_courses()
-        year_levels = ["All"] + r2.get_year_levels()
+        courses =  r2.get_courses() +  ["All"]
+        year_levels =  r2.get_year_levels() +  ["All"]
 
         col1, col2 = st.columns(2)
         with col1:
@@ -341,8 +343,8 @@ def report_page(db):
         st.subheader("⚠️ Incomplete Grades Report")
 
         # --- Filters ---
-        courses = ["All"] + r2.get_courses()
-        year_levels = ["All"] + r2.get_year_levels()
+        courses =  r2.get_courses() + ["All"]
+        year_levels = r2.get_year_levels() + ["All"]
 
         col1, col2 = st.columns(2)
         with col1:
@@ -397,8 +399,8 @@ def report_page(db):
         st.subheader("📊 Retention and Dropout Rates")
 
         # --- Filters ---
-        courses = ["All"] + r2.get_courses()
-        year_levels = ["All"] + r2.get_year_levels()
+        courses = r2.get_courses() + ["All"]
+        year_levels = r2.get_year_levels() + ["All"]
 
         col1, col2 = st.columns(2)
         with col1:
@@ -468,8 +470,8 @@ def report_page(db):
         st.subheader("🏆 Top Performers per Program")
         
         # --- Filters ---
-        courses = ["All"] + r2.get_courses()
-        year_levels = ["All"] + r2.get_year_levels()
+        courses = r2.get_courses() + ["All"]
+        year_levels = r2.get_year_levels() + ["All"]
 
         col1, col2 = st.columns(2)
         with col1:

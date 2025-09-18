@@ -8,54 +8,12 @@ import time
 from config.settings import CACHE_MAX_AGE
 CACHE_DIR = "./cache"
 
-def cache_result(ttl=600000000):  # default no expiration
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            print(f'Func: {func.__name__}', end='')
-
-            ttl_minutes = kwargs.pop('ttl', ttl)
-            
-            # Exclude db objects from args and kwargs
-            filtered_args = tuple(a for a in args if not hasattr(a, "client") and not hasattr(a, "command"))
-            filtered_kwargs = {k: v for k, v in kwargs.items() if not hasattr(v, "client") and not hasattr(v, "command")}
-
-            cache_key = hashlib.md5(pickle.dumps((filtered_args, tuple(sorted(filtered_kwargs.items()))))).hexdigest()
-            cache_name = f"./cache/{func.__name__}_{cache_key}.pkl"
-            os.makedirs("./cache/", exist_ok=True)
-
-            if os.path.exists(cache_name):
-                file_mod_time = os.path.getmtime(cache_name)
-                if (time.time() - file_mod_time) / 60 > ttl_minutes:
-                    os.remove(cache_name)
-                    result = func(*args, **kwargs)
-                else:
-                    with open(cache_name, "rb") as f:
-                        result = pickle.load(f)
-                        print(' - from cache')
-                        print(result.head(5) if isinstance(result, pd.DataFrame) else result)
-                        return result
-            else:
-                result = func(*args, **kwargs)
-
-            with open(cache_name, "wb") as f:
-                pickle.dump(result, f)
-
-            print(' - fresh')
-            if not result.empty:
-                print(result.iloc[0] if isinstance(result, pd.DataFrame) else result)
-            else:
-                print('Empty data!')
-            return result
-        return wrapper
-    return decorator
-
 def cache_meta(ttl=600000000):  # default no expiration
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             print(f'-----------------------------------------------')
-            print(f'Func: {func.__name__}', end = '')
+            print(f'Func: {func.__name__}({args})', end = '')
 
             ttl_minutes = kwargs.pop('ttl', ttl)
             # args_tuple = tuple(arg for arg in args)
@@ -72,7 +30,7 @@ def cache_meta(ttl=600000000):  # default no expiration
                 else:
                     with open(cache_name, "rb") as f:
                         result = pickle.load(f)
-                        print(' - from cache')
+                        print(' - loaded from cache')
                         return result 
             else:
                 result = func(*args, **kwargs)
@@ -81,7 +39,7 @@ def cache_meta(ttl=600000000):  # default no expiration
             with open(cache_name, "wb") as f:
                 pickle.dump(result, f)
 
-            print(' - fresh')
+            print(' - loaded from db')
 
             return result
         return wrapper
