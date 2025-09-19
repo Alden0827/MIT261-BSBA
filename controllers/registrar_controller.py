@@ -27,7 +27,7 @@ def registrar_view(db):
                 "Subjects",
                 "Student Records",
                 "Semester Control",
-                # "Class Scheduling",
+                "Class Scheduling",
                 "Enrollment",
                 # "Enrolled Students",
                 "Reports",
@@ -118,9 +118,10 @@ def registrar_view(db):
     elif menu == "Semester Control":
         from .registrar.semester_manager import semester_manager_page
         semester_manager_page(db)
-    # elif menu == "Class Scheduling":
-    #     from .registrar.class_scheduler_manager import class_scheduler_manager_page
-    #     class_scheduler_manager_page(db)
+    elif menu == "Class Scheduling":
+        from .registrar.class_scheduler_manager import teacher_subjects_page
+        teacher_subjects_page(db,'Leonor Rivera')
+        # class_scheduler_manager_page
     elif menu == "Enrollment":
         from .registrar.enrollment_manager import enrollment_manager_page
         enrollment_manager_page(db)

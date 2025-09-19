@@ -8,7 +8,7 @@ import time
 from config.settings import CACHE_MAX_AGE
 CACHE_DIR = "./cache"
 
-def cache_meta(ttl=600000000):  # default no expiration
+def cache_meta(ttl=CACHE_MAX_AGE):  # default no expiration
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):

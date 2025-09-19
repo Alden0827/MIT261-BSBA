@@ -5,7 +5,7 @@ from typing import Optional
 import pandas as pd
 from dotenv import load_dotenv
 import pymongo
-from pymongo import MongoClient
+# from pymongo import MongoClient
 import time
 
 # from config.settings import MONGODB_URI, CACHE_MAX_AGE

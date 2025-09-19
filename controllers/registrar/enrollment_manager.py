@@ -35,13 +35,14 @@ def enrollment_manager_page(db):
     st.title("Enrollment Manager")
 
     # --- Pre-load data ---
-    r = dh.data_helper({"db": db})
+    r1 = dh.data_helper({"db": db})
+    r2 = rh.data_helper({"db": db})
     with st.spinner("Loading school years...", show_time=True):
-        school_years = r.get_school_years()
+        school_years = r1.get_school_years()
     with st.spinner("Loading semesters...", show_time=True):
-        semester_names = r.get_semester_names()
+        semester_names = r1.get_semester_names()
     with st.spinner("Loading Courses...", show_time=True):
-        courses = r.get_courses()
+        courses = r1.get_courses()
 
     # --- Initialize session state variables ---
     if "confirm_enrollment" not in st.session_state:
@@ -85,7 +86,7 @@ def enrollment_manager_page(db):
 
             if search_query.strip():
                 students_col = db["students"]
-                matches = rh.find_best_match(query=search_query, course=selected_course, collection=students_col)
+                matches = r2.find_best_match(query=search_query, course=selected_course, collection=students_col)
                 if matches:
                     st.session_state.search_results = matches
                 else:
@@ -120,8 +121,8 @@ def enrollment_manager_page(db):
             st.write(f"**Year Level:** {student.get('YearLevel', 'N/A')}")
 
             # Get Curriculum & Grades
-            curriculum_df = r.get_curriculum(student.get("Course"))
-            student_grades_df = r.get_student_subjects_grades(student.get("_id"))
+            curriculum_df = r1.get_curriculum(student.get("Course"))
+            student_grades_df = r1.get_student_subjects_grades(student.get("_id"))
 
             if not curriculum_df.empty:
                 passed_subjects = []
@@ -172,10 +173,10 @@ def enrollment_manager_page(db):
                                 registrar_user = {"_id": "registrar1", "fullName": "Registrar User"} # Dummy user
 
                                 # Check if already enrolled
-                                if rh.is_already_enrolled(student_id, semester_id):
+                                if r2.is_already_enrolled(student_id, semester_id):
                                     st.warning(f"Student is already enrolled or has a pending enrollment for this semester.")
                                 else:
-                                    pending_id = rh.add_pending_enrollee(
+                                    pending_id = r2.add_pending_enrollee(
                                         student_id=student_id,
                                         semester_id=semester_id,
                                         subject_codes=selected_subjects,
@@ -221,7 +222,7 @@ def enrollment_manager_page(db):
         if semester_doc:
             semester_id = semester_doc["_id"]
 
-            pending_df = rh.get_pending_enrollees(semester_id=semester_id)
+            pending_df = r2.get_pending_enrollees(semester_id=semester_id)
 
             if not pending_df.empty:
                 st.write("Select a student to approve or discard their enrollment.")
@@ -241,7 +242,7 @@ def enrollment_manager_page(db):
                         enrollment_doc = db.enrollments.find_one({"studentId": int(selected_student_id), "semesterId": int(semester_id), "status": "Pending"})
                         if enrollment_doc:
                             subject_codes = [s['subjectCode'] for s in enrollment_doc.get('subjects', [])]
-                            approved_id = rh.approve_enrollee(
+                            approved_id = r2.approve_enrollee(
                                 student_id=selected_student_id,
                                 semester_id=semester_id,
                                 subject_codes=subject_codes,
@@ -260,7 +261,7 @@ def enrollment_manager_page(db):
                     if st.button("Discard Enrollment", key=f"discard_{selected_student_id}"):
                         if reason.strip():
                             discarded_by_user = {"_id": "registrar1", "fullName": "Registrar User"} # Dummy user
-                            success = rh.discard_pending_enrollee(
+                            success = r2.discard_pending_enrollee(
                                 student_id=selected_student_id,
                                 semester_id=semester_id,
                                 discarded_by_user=discarded_by_user,
@@ -295,7 +296,7 @@ def enrollment_manager_page(db):
             semester_id = semester_doc["_id"]
 
             course_filter = course_enrolled if course_enrolled != "All" else None
-            enrolled_df = rh.get_enrolled_students(course=course_filter, semester_id=semester_id)
+            enrolled_df = r2.get_enrolled_students(course=course_filter, semester_id=semester_id)
 
             if not enrolled_df.empty:
                 st.write("Select a student to update their enrollment.")
@@ -316,7 +317,7 @@ def enrollment_manager_page(db):
 
                         # Get available subjects for adding
                         student_doc = db.students.find_one({"_id": student_id})
-                        curriculum_df = r.get_curriculum(student_doc.get("Course"))
+                        curriculum_df = r1.get_curriculum(student_doc.get("Course"))
                         if not curriculum_df.empty:
                             # This logic is simplified, in a real scenario it would be more complex
                             all_subjects = curriculum_df["Subject Code"].tolist()
@@ -328,7 +329,7 @@ def enrollment_manager_page(db):
                             if st.button("Update Enrollment"):
                                 if add_subjects or drop_subjects:
                                     updater_user = {"_id": "updater1", "fullName": "Registrar Updater"}
-                                    success = rh.update_enrollment(
+                                    success = r2.update_enrollment(
                                         student_id=student_id,
                                         semester_id=semester_id,
                                         add_subjects=add_subjects,

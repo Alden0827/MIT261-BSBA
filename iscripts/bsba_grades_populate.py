@@ -67,7 +67,7 @@ def populate(TARGET_SEMESTER_ID,TARGET_PROGRAM = "BSBA", school_year=1, semester
         student_id = student["_id"]
 
         # Check if already enrolled for semesterId = 16
-        existing = db.enrollments.find_one({"studentId": student_id, "semesterId": TARGET_SEMESTER_ID})
+        existing = db.enrollments.find_one({"StudentID": student_id, "SemesterID": TARGET_SEMESTER_ID})
         if existing:
             print(f"⏭️ Student {student_id} already has enrollment for semester {TARGET_SEMESTER_ID}")
             continue
@@ -84,8 +84,8 @@ def populate(TARGET_SEMESTER_ID,TARGET_PROGRAM = "BSBA", school_year=1, semester
             })
 
         enrollment_doc = {
-            "studentId": student_id,
-            "semesterId": TARGET_SEMESTER_ID,
+            "StudentID": student_id,
+            "SemesterID": TARGET_SEMESTER_ID,
             "schoolYear": 2025,  # adjust dynamically if needed
             "status": "Enrolled",
             "registrationDate": datetime.utcnow(),
@@ -104,7 +104,7 @@ def populate(TARGET_SEMESTER_ID,TARGET_PROGRAM = "BSBA", school_year=1, semester
         # Step 4: Create grades document with dummy grades
         # -------------------------------------------------------------------
         subject_codes = [subj["code"] for subj in subjects]
-        grades_list = [random.randint(70, 95) for _ in subjects]
+        grades_list = [random.randint(55, 95) for _ in subjects]
 
         # Fetch teacher from subjects collection
         teachers_list = []
@@ -183,8 +183,8 @@ def assign_random_teachers_to_subjects():
     return count
 
 def roll_back(TARGET_SEMESTER_ID):
-    data2 = db.enrollments.delete_many({"semesterId": TARGET_SEMESTER_ID,"studentId": {"$gte":500001}})
-    data = db.grades.delete_many({"semesterId": TARGET_SEMESTER_ID,"studentId": {"$gte":500001}})
+    data2 = db.enrollments.delete_many({"SemesterID": TARGET_SEMESTER_ID,"StudentID": {"$gte":500001}})
+    data = db.grades.delete_many({"SemesterID": TARGET_SEMESTER_ID,"StudentID": {"$gte":500001}})
     print('roll_back',data,data2)
 
 if __name__ == "__main__":
@@ -197,9 +197,11 @@ if __name__ == "__main__":
     # roll_back(TARGET_SEMESTER_ID=10)
     # roll_back(TARGET_SEMESTER_ID=11)
     # roll_back(TARGET_SEMESTER_ID=12)
+
     # roll_back(TARGET_SEMESTER_ID=13)
     # roll_back(TARGET_SEMESTER_ID=14)
     # roll_back(TARGET_SEMESTER_ID=15)
+
     # roll_back(TARGET_SEMESTER_ID=16)
     # roll_back(TARGET_SEMESTER_ID=17)
 
@@ -211,8 +213,8 @@ if __name__ == "__main__":
     # populate(TARGET_SEMESTER_ID=11, school_year=2, semester_label ="second") #second 2023
     # populate(TARGET_SEMESTER_ID=12, school_year=2, semester_label ="summer") #summer 2023
 
-    populate(TARGET_SEMESTER_ID=13, school_year=3, semester_label ="first") #first 2024
-    # populate(TARGET_SEMESTER_ID=14, school_year=3, semester_label ="second") #second 2024
-    # populate(TARGET_SEMESTER_ID=15, school_year=3, semester_label ="summer") #summer 2024
+    populate(TARGET_SEMESTER_ID=13, school_year=1, semester_label ="first") #first 2024
+    populate(TARGET_SEMESTER_ID=14, school_year=1, semester_label ="second") #second 2024
+    populate(TARGET_SEMESTER_ID=15, school_year=1, semester_label ="summer") #summer 2024
 
     # populate(TARGET_SEMESTER_ID=16, school_year=4, semester_label ="first") #first 2025

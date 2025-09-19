@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import pandas as pd
 
-from pymongo import MongoClient
+# from pymongo import MongoClient
 from functools import wraps
 import hashlib
 import pickle
@@ -41,7 +41,7 @@ class report_helper(object):
         self.db = arg["db"]
         
 
-    @cache_meta()
+    @cache_meta(ttl=1440)
     def get_students_batch_checkpoint(self,batch_size=1000, course=None, year_level=None):
         
         CACHE_DIR = "./cache"
@@ -101,7 +101,7 @@ class report_helper(object):
     # 1a. Dean's List
     # ------------------------------
 
-    @cache_meta()
+    @cache_meta(ttl=1)
     def get_deans_list(self,batch_size=1000, top_n=10, course=None, year_level=None):
         
 
@@ -143,20 +143,44 @@ class report_helper(object):
                     grade_map.setdefault(g["StudentID"], []).append(g["Grades"])
 
             # --- Flatten into rows ---
+            # for stu in students:
+            #     student_grades = grade_map.get(stu["_id"], [])
+            #     for g in student_grades:
+            #         if not g:
+            #             continue
+            #         print("DEBUG g:", g, type(g))
+            #         results.append({
+            #             "ID": stu["_id"],
+            #             "Name": stu.get("Name"),
+            #             "Prog": stu.get("Course"),
+            #             "Yr": stu.get("YearLevel"),
+            #             "Units": len(g),
+            #             "High": max(g),
+            #             "Low": min(g),
+            #             "GPA": sum(g) / len(g)
+            #         })
+
             for stu in students:
                 student_grades = grade_map.get(stu["_id"], [])
                 for g in student_grades:
                     if not g:
                         continue
+
+                    # Remove None values
+                    valid_grades = [x for x in g if x is not None]
+                    if not valid_grades:
+                        continue  # skip if no valid numbers remain
+
+                    print("DEBUG g:", valid_grades, type(valid_grades))
                     results.append({
                         "ID": stu["_id"],
                         "Name": stu.get("Name"),
                         "Prog": stu.get("Course"),
                         "Yr": stu.get("YearLevel"),
-                        "Units": len(g),
-                        "High": max(g),
-                        "Low": min(g),
-                        "GPA": sum(g) / len(g)
+                        "Units": len(valid_grades),
+                        "High": max(valid_grades),
+                        "Low": min(valid_grades),
+                        "GPA": sum(valid_grades) / len(valid_grades)
                     })
 
             # --- Save checkpoint after each batch ---
@@ -190,7 +214,7 @@ class report_helper(object):
     # ------------------------------
     # 1b. Academic Probation
     # ------------------------------
-    @cache_meta()
+    @cache_meta(ttl=1440)
     def get_academic_probation_batch_checkpoint(self,batch_size=10000, top_n=10, course=None, year_level=None):
         CHECKPOINT_FILE = os.path.join(CACHE_DIR, "get_academic_probation_batch_checkpoint.pkl")
         
@@ -231,19 +255,22 @@ class report_helper(object):
             for _, stu in batch_students.iterrows():
                 sid = stu["_id"]
                 grades = grades_map.get(sid, [])
-                if not grades:
-                    continue
+
+                # Remove None values
+                valid_grades = [g for g in grades if g is not None]
+                if not valid_grades:
+                    continue  # skip students with no valid grades
 
                 print(f"   → Checking {stu.get('Name', 'Unknown')} ({sid})")
 
-                units = len(grades)
-                high = max(grades)
-                low = min(grades)
-                gpa = sum(grades) / units if units else 0
+                units = len(valid_grades)
+                high = max(valid_grades)
+                low = min(valid_grades)
+                gpa = sum(valid_grades) / units if units else 0
 
                 fail_percent = 0.0
                 if units > 0:
-                    fail_percent = (len([x for x in grades if x < 75]) / units) * 100
+                    fail_percent = (len([x for x in valid_grades if x < 75]) / units) * 100
 
                 if low < 75 or fail_percent >= 30:
                     rows.append({
@@ -257,6 +284,7 @@ class report_helper(object):
                         "GPA": round(gpa, 2),
                         "Fail%": round(fail_percent, 2)
                     })
+
 
             if rows:
                 batch_df = pd.DataFrame(rows)
