@@ -1,0 +1,12 @@
+[server]
+port = 8501
+headless = true
+runOnSave = false   # stop auto-reloading when files change
+
+[theme]
+base = "light"
+primaryColor = "#FF4B4B"
+font = "sans serif"
+
+[logger]
+level = "info"
