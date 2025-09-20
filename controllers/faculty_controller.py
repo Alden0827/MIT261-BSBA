@@ -135,8 +135,9 @@ def faculty_view(db,user_role):
         else:
             st.warning("Please select a faculty member to view the report.")
 
-    elif menu == "Student Progress Tracker":        
-        pass
+    elif menu == "Student Progress Tracker":
+        from .faculty.student_progress_tracker import student_progress_tracker_page
+        student_progress_tracker_page(db)
     elif menu == "Subject Difficulty":        
         pass
     elif menu == "Intervention Candidates List":        
