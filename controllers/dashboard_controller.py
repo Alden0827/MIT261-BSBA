@@ -1,29 +1,31 @@
 import pandas as pd
 import streamlit as st
-from streamlit_echarts import st_echarts #pip install streamlit-echarts
+from streamlit_echarts import st_echarts  # pip install streamlit-echarts
 import os, pickle, time
 # from helpers.data_helper import get_students, get_grades, get_semesters, get_subjects
 import helpers.data_helper as dh
+import numpy as np
 
 CACHE_FILE = "./cache/dashboard_cache.pkl"
 CACHE_TTL = 3600  # 1 hour in seconds
 
+
 def dasboard_view(db):
     r = dh.data_helper({"db": db})
 
-    with st.spinner("Loading students...", show_time = True):
+    with st.spinner("Loading students...", show_time=True):
         students = r.get_students()
         time.sleep(1)
-    with st.spinner("Loading grades...", show_time = True):
+    with st.spinner("Loading grades...", show_time=True):
         grades = r.get_grades()
         time.sleep(1)
-    with st.spinner("Loading semesters...", show_time = True):
+    with st.spinner("Loading semesters...", show_time=True):
         semesters = r.get_semesters()
         time.sleep(1)
-    with st.spinner("Loading subjects...", show_time = True):
+    with st.spinner("Loading subjects...", show_time=True):
         subjects = r.get_subjects()
         time.sleep(1)
-        
+
     st.title("🎓 University Dashboard")
 
     # KPI Metrics
@@ -60,28 +62,34 @@ def dasboard_view(db):
     # Grade Distribution
     with row1_col2:
         st.subheader("📊 Grade Distribution")
-        all_grades_list = [g for row in grades["Grades"] for g in row]
 
+        # Flatten all grades
+        raw_grades = [g for row in grades["Grades"] for g in row]
+
+        # ✅ Clean grades: keep only valid numeric values
+        all_grades_list = [
+            int(g) for g in raw_grades
+            if isinstance(g, (int, float, str)) and str(g).strip().isdigit()
+        ]
+
+        # print("Cleaned grades:", all_grades_list)
+
+        # Simulate histogram with numpy
+        hist, bins = np.histogram(all_grades_list, bins=10)
         option2 = {
             "tooltip": {},
-            "xAxis": {"type": "category", "data": list(range(50, 101, 5))},
+            "xAxis": {
+                "type": "category",
+                "data": [f"{int(bins[i])}-{int(bins[i+1])}" for i in range(len(bins) - 1)]
+            },
             "yAxis": {"type": "value"},
             "series": [{
-                "type": "histogram",
-                "data": all_grades_list,
-                "itemStyle": {"color": "#E74C3C"}
+                "data": hist.tolist(),
+                "type": "bar",
+                "itemStyle": {"color": "#E74C3C"},
+                "label": {"show": True, "position": "top"}
             }]
         }
-        # ECharts has no direct "histogram", we simulate with bar count
-        import numpy as np
-        hist, bins = np.histogram(all_grades_list, bins=10)
-        option2["xAxis"]["data"] = [f"{int(bins[i])}-{int(bins[i+1])}" for i in range(len(bins)-1)]
-        option2["series"] = [{
-            "data": hist.tolist(),
-            "type": "bar",
-            "itemStyle": {"color": "#E74C3C"},
-            "label": {"show": True, "position": "top"}
-        }]
         st_echarts(options=option2, height="400px")
 
     st.markdown("---")
@@ -95,9 +103,12 @@ def dasboard_view(db):
             row["Grades"],
             row["SemesterID"] if isinstance(row["SemesterID"], list) else [row["SemesterID"]] * len(row["Grades"])
         ):
-            all_grades.append({"Grade": g, "SemesterID": sem_id})
+            # Only include numeric grades
+            if isinstance(g, (int, float, str)) and str(g).strip().isdigit():
+                all_grades.append({"Grade": int(g), "SemesterID": sem_id})
+
     df_grades = pd.DataFrame(all_grades)
-    print("semesters:",semesters)
+    # print("semesters:", semesters)
     df_grades = df_grades.merge(semesters, left_on="SemesterID", right_on="_id", how="left")
     df_grades["SemesterLabel"] = df_grades["Semester"].astype(str) + " " + df_grades["SchoolYear"].astype(str)
 

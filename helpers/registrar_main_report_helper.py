@@ -160,18 +160,41 @@ class report_helper(object):
             #             "GPA": sum(g) / len(g)
             #         })
 
+            # for stu in students:
+            #     student_grades = grade_map.get(stu["_id"], [])
+            #     for g in student_grades:
+            #         if not g:
+            #             continue
+
+            #         # Remove None values
+            #         valid_grades = [x for x in g if x is not None]
+            #         if not valid_grades:
+            #             continue  # skip if no valid numbers remain
+
+            #         print("DEBUG g:", valid_grades, type(valid_grades))
+            #         results.append({
+            #             "ID": stu["_id"],
+            #             "Name": stu.get("Name"),
+            #             "Prog": stu.get("Course"),
+            #             "Yr": stu.get("YearLevel"),
+            #             "Units": len(valid_grades),
+            #             "High": max(valid_grades),
+            #             "Low": min(valid_grades),
+            #             "GPA": sum(valid_grades) / len(valid_grades)
+            #         })
+
             for stu in students:
                 student_grades = grade_map.get(stu["_id"], [])
                 for g in student_grades:
                     if not g:
                         continue
 
-                    # Remove None values
-                    valid_grades = [x for x in g if x is not None]
+                    # ✅ Clean grades: only numbers, skip blanks/None
+                    valid_grades = [int(x) for x in g if str(x).strip().isdigit()]
                     if not valid_grades:
-                        continue  # skip if no valid numbers remain
+                        continue
 
-                    print("DEBUG g:", valid_grades, type(valid_grades))
+                    # print("DEBUG g:", valid_grades, type(valid_grades))
                     results.append({
                         "ID": stu["_id"],
                         "Name": stu.get("Name"),
@@ -182,6 +205,7 @@ class report_helper(object):
                         "Low": min(valid_grades),
                         "GPA": sum(valid_grades) / len(valid_grades)
                     })
+
 
             # --- Save checkpoint after each batch ---
             save_checkpoint(last_index=i + batch_size, results={"last_index": i + batch_size}, CHECKPOINT_FILE=CHECKPOINT_FILE)
@@ -231,6 +255,8 @@ class report_helper(object):
         start_index = checkpoint["last_index"]
         results = checkpoint["results"]
 
+
+
         print(f"Resuming Academic Probation from batch index {start_index}...")
 
         for i in range(start_index, len(student_ids), batch_size):
@@ -256,11 +282,12 @@ class report_helper(object):
                 sid = stu["_id"]
                 grades = grades_map.get(sid, [])
 
-                # Remove None values
-                valid_grades = [g for g in grades if g is not None]
+                # ✅ Clean: keep only digits, drop '' and None
+                valid_grades = [int(x) for x in grades if str(x).strip().isdigit()]
                 if not valid_grades:
                     continue  # skip students with no valid grades
 
+                # print("DEBUG g:", valid_grades, type(valid_grades))
                 print(f"   → Checking {stu.get('Name', 'Unknown')} ({sid})")
 
                 units = len(valid_grades)
@@ -268,9 +295,7 @@ class report_helper(object):
                 low = min(valid_grades)
                 gpa = sum(valid_grades) / units if units else 0
 
-                fail_percent = 0.0
-                if units > 0:
-                    fail_percent = (len([x for x in valid_grades if x < 75]) / units) * 100
+                fail_percent = (len([x for x in valid_grades if x < 75]) / units) * 100 if units else 0
 
                 if low < 75 or fail_percent >= 30:
                     rows.append({
@@ -284,6 +309,7 @@ class report_helper(object):
                         "GPA": round(gpa, 2),
                         "Fail%": round(fail_percent, 2)
                     })
+
 
 
             if rows:

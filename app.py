@@ -12,8 +12,8 @@ from config.settings import APP_TITLE, DEFAULT_PAGE_TITLE, MONGODB_URI
 st.set_page_config(page_title=DEFAULT_PAGE_TITLE, layout="wide")
 
 # Database connection
-# client = MongoClient(MONGODB_URI)
-client = MongoClient('mongodb://localhost:27017/')
+client = MongoClient(MONGODB_URI)
+# client = MongoClient('mongodb://localhost:27017/')
 
 db = client["mit261"]
 
@@ -107,11 +107,14 @@ def main():
         # Role-based menu
         user_role = st.session_state["user_role"]
         menu_options = {
-            "admin": ["Student Evaluation", "Faculty", "Registrar", "Admin"],
-            "registrar": ["Registrar"],
+            "admin": ["Student", "Faculty", "Registrar", "Admin"],
+            "registrar": ["Registrar","Student", "Faculty"],
             "faculty": ["Faculty"],
-            "student": ["Student Evaluation"]
+            "teacher": ["Faculty"],
+            "student": ["Student"]
         }
+
+        print('user_role:',user_role)
 
         # Combine menu + Logout
         main_menu = menu_options.get(user_role, ["Dashboard"])
@@ -138,12 +141,16 @@ def main():
         )
 
     # ---------------- Pages ----------------
+    print('app.menu',menu)
+
     if menu == "Dashboard":
         dasboard_view(db)
-    elif menu == "Student Evaluation":
+    elif menu == "Student":
         student_view(db)
     elif menu == "Faculty":
-        faculty_view(db)
+        print('Loading faculty view', end = '')
+        faculty_view(db,user_role=user_role)
+
     elif menu == "Registrar":
         registrar_view(db)
     elif menu == "Admin":
