@@ -104,8 +104,37 @@ def faculty_view(db,user_role):
     if menu == "Class Scheduling":
         from .faculty.class_scheduler_manager import class_scheduler_manager_page
         class_scheduler_manager_page(db)
-    elif menu == "Class Grade Distribution":        
-        pass
+    elif menu == "Class Grade Distribution":
+        from .faculty.teacher_reports import class_grade_distribution
+        from helpers.data_helper import data_helper
+
+        dh = data_helper({"db": db})
+
+        # Get data for filters
+        semesters = dh.get_semester_names()
+        school_years = dh.get_school_years()
+
+        teacher_name = None
+
+        # If the user is a teacher, default to their name.
+        # Otherwise, show a dropdown to select a faculty member.
+        if st.session_state["user_role"] == "teacher":
+            teacher_name = st.session_state["fullname"]
+        else:
+            teachers_df = dh.get_instructor_subjects()
+            teacher_names = teachers_df['Teacher'].unique()
+            teacher_name = st.selectbox("Select Faculty Name", teacher_names)
+
+        # Common filters for semester and school year
+        semester = st.selectbox("Select Semester", semesters)
+        school_year = st.selectbox("Select School Year", school_years)
+
+        # Display the report if a teacher is selected
+        if teacher_name:
+            class_grade_distribution(db, teacher_name, semester, school_year)
+        else:
+            st.warning("Please select a faculty member to view the report.")
+
     elif menu == "Student Progress Tracker":        
         pass
     elif menu == "Subject Difficulty":        
