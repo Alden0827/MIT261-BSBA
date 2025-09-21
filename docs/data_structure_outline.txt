@@ -18,6 +18,70 @@ except Exception as e:
 
 ### mongodb structure with sample data ------------------------------------------------
 
+students:
+{
+  "_id": 1,
+  "Name": "Lejeune, Niel Alfred F.",
+  "Course": "Information Technology",
+  "YearLevel": 1
+}
+
+semesters:
+{
+  "_id": 3,
+  "Semester": "Summer",
+  "SchoolYear": 2020
+}
+
+grades:
+{
+  "_id": 1,
+  "StudentID": 1,
+  "SubjectCodes": [
+    "IT304","IT304"
+  ],
+  "Grades": [
+    79,31
+  ],
+  "Teachers": [
+    "Prof. Henry Dologuin"
+    "Prof. hela"
+  ],
+  "SemesterID": 1,
+  "Status": [
+    "",""
+  ]
+}
+
+subjects:
+{
+  "_id": "IT103",
+  "Description": "Web Development 1 (HTML/CSS/JS)",
+  "Units": 3,
+  "Teacher": "Prof. Jake Guinto"
+}
+
+userAccounts:
+{
+  "_id": {
+    "$oid": "68b664698519ad27d3877a87"
+  },
+  "username": "faculty",
+  "role": "faculty",
+  "linkedId": null,
+  "passwordHash": {
+    "$binary": {
+      "base64": "JDJiJDEyJDRhTW1DLnk2a2VmQ2pKeEUxZk5YaXUvSkMyajI5MjUzWHY0SkNtUk1HTmZXMnJmUldMM2hD",
+      "subType": "00"
+    }
+  },
+  "fullName": "",
+  "UID": 0
+}
+
+
+---------------
+
 enrollments:
 {
   "_id": {
@@ -66,65 +130,7 @@ enrollments:
   }
 }
 
-students:
-{
-  "_id": 1,
-  "Name": "Lejeune, Niel Alfred F.",
-  "Course": "Information Technology",
-  "YearLevel": 1
-}
 
-semesters:
-{
-  "_id": 3,
-  "Semester": "Summer",
-  "SchoolYear": 2020
-}
-
-grades:
-{
-  "_id": 1,
-  "StudentID": 1,
-  "SubjectCodes": [
-    "IT304"
-  ],
-  "Grades": [
-    79
-  ],
-  "Teachers": [
-    "Prof. Henry Dologuin"
-  ],
-  "SemesterID": 1,
-  "Status": [
-    ""
-  ]
-}
-
-subjects:
-{
-  "_id": "IT103",
-  "Description": "Web Development 1 (HTML/CSS/JS)",
-  "Units": 3,
-  "Teacher": "Prof. Jake Guinto"
-}
-
-userAccounts:
-{
-  "_id": {
-    "$oid": "68b664698519ad27d3877a87"
-  },
-  "username": "faculty",
-  "role": "faculty",
-  "linkedId": null,
-  "passwordHash": {
-    "$binary": {
-      "base64": "JDJiJDEyJDRhTW1DLnk2a2VmQ2pKeEUxZk5YaXUvSkMyajI5MjUzWHY0SkNtUk1HTmZXMnJmUldMM2hD",
-      "subType": "00"
-    }
-  },
-  "fullName": "",
-  "UID": 0
-}
 
 curriculum:
 {

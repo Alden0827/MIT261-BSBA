@@ -122,7 +122,41 @@ class data_helper(object):
 
         return df
 
+    def get_subjects2(self, batch_size=1000):
+        # Debug: show first few docs
+        print("🔍 Sample subjects:", list(self.db.subjects.find().limit(3)))
 
+        cursor = self.db.subjects.find({})
+        docs, chunks = [], []
+        for i, doc in enumerate(cursor, 1):
+            docs.append(doc)
+            if i % batch_size == 0:
+                chunks.append(pd.DataFrame(docs))
+                docs = []
+
+        if docs:
+            chunks.append(pd.DataFrame(docs))
+
+        df = pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
+
+        if not df.empty:
+            # normalize column names
+            if "_id" in df.columns:
+                df.rename(columns={"_id": "Subject Code"}, inplace=True)
+                df["Subject Code"] = df["Subject Code"].astype(str)
+            elif "Code" in df.columns:
+                df.rename(columns={"Code": "Subject Code"}, inplace=True)
+
+            if "Description" not in df.columns:
+                df["Description"] = ""
+
+            if "Units" not in df.columns:
+                df["Units"] = 0
+
+            if "Teacher" not in df.columns:
+                df["Teacher"] = ""
+
+        return df
 
     @cache_meta(ttl=600000) #60 minutes
     def get_semester_names(self):

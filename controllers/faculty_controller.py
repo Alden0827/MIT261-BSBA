@@ -86,7 +86,8 @@ def faculty_view(db,user_role):
                     "Subject Difficulty",
                     "Intervention Candidates List",
                     "Grade Submission Status",
-                    "Custom Query Builder"
+                    "Custom Query Builder",
+                    "Students Grade Analytics"
                 ],
                 icons=["file-text", "book"],
                 menu_icon="cast",
@@ -105,7 +106,7 @@ def faculty_view(db,user_role):
         from .faculty.class_scheduler_manager import class_scheduler_manager_page
         class_scheduler_manager_page(db)
     elif menu == "Class Grade Distribution":
-        from .faculty.teacher_reports import class_grade_distribution
+        from .faculty.class_grade_distribution import class_grade_distribution
         from helpers.data_helper import data_helper
 
         dh = data_helper({"db": db})
@@ -126,8 +127,12 @@ def faculty_view(db,user_role):
             teacher_name = st.selectbox("Select Faculty Name", teacher_names)
 
         # Common filters for semester and school year
-        semester = st.selectbox("Select Semester", semesters)
-        school_year = st.selectbox("Select School Year", school_years)
+        with st.container():
+            col1, col2 = st.columns(2)
+            with col1:
+                semester = st.selectbox("Select Semester", semesters)
+            with col2:
+                school_year = st.selectbox("Select School Year", school_years)
 
         # Display the report if a teacher is selected
         if teacher_name:
@@ -138,13 +143,20 @@ def faculty_view(db,user_role):
     elif menu == "Student Progress Tracker":
         from .faculty.student_progress_tracker import student_progress_tracker_page
         student_progress_tracker_page(db)
-    elif menu == "Subject Difficulty":        
-        pass
+    elif menu == "Subject Difficulty":
+        from .faculty.subject_difficulty import subject_difficulty_page
+        subject_difficulty_page(db)        
+        
     elif menu == "Intervention Candidates List":        
-        pass
+        from .faculty.intervention_candidates import intervention_candidates_page
+        intervention_candidates_page(db)
     elif menu == "Grade Submission Status":        
-        pass
+        from .faculty.grade_submission_status import grade_submission_status_page
+        grade_submission_status_page(db)
     elif menu == "Custom Query Builder":        
-        pass
-    elif menu == "Intervention Candidates List":        
-        pass
+        from .faculty.custom_query_builder import custom_query_builder_page
+        custom_query_builder_page(db)
+    elif menu == "Students Grade Analytics":
+        from .faculty.students_grade_analytics import student_grade_analytics_page        
+        student_grade_analytics_page(db)
+        student_grade_analytics_page
