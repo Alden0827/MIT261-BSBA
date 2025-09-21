@@ -23,10 +23,17 @@ def student_view(db):
             menu_title="Student Menu",
             options=[
                 "Prospectus",
+                "Performance Trend",
+                "Subject Difficulty",
+                "Peer Comparison",
+                "Passed/Failed Summary",
             ],
             icons=[
-                "bar-chart-line", "book", "book-half", "people",
-                "calendar", "calendar-check", "file-earmark-text", "graph-up"
+                "book",
+                "graph-up",
+                "graph-down",
+                "people",
+                "check-circle",
             ],
             menu_icon="cast",
             default_index=0,
@@ -46,3 +53,15 @@ def student_view(db):
     elif menu == "Prospectus":
         from .student.prospectus_viewer import prospectus_page
         prospectus_page(db)
+    elif menu == "Performance Trend":
+        from .student.performance_trend import performance_trend_page
+        performance_trend_page(db)
+    elif menu == "Subject Difficulty":
+        from .student.subject_difficulty import subject_difficulty_page
+        subject_difficulty_page(db)
+    elif menu == "Peer Comparison":
+        from .student.peer_comparison import peer_comparison_page
+        peer_comparison_page(db)
+    elif menu == "Passed/Failed Summary":
+        from .student.passed_failed_summary import passed_failed_summary_page
+        passed_failed_summary_page(db)
