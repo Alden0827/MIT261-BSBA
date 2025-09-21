@@ -9,14 +9,111 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+
+
+
+def get_student_subjects_grades(db, StudentID=None, limit=1000):
+    """
+    Returns all subjects and grades for a specific student with columns:
+    ["Subject Code", "Description", "Grade", "Semester", "SchoolYear"]
+    """
+    if StudentID is None:
+        return pd.DataFrame()
+
+    student_id = int(StudentID)
+
+    # Fetch all grade documents for the student (all semesters)
+    grade_docs = list(db.grades.find({"StudentID": student_id}))
+    if not grade_docs:
+        return pd.DataFrame()
+
+    # Pre-fetch all semester documents to avoid repeated queries
+    semester_ids = list({doc.get("SemesterID") for doc in grade_docs})
+    semesters = {s["_id"]: s for s in db.semesters.find({"_id": {"$in": semester_ids}})}
+
+    # Pre-fetch all subjects to avoid repeated queries
+    all_subject_codes = set()
+    for doc in grade_docs:
+        all_subject_codes.update(doc.get("SubjectCodes", []))
+    subjects = {s["_id"]: s for s in db.subjects.find({"_id": {"$in": list(all_subject_codes)}})}
+
+    # Build rows
+    rows = []
+    for doc in grade_docs:
+        sem = semesters.get(doc.get("SemesterID"))
+        semester = sem["Semester"] if sem else None
+        school_year = sem["SchoolYear"] if sem else None
+
+        for code, grade in zip(doc.get("SubjectCodes", []), doc.get("Grades", [])):
+            subj = subjects.get(code)
+            desc = subj["Description"] if subj else None
+
+            rows.append({
+                "Subject Code": code,
+                "Description": desc,
+                "Grade": grade,
+                "Semester": semester,
+                "SchoolYear": school_year
+            })
+
+    # Apply limit if specified
+    if limit:
+        rows = rows[:limit]
+
+    return pd.DataFrame(rows)
+
+def get_students_info(db, StudentID=None):
+    """
+    Returns a DataFrame of students with grades including these columns:
+    ['_id', 'Name', 'Course', 'YearLevel']
+
+    Column explanations:
+    _id       → Student ID
+    Name      → Student’s full name
+    Course    → Course enrolled
+    YearLevel → Year level of the student
+    """
+    pipeline = [
+        {"$match": {"StudentID": StudentID} if StudentID else {}},
+        {"$group": {"_id": "$StudentID"}},  # unique students with grades
+        {
+            "$lookup": {
+                "from": "students",
+                "localField": "_id",
+                "foreignField": "_id",
+                "as": "student"
+            }
+        },
+        {"$unwind": "$student"},
+        {
+            "$project": {
+                "_id": "$student._id",
+                "Name": "$student.Name",
+                "Course": "$student.Course",
+                "YearLevel": "$student.YearLevel"
+            }
+        },
+        {"$sort": {"Name": 1}}
+    ]
+
+    cursor = db.grades.aggregate(pipeline)
+    df = pd.DataFrame(list(cursor))
+    
+    df.attrs['column_explanations'] = {
+        "_id": "Student ID",
+        "Name": "Student’s full name",
+        "Course": "Course enrolled",
+        "YearLevel": "Year level of the student"
+    }
+    
+    return df
 
 def prospectus_page(db):
     r = dh.data_helper({"db": db})
 
-    StudentID = st.session_state['uid']
-    print(f"StudentID in student_view: {StudentID}")
-
-    students = r.get_students(StudentID=StudentID)
+    StudentID = st.session_state["uid"]
+    students = get_students_info(db, StudentID=StudentID)
 
     st.title("🧑‍🎓 Student Prospectus & GPA")
 
@@ -47,11 +144,10 @@ def prospectus_page(db):
     program_code = student_row['Course']
 
     curriculum_df = r.get_curriculum(program_code)
-    stud_grades = r.get_student_subjects_grades(StudentID=student_id)
+    stud_grades = get_student_subjects_grades(db, StudentID=student_id)
 
     if curriculum_df.empty:
         st.warning(f"No curriculum found for the program: {program_code}")
-        # still show grades if available
         if not stud_grades.empty:
             st.subheader("Grades")
             st.dataframe(stud_grades)
@@ -59,15 +155,13 @@ def prospectus_page(db):
 
     # --- Merge curriculum with grades ---
     if not stud_grades.empty:
-        # Prepare grades data for merging
         grades_to_merge = stud_grades[['Subject Code', 'Grade', 'SchoolYear', 'Semester']].copy()
-        # Merge, keeping all curriculum subjects
         prospectus_df = pd.merge(curriculum_df, grades_to_merge, on="Subject Code", how="left")
     else:
         prospectus_df = curriculum_df.copy()
         prospectus_df['Grade'] = np.nan
         prospectus_df['SchoolYear'] = ''
-        prospectus_df['Semester_taken'] = '' # Semester when taken
+        prospectus_df['Semester'] = ''
 
     # --- Status Column ---
     def grade_status(grade):
@@ -76,26 +170,44 @@ def prospectus_page(db):
         elif float(grade) >= 75:
             return "Pass"
         else:
-            return "Failed"
+            return "Fail"
+
     prospectus_df["Status"] = prospectus_df["Grade"].apply(grade_status)
 
+    # --- Styling Functions ---
+    def color_status(val):
+        if val == "Pass":
+            return "color: green; font-weight: bold;"
+        elif val == "Fail":
+            return "color: red; font-weight: bold;"
+        else:
+            return ""
 
-    # --- Display Prospectus ---
-    # Sort by year and semester from curriculum
+    def color_grade(val):
+        if val == "-" or pd.isna(val):
+            return ""
+        elif float(val) >= 75:
+            return "color: green;"
+        else:
+            return "color: red;"
+
+    # --- Display Prospectus per Year/Semester ---
     prospectus_df.sort_values(by=['year', 'semester'], inplace=True)
 
     for (year, sem), group in prospectus_df.groupby(["year", "semester"]):
         st.subheader(f"📘 Year {year} / {sem} Semester")
         display_df = group[["Subject Code", "Description", "Grade", "Status", "unit", "preRequisites"]].copy()
 
-        # Format Grade column to show "Not Taken" for NaN values
-        display_df['Grade'] = display_df['Grade'].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "—")
+        # Format Grade column
+        display_df['Grade'] = display_df['Grade'].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "-")
         display_df.rename(columns={"unit": "Units", "preRequisites": "Prerequisites"}, inplace=True)
 
-        st.dataframe(
-            display_df[["Subject Code", "Description", "Grade", "Status", "Units", "Prerequisites"]].reset_index(drop=True)
-        )
+        # --- Apply styling ---
+        styled_df = display_df.style.applymap(color_status, subset=["Status"]) \
+                                    .applymap(color_grade, subset=["Grade"])
 
+        # Display in Streamlit — remove .reset_index()
+        st.dataframe(styled_df)
 
     # --- Calculations for subjects with grades ---
     graded_subjects = prospectus_df.dropna(subset=['Grade'])
@@ -110,15 +222,13 @@ def prospectus_page(db):
 
         # GPA Trend
         st.subheader("📈 GPA Trend per Semester")
-
-        # Use semester info from grades, not curriculum
         gpa_trend = (
             graded_subjects.groupby(["SchoolYear", "Semester"])["Grade"]
             .mean()
             .reset_index()
         )
         gpa_trend["Period"] = gpa_trend["SchoolYear"].astype(str) + " / " + gpa_trend["Semester"].astype(str)
-        gpa_trend.sort_values("Period", inplace=True) # Sort chronologically
+        gpa_trend.sort_values("Period", inplace=True)
 
         fig, ax = plt.subplots(figsize=(10, 4))
         ax.plot(gpa_trend["Period"], gpa_trend["Grade"], marker='o', linestyle='-')

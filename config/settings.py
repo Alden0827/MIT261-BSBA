@@ -15,13 +15,14 @@ DB_NAME = "mit261"
 MONGODB_USERNAME = os.getenv("MONGODB_USERNAME")
 MONGODB_PASSWORD = os.getenv("MONGODB_PASSWORD")
 MONGODB_CLUSTER_INSTANCE = os.getenv("MONGODB_CLUSTER_INSTANCE")
-MONGODB_DATABASE = os.getenv("MONGODB_DATABASE")
+# MONGODB_DATABASE = os.getenv("MONGODB_DATABASE")
 
 MONGODB_URI = (
     f"mongodb+srv://{MONGODB_USERNAME}:{MONGODB_PASSWORD}"
-    f"@cluster0.{MONGODB_CLUSTER_INSTANCE}.mongodb.net/{MONGODB_DATABASE}"
+    f"@cluster0.{MONGODB_CLUSTER_INSTANCE}.mongodb.net/{DB_NAME}"
 )
 
 # CACHING SETTINGS -------------------------------------------------------------
-CACHE_MAX_AGE = 3600
+# CACHE_MAX_AGE = 3600
+CACHE_MAX_AGE = 0 #disable caching
 

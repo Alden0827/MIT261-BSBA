@@ -11,17 +11,6 @@ from typing import List
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from bson.objectid import ObjectId
-# from pymongo import MongoClient
-
-# MongoDB Connection
-# try:
-#     client = MongoClient("mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net")
-#     db = client['mit261']
-#     print("✅ Successfully connected to MongoDB!")
-# except Exception as e:
-#     print(f"❌ Error connecting to MongoDB: {e}")
-#     sys.exit()
-
 
 class data_helper(object):
     """docstring for data_helper"""

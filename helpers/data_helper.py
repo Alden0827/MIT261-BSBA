@@ -61,43 +61,67 @@ class data_helper(object):
 
         return load_or_query("students_cache_x.pkl", query)
 
-    @cache_meta(ttl=660000000) #60 minutes
-    def get_students(self,StudentID=None, limit=1000):
+    # @cache_meta(ttl=6100) #60 minutes
+    # def get_students(self,StudentID=None, limit=1000):
+    #     # Start pipeline from grades, since only students with grades matter
+    #     pipeline = [
+    #         {
+    #             "$match": {  # filter by StudentID if provided
+    #                 **({"StudentID": StudentID} if StudentID else {})
+    #             }
+    #         },
+    #         {"$group": {"_id": "$StudentID"}},  # unique students with grades
+    #         {
+    #             "$lookup": {  # join with students collection
+    #                 "from": "students",
+    #                 "localField": "_id",
+    #                 "foreignField": "_id",
+    #                 "as": "student"
+    #             }
+    #         },
+    #         {"$unwind": "$student"},  # flatten student array
+    #         {
+    #             "$project": {
+    #                 "_id": "$student._id",
+    #                 "Name": "$student.Name",
+    #                 "Course": "$student.Course",
+    #                 "YearLevel": "$student.YearLevel"
+    #             }
+    #         },
+    #         {"$sort": {"Name": 1}}
+    #     ]
 
+    #     if limit:
+    #         pipeline.append({"$limit": limit})
 
-        # Start pipeline from grades, since only students with grades matter
-        pipeline = [
-            {
-                "$match": {  # filter by StudentID if provided
-                    **({"StudentID": StudentID} if StudentID else {})
-                }
-            },
-            {"$group": {"_id": "$StudentID"}},  # unique students with grades
-            {
-                "$lookup": {  # join with students collection
-                    "from": "students",
-                    "localField": "_id",
-                    "foreignField": "_id",
-                    "as": "student"
-                }
-            },
-            {"$unwind": "$student"},  # flatten student array
-            {
-                "$project": {
-                    "_id": "$student._id",
-                    "Name": "$student.Name",
-                    "Course": "$student.Course",
-                    "YearLevel": "$student.YearLevel"
-                }
-            },
-            {"$sort": {"Name": 1}}
-        ]
+    #     cursor = self.db.grades.aggregate(pipeline)  # NOTE: run on grades_col
+    #     return pd.DataFrame(list(cursor))
 
-        if limit:
-            pipeline.append({"$limit": limit})
+    def get_students(self, StudentID=None, limit=10000000000000):
+        """
+        Fetch student info for those who have grades.
+        If StudentID is provided, return only that student.
+        """
+        # Step 1: Get distinct student IDs from grades
+        if StudentID:
+            student_ids = [StudentID]
+        else:
+            student_ids = self.db.grades.distinct("StudentID")
 
-        cursor = self.db.grades.aggregate(pipeline)  # NOTE: run on grades_col
-        return pd.DataFrame(list(cursor))
+        if not student_ids:
+            return pd.DataFrame()
+
+        # Step 2: Query students collection with those IDs
+        query = {"_id": {"$in": student_ids}}
+        cursor = self.db.students.find(
+            query,
+            {"_id": 1, "Name": 1, "Course": 1, "YearLevel": 1}
+        ).sort("Name", 1).limit(limit)
+
+        # Step 3: Return DataFrame
+        df = pd.DataFrame(list(cursor))
+        return df
+
 
     def get_subjects(self,batch_size=1000):
 
@@ -158,12 +182,12 @@ class data_helper(object):
 
         return df
 
-    @cache_meta(ttl=600000) #60 minutes
+    @cache_meta(ttl=1) #60 minutes
     def get_semester_names(self):
         print('fetching semester from semesters collection as list')
         return self.db.semesters.distinct("Semester")
 
-    @cache_meta(ttl=600000) #60 minutes
+    @cache_meta(ttl=1) #60 minutes
     def get_semesters(self,batch_size=1000):
         print('fetching semesters collection as DataFrame')
 
@@ -182,12 +206,12 @@ class data_helper(object):
 
         return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
 
-    @cache_meta(ttl=600000) #60 minutes
+    @cache_meta(ttl=1) #60 minutes
     def get_school_years(self):
         years = self.db.semesters.distinct("SchoolYear")
         return sorted(years, reverse=True)
 
-    @cache_meta(ttl=600000) #60 minutes
+    @cache_meta(ttl=1) #60 minutes
     def get_current_school_year(self):
         years = self.db.semesters.distinct("SchoolYear")
         latest_year = sorted(years, key=lambda y: int(str(y).split("-")[0]), reverse=True)[0]
@@ -195,15 +219,24 @@ class data_helper(object):
         return latest_year
 
 
-    @cache_meta(ttl=600000) #60 minutes
+    # @cache_meta(ttl=1) #60 minutes
     def get_courses(self):
-        return self.db.students.distinct("Course")
+        # Get distinct course values
+        data = self.db.students.distinct("Course")
 
-    @cache_meta(ttl=600000) #60 minutes
+        # Print debug info
+        print("Database Name:", self.db.name)
+        print("Connection String:", self.db.client.address)  # tuple (host, port)
+        print("Courses:", data)
+
+        return data
+
+
+    @cache_meta(ttl=1) #60 minutes
     def get_year_levels(self):
         return self.db.students.distinct("YearLevel")
 
-    @cache_meta(ttl=600000) #60 minutes
+    @cache_meta(ttl=1) #60 minutes
     def get_grades(self,student_id: int | None = None, batch_size: int = 1000):
         print("Fetching data", end="")
         # 🔹 Build query filter
@@ -315,53 +348,32 @@ class data_helper(object):
 
     def get_all_grades_for_subject(self, subject_code: str):
         """
-        Returns a DataFrame with ['StudentID', 'Subject Code', 'Grade'] for a specific subject across all students.
+        Returns a DataFrame with ['StudentID', 'Subject Code', 'Grade'] 
+        for a specific subject across all students.
         Handles multiple takes of the same subject by a student.
+        (Non-aggregated version using find + Python processing)
         """
-        cache_key = f"grades_for_subject_{subject_code}.pkl"
+        records = []
+        cursor = self.db.grades.find(
+            {"SubjectCodes": subject_code},
+            {"StudentID": 1, "SubjectCodes": 1, "Grades": 1, "_id": 0}
+        )
 
-        def query():
-            pipeline = [
-                # Find documents containing the subject code
-                {'$match': {'SubjectCodes': subject_code}},
-                # Project fields and create a combined array of subjects and grades
-                {
-                    '$project': {
-                        'StudentID': 1,
-                        'grades_info': {
-                            '$filter': {
-                                'input': {
-                                    '$map': {
-                                        'input': {'$range': [0, {'$size': '$SubjectCodes'}]},
-                                        'as': 'i',
-                                        'in': {
-                                            'code': {'$arrayElemAt': ['$SubjectCodes', '$$i']},
-                                            'grade': {'$arrayElemAt': ['$Grades', '$$i']}
-                                        }
-                                    }
-                                },
-                                'as': 'item',
-                                'cond': {'$eq': ['$$item.code', subject_code]}
-                            }
-                        }
-                    }
-                },
-                # Unwind the array to create a doc for each subject entry
-                {'$unwind': '$grades_info'},
-                # Final projection
-                {
-                    '$project': {
-                        '_id': 0,
-                        'StudentID': '$StudentID',
-                        'Subject Code': '$grades_info.code',
-                        'Grade': '$grades_info.grade'
-                    }
-                }
-            ]
-            cursor = self.db.grades.aggregate(pipeline)
-            return pd.DataFrame(list(cursor))
+        for doc in cursor:
+            student_id = doc.get("StudentID")
+            subject_codes = doc.get("SubjectCodes", [])
+            grades = doc.get("Grades", [])
 
-        return load_or_query(cache_key, query, ttl=3600) # Cache for 1 hour
+            for code, grade in zip(subject_codes, grades):
+                if code == subject_code:
+                    records.append({
+                        "StudentID": student_id,
+                        "Subject Code": code,
+                        "Grade": grade
+                    })
+
+        return pd.DataFrame(records, columns=["StudentID", "Subject Code", "Grade"])
+
 
 
     def get_instructor_subjects(self,instructor_name=None, limit=1000):

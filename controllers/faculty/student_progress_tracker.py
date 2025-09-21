@@ -1,7 +1,21 @@
 import streamlit as st
 import pandas as pd
 from streamlit_echarts import st_echarts
-from helpers.data_helper import data_helper
+# from helpers.data_helper import data_helper
+
+def get_year_levels(db):
+    return db.students.distinct("YearLevel")
+
+def get_courses(db):
+    # Get distinct course values
+    data = db.students.distinct("Course")
+
+    # Print debug info
+    print("Database Name:", db.name)
+    print("Connection String:", db.client.address)  # tuple (host, port)
+    print("Courses:", data)
+
+    return data
 
 def get_subjects_by_teacher(db,teacher_name, batch_size=1000):
     """
@@ -45,16 +59,23 @@ def student_progress_tracker_page(db):
     st.markdown("Shows longitudinal performance for individual students.")
 
     # --- Data Helper ---
-    dh = data_helper(db)
+    # dh = data_helper(db)
 
     # --- Filters (Sidebar) ---
     teacher_name = st.session_state.get("fullname", "")
 
     # st.sidebar.header("Filters")
     with st.spinner("Loading teacher's handled Subjects...", show_time=True):
-        year_levels = [""] + dh.get_year_levels()
-        courses = [""] + dh.get_courses()
+        year_levels = get_year_levels(db)
+        courses = get_courses(db)
         subjects_df = get_subjects_by_teacher(db, teacher_name)
+
+    if courses == [] or courses == [""]:
+        st.warning(year_levels)
+
+    if year_levels == [] or year_levels == [""]:
+        st.warning("Year List is empty or only has an empty string")
+
 
     if "Subject Code" in subjects_df.columns:
         subject_list = [""] + subjects_df["Subject Code"].tolist()
@@ -63,6 +84,8 @@ def student_progress_tracker_page(db):
     else:
         subject_list = []
         st.warning("⚠️ No subject code column found in subjects_df.")
+
+
 
     with st.container():
         col1, col2, col3 = st.columns(3)
@@ -103,58 +126,89 @@ def student_progress_tracker_page(db):
         display_df = progress_data.fillna('-')
         st.dataframe(display_df.style.applymap(style_trend, subset=['Overall Trend']))
 
-        # --- ECharts Visualizations ---
+        progress_data = progress_data.drop(columns=['StudentID'])
+        progress_data = progress_data.fillna(0)
         st.markdown("---")
         st.markdown("### Visualizations")
 
+        # Keep only numeric GPA columns (semesters)
+        gpa_cols = progress_data.select_dtypes(include='number').columns.tolist()
+
+        # Compute average GPA per semester
+        avg_per_semester = progress_data[gpa_cols].mean().tolist()
+
         # --- Line Chart ---
-        st.markdown("#### GPA Trend - Line Chart")
-        gpa_cols = [col for col in progress_data.columns if ' ' in col]
-        line_options = {
-            "tooltip": {"trigger": "axis"},
-            "legend": {"data": progress_data['Name'].tolist()},
-            "xAxis": {"type": "category", "data": gpa_cols},
-            "yAxis": {"type": "value", "name": "GPA"},
-            "series": [],
-        }
-        for _, row in progress_data.iterrows():
-            line_options["series"].append({
-                "name": row['Name'],
-                "type": "line",
-                "data": [row.get(c, None) for c in gpa_cols],
-            })
-        st_echarts(options=line_options, height="500px")
+        st.markdown("#### Average GPA Trend per Semester")
+        with st.spinner("Processing Average GPA Trend", show_time=True):
+            line_options = {
+                "tooltip": {"trigger": "axis"},
+                "xAxis": {"type": "category", "data": gpa_cols, "name": "Semester"},
+                "yAxis": {"type": "value", "name": "Average GPA"},
+                "series": [{
+                    "name": "Average GPA",
+                    "type": "line",
+                    "data": avg_per_semester,
+                    "smooth": True,
+                }],
+            }
+
+        st_echarts(options=line_options, height="400px")
+
+
 
         # --- Scatter Chart ---
         st.markdown("#### GPA Progress - Scatter Chart")
-        if len(gpa_cols) >= 2:
-            first_sem, last_sem = gpa_cols[0], gpa_cols[-1]
-            scatter_data = progress_data[[first_sem, last_sem, 'Name']].dropna()
 
-            scatter_options = {
-                "xAxis": {"type": "value", "name": f"GPA ({first_sem})"},
-                "yAxis": {"type": "value", "name": f"GPA ({last_sem})"},
-                "tooltip": {"trigger": 'item', "formatter": "{b}: ({c})"},
-                "series": [{
-                    "name": 'Student Progress',
-                    "type": 'scatter',
-                    "data": [
-                        {"value": [row[first_sem], row[last_sem]], "name": row['Name']}
-                        for _, row in scatter_data.iterrows()
-                    ],
-                    "symbolSize": 15,
-                }]
-            }
-            st_echarts(options=scatter_options, height="500px")
-        else:
-            st.info("Scatter plot requires at least two semesters of data.")
+        # Drop non-GPA column
+        
 
+        # Identify GPA columns (numeric only)
+        gpa_cols = progress_data.select_dtypes(include='number').columns.tolist()
+
+        # Compute general average per student
+        progress_data["GeneralAverage"] = progress_data[gpa_cols].mean(axis=1)
+
+        # Find global min/max values across all GPA-related numbers
+        all_values = progress_data[gpa_cols + ["GeneralAverage"]].values.flatten()
+        min_val = float(50)
+        max_val = float(pd.Series(all_values).max())
+        print('min:',min_val, 'max:', max_val)
+
+        # Build scatter chart
+        scatter_options = {
+            "tooltip": {"trigger": "item", "formatter": "{b}: {c}"},
+            "legend": {"data": gpa_cols},
+            "xAxis": {"type": "value", "name": "General Average GPA", "min": min_val, "max": max_val},
+            "yAxis": {"type": "value", "name": "Semester GPA", "min": min_val, "max": max_val},
+            "series": []
+        }
+
+        for col in gpa_cols:
+            scatter_options["series"].append({
+                "name": col,
+                "type": "scatter",
+                "data": [
+                    {"value": [row["GeneralAverage"], row[col]], "name": row["Name"]}
+                    for _, row in progress_data.iterrows()
+                    if pd.notnull(row[col])  # skip NaN
+                ],
+                "symbolSize": 12,
+            })
+
+        st_echarts(options=scatter_options, height="500px")
+
+
+
+    else:
+        st.info("Scatter plot requires at least two semesters of data.")
 
 
 def get_student_progress_data(db, course, year_level, subject_code):
     """
     Fetches and processes data to generate the student progress report.
     """
+    import pandas as pd
+
     students_df = pd.DataFrame(list(db.students.find()))
     grades_df = pd.DataFrame(list(db.grades.find()))
     subjects_df = pd.DataFrame(list(db.subjects.find()))
@@ -200,13 +254,24 @@ def get_student_progress_data(db, course, year_level, subject_code):
     new_columns = {sem_id: f"{sem_info['Semester']} {sem_info['SchoolYear']}" for sem_id, sem_info in semester_map.items()}
     gpa_pivot = gpa_pivot.rename(columns=new_columns)
 
-    # order columns
-    student_id_col = ['StudentID']
-    gpa_cols = sorted([c for c in gpa_pivot.columns if c not in student_id_col])
-    gpa_pivot = gpa_pivot[student_id_col + gpa_cols]
+    # order columns by SchoolYear and Semester
+    semester_rank = {'Spring': 1, 'Summer': 2, 'Fall': 3}  # adjust if you have other semesters
+    semester_order = semesters_df.copy()
+    semester_order['semester_num'] = semester_order['Semester'].map(semester_rank)
+    semester_order = semester_order.sort_values(['SchoolYear', 'semester_num'])
+    gpa_cols_ordered = [new_columns[sem_id] for sem_id in semester_order['SemesterID'] if new_columns[sem_id] in gpa_pivot.columns]
+
+    # keep only semester columns where average GPA > 0
+    non_zero_semesters = [c for c in gpa_cols_ordered if gpa_pivot[c].dropna().mean() > 0]
+
+    # final pivot columns
+    gpa_pivot = gpa_pivot[['StudentID'] + non_zero_semesters]
 
     # merge student info
     final_df = pd.merge(students_df[['StudentID', 'Name']], gpa_pivot, on='StudentID', how='inner')
+
+    # redefine gpa_cols for trend calculation
+    gpa_cols = non_zero_semesters
 
     # calculate trend
     def calculate_trend(row):
@@ -227,7 +292,6 @@ def get_student_progress_data(db, course, year_level, subject_code):
     final_df['Overall Trend'] = final_df.apply(calculate_trend, axis=1)
 
     return final_df
-
 
 
 if __name__ == "__main__":
