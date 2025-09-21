@@ -286,6 +286,84 @@ class data_helper(object):
 
         return load_or_query(cache_key, query)
 
+
+    def get_all_grades(self):
+        """
+        Returns a DataFrame with ['StudentID', 'Subject Code', 'Grade'] for all students and all subjects.
+        This can be a large dataset.
+        """
+        cache_key = "all_grades_flat.pkl"
+
+        def query():
+            cursor = self.db.grades.find({}, {"StudentID": 1, "SubjectCodes": 1, "Grades": 1})
+
+            rows = []
+            for doc in cursor:
+                if 'SubjectCodes' in doc and 'Grades' in doc:
+                    # Ensure lengths match to avoid errors
+                    min_len = min(len(doc['SubjectCodes']), len(doc['Grades']))
+                    for i in range(min_len):
+                        rows.append({
+                            "StudentID": doc["StudentID"],
+                            "Subject Code": doc["SubjectCodes"][i],
+                            "Grade": doc["Grades"][i]
+                        })
+
+            return pd.DataFrame(rows)
+
+        return load_or_query(cache_key, query, ttl=3600) # Cache for 1 hour
+
+    def get_all_grades_for_subject(self, subject_code: str):
+        """
+        Returns a DataFrame with ['StudentID', 'Subject Code', 'Grade'] for a specific subject across all students.
+        Handles multiple takes of the same subject by a student.
+        """
+        cache_key = f"grades_for_subject_{subject_code}.pkl"
+
+        def query():
+            pipeline = [
+                # Find documents containing the subject code
+                {'$match': {'SubjectCodes': subject_code}},
+                # Project fields and create a combined array of subjects and grades
+                {
+                    '$project': {
+                        'StudentID': 1,
+                        'grades_info': {
+                            '$filter': {
+                                'input': {
+                                    '$map': {
+                                        'input': {'$range': [0, {'$size': '$SubjectCodes'}]},
+                                        'as': 'i',
+                                        'in': {
+                                            'code': {'$arrayElemAt': ['$SubjectCodes', '$$i']},
+                                            'grade': {'$arrayElemAt': ['$Grades', '$$i']}
+                                        }
+                                    }
+                                },
+                                'as': 'item',
+                                'cond': {'$eq': ['$$item.code', subject_code]}
+                            }
+                        }
+                    }
+                },
+                # Unwind the array to create a doc for each subject entry
+                {'$unwind': '$grades_info'},
+                # Final projection
+                {
+                    '$project': {
+                        '_id': 0,
+                        'StudentID': '$StudentID',
+                        'Subject Code': '$grades_info.code',
+                        'Grade': '$grades_info.grade'
+                    }
+                }
+            ]
+            cursor = self.db.grades.aggregate(pipeline)
+            return pd.DataFrame(list(cursor))
+
+        return load_or_query(cache_key, query, ttl=3600) # Cache for 1 hour
+
+
     def get_instructor_subjects(self,instructor_name=None, limit=1000):
         """
         Returns a DataFrame with columns:
