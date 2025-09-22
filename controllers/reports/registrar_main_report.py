@@ -634,6 +634,36 @@ def report_page(db):
                 }
                 st_echarts(options=option, height="400px")
 
+            # --- Predicted Subjects Section ---
+            st.markdown("---")
+            st.subheader("🔮 Predicted Subjects for Next Semester")
+
+            # Get a list of future semesters
+            semesters_df = r2.get_semesters()
+            if not semesters_df.empty:
+                # Assuming you want to predict for semesters beyond the current ones in the DB
+                latest_year = semesters_df['SchoolYear'].max()
+                # Let's create options for the next 2 years
+                future_semesters = [f"FirstSem {latest_year + 1}", f"SecondSem {latest_year + 1}", f"Summer {latest_year + 2}", f"FirstSem {latest_year + 2}", f"SecondSem {latest_year + 2}"]
+
+                selected_semester_predict = st.selectbox("Select Semester for Prediction:", ["-- Select --"] + future_semesters)
+
+                if selected_semester_predict != "-- Select --":
+                    with st.spinner(f"Predicting subjects for {selected_semester_predict}..."):
+                        recommended_df, blocked_df = r.get_predicted_subjects(student['_id'], selected_semester_predict)
+
+                    st.markdown(f"#### ✅ Recommended Subjects for {selected_semester_predict}")
+                    if not recommended_df.empty:
+                        st.dataframe(recommended_df, use_container_width=True)
+                    else:
+                        st.info("No recommended subjects for this semester. The student may have already taken them, or there are no subjects scheduled.")
+
+                    st.markdown(f"#### 🚫 Blocked Subjects for {selected_semester_predict}")
+                    if not blocked_df.empty:
+                        st.dataframe(blocked_df, use_container_width=True)
+                    else:
+                        st.info("No blocked subjects for this semester.")
+
 
         st.markdown("""
         **Insight:**  
