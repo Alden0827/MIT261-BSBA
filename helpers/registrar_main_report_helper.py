@@ -829,6 +829,83 @@ class report_helper(object):
         df = pd.DataFrame(rows)
         return df
 
+    def get_predicted_subjects(self, student_id, semester_string):
+        """
+        Predicts recommended and blocked subjects for a student for a given semester.
+        """
+        from helpers.data_helper import data_helper
+        dh = data_helper({"db": self.db})
+
+        # 1. Get student's course
+        student_data = self.db.students.find_one({"_id": student_id})
+        if not student_data:
+            return pd.DataFrame(), pd.DataFrame()
+        student_course = student_data.get("Course")
+
+        # 2. Get student's passed subjects
+        grades_df = dh.get_grades(student_id=student_id)
+
+        passed_subjects = set()
+        if not grades_df.empty:
+            # Explode the DataFrame to have one row per subject grade
+            grades_flat = grades_df.explode(['SubjectCodes', 'Grades'])
+            # Filter for passed grades
+            passed_df = grades_flat[grades_flat['Grades'] >= 75]
+            passed_subjects.update(passed_df['SubjectCodes'].unique())
+
+        # 3. Get curriculum for the student's course
+        curriculum_df = dh.get_curriculum(student_course)
+        if curriculum_df.empty:
+            return pd.DataFrame(), pd.DataFrame()
+
+        # 4. Parse semester string
+        # Assuming semester_string format is "FirstSem 2025", "SecondSem 2025", etc.
+        semester_map = {"FirstSem": "First", "SecondSem": "Second", "Summer": "Summer"}
+        parts = semester_string.split()
+        semester_name_short = parts[0]
+        semester_name_full = semester_map.get(semester_name_short)
+
+        if not semester_name_full:
+            return pd.DataFrame(), pd.DataFrame()
+
+        # 5. Filter curriculum for the target semester
+        target_subjects_df = curriculum_df[curriculum_df['semester'] == semester_name_full]
+
+        recommended_list = []
+        blocked_list = []
+
+        # 6. Check prerequisites
+        for _, subject in target_subjects_df.iterrows():
+            prereqs = subject.get('preRequisites', [])
+            subject_code = subject.get('code') # Corrected from 'Subject Code'
+
+            # Skip subjects already passed
+            if subject_code in passed_subjects:
+                continue
+
+            missing_prereqs = [p for p in prereqs if p not in passed_subjects]
+
+            if not missing_prereqs:
+                recommended_list.append({
+                    "Subject Code": subject_code,
+                    "Description": subject.get('name'), # Corrected from 'Description'
+                    "Grade": "",  # No grade yet
+                    "Year Level": subject.get('year'),
+                    "Semester": subject.get('semester')
+                })
+            else:
+                blocked_list.append({
+                    "Subject Code": subject_code,
+                    "Subject": subject.get('name'), # Corrected from 'Description'
+                    "Prerequisites": ", ".join(missing_prereqs),
+                    "Year Level": subject.get('year'),
+                    "Semester": subject.get('semester')
+                })
+
+        recommended_df = pd.DataFrame(recommended_list)
+        blocked_df = pd.DataFrame(blocked_list)
+
+        return recommended_df, blocked_df
 
 
 # ------------------------------
