@@ -14,19 +14,43 @@ def get_subjects_by_teacher(db, teacher_name):
         df["SubjectCode"] = df["SubjectCode"].astype(str)
     return df
 
+def get_teachers(db, teacher=None):
+    """
+    Returns a list of teacher names from the subjects collection.
+    
+    :param teacher: Optional string to filter by a specific teacher
+    :return: List of teacher names
+    """
+    query = {}
+    if teacher:
+        query['Teacher'] = teacher
+    
+    # Use distinct to get unique teacher names
+    teacher_names = db.subjects.distinct("Teacher", filter=query)
+    return teacher_names
 
 def intervention_candidates_page(db):
     """📋 Lists students at academic risk (low or missing grades)."""
     st.markdown("### 🚨 Intervention Candidates List")
     st.markdown("Students flagged due to **low grades (<60)** or **missing grades (INC)**.")
 
-    # Faculty name
-    teacher_name = st.session_state.get("fullname", "")
-    if not teacher_name:
-        teacher_name = st.text_input("Faculty Name", value="")
-        if not teacher_name:
-            st.warning("Faculty name is required.")
-            return
+    # --- Determine teacher list based on user role ---
+    user_role = st.session_state.get("user_role", "")
+    if user_role == "registrar":
+        # Registrar sees all teachers
+        teacher_list = get_teachers(db)
+    elif user_role == "teacher":
+        # Teacher sees only themselves
+        teacher_list = [st.session_state.get("fullname", "")]
+    else:
+        teacher_list = []
+
+    if not teacher_list:
+        st.warning("Faculty name is required.")
+        return
+
+    # --- Teacher selectbox ---
+    teacher_name = st.selectbox("Select Teacher", teacher_list)
 
     # --- Load collections ---
     with st.spinner("Loading data..."):
@@ -72,15 +96,13 @@ def intervention_candidates_page(db):
             gdoc.get("Teachers", []),
             fillvalue=None
         ):
-            subj_s = str(subj) if subj else ""
-            tchr_s = str(tchr) if tchr else ""
-            if tchr_s != teacher_name:
+            if tchr != teacher_name:
                 continue
-
+            subj_s = str(subj) if subj else ""
             grade_val = None
             risk_flag = ""
 
-            # --- FIX: treat 0 as INC ---
+            # Treat 0 or empty as INC
             if grd is None or str(grd).strip() == "" or float(grd) == 0:
                 grade_val, risk_flag = "INC", "Missing Grades"
             else:
@@ -114,7 +136,7 @@ def intervention_candidates_page(db):
     # --- Show table ---
     st.dataframe(display_df)
 
-    # --- Export ---
+    # --- Export CSV ---
     csv = display_df.to_csv(index=False).encode("utf-8")
     sem_label = selected_sem.replace(" ", "_")
     st.download_button(

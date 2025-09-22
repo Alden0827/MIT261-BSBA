@@ -7,9 +7,9 @@ from pymongo import MongoClient
 # MongoDB Connection
 # -------------------------------------------------------------------
 try:
-    # client = MongoClient("mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net")
-    client = MongoClient("mongodb://localhost:27017/")
-    db = client['mit261m']
+    client = MongoClient("mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net")
+    # client = MongoClient("mongodb://localhost:27017/")
+    db = client['mit261']
     print("✅ Successfully connected to MongoDB!")
 except Exception as e:
     print(f"❌ Error connecting to MongoDB: {e}")
@@ -208,14 +208,14 @@ if __name__ == "__main__":
 
     populate(TARGET_SEMESTER_ID=7, school_year=1, semester_label ="first") #first 2022
     populate(TARGET_SEMESTER_ID=8, school_year=1, semester_label ="second") #second 2022
-    populate(TARGET_SEMESTER_ID=9, school_year=1, semester_label ="summer") #summer 2022
+    # populate(TARGET_SEMESTER_ID=9, school_year=1, semester_label ="summer") #summer 2022
 
     populate(TARGET_SEMESTER_ID=10, school_year=2, semester_label ="first") #first 2023
     populate(TARGET_SEMESTER_ID=11, school_year=2, semester_label ="second") #second 2023
-    populate(TARGET_SEMESTER_ID=12, school_year=2, semester_label ="summer") #summer 2023
+    # populate(TARGET_SEMESTER_ID=12, school_year=2, semester_label ="summer") #summer 2023
 
     populate(TARGET_SEMESTER_ID=13, school_year=3, semester_label ="first") #first 2024
     populate(TARGET_SEMESTER_ID=14, school_year=3, semester_label ="second") #second 2024
-    populate(TARGET_SEMESTER_ID=15, school_year=3, semester_label ="summer") #summer 2024
+    # populate(TARGET_SEMESTER_ID=15, school_year=3, semester_label ="summer") #summer 2024
 
     populate(TARGET_SEMESTER_ID=16, school_year=4, semester_label ="first") #first 2025

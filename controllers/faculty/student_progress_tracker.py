@@ -51,6 +51,21 @@ def get_subjects_by_teacher(db,teacher_name, batch_size=1000):
 
     return df
 
+def get_teachers(db, teacher=None):
+    """
+    Returns a list of teacher names from the subjects collection.
+    
+    :param teacher: Optional string to filter by a specific teacher
+    :return: List of teacher names
+    """
+    query = {}
+    if teacher:
+        query['Teacher'] = teacher
+    
+    # Use distinct to get unique teacher names
+    teacher_names = db.subjects.distinct("Teacher", filter=query)
+    return teacher_names
+
 def student_progress_tracker_page(db):
     """
     Displays the Student Progress Tracker report page.
@@ -58,25 +73,33 @@ def student_progress_tracker_page(db):
     st.markdown("### 📈 Student Progress Tracker")
     st.markdown("Shows longitudinal performance for individual students.")
 
-    # --- Data Helper ---
-    # dh = data_helper(db)
+    # --- Determine teacher list based on user role ---
+    user_role = st.session_state.get("user_role", "")
+    if user_role == "registrar":
+        teacher_list = get_teachers(db)
+    elif user_role == "teacher":
+        teacher_list = [st.session_state.get("fullname", "")]
+    else:
+        teacher_list = []
 
-    # --- Filters (Sidebar) ---
-    teacher_name = st.session_state.get("fullname", "")
+    if not teacher_list:
+        st.warning("Faculty name is required.")
+        return
 
-    # st.sidebar.header("Filters")
+    # --- Teacher selectbox ---
+    teacher_name = st.selectbox("Select Teacher", teacher_list)
+
+    # --- Load data ---
     with st.spinner("Loading teacher's handled Subjects...", show_time=True):
         year_levels = get_year_levels(db)
         courses = get_courses(db)
         subjects_df = get_subjects_by_teacher(db, teacher_name)
 
-    if courses == [] or courses == [""]:
-        st.warning(year_levels)
+    if not courses or not year_levels or subjects_df.empty:
+        st.warning("⚠️ Missing data in one or more collections.")
+        return
 
-    if year_levels == [] or year_levels == [""]:
-        st.warning("Year List is empty or only has an empty string")
-
-
+    # --- Prepare subject list ---
     if "Subject Code" in subjects_df.columns:
         subject_list = [""] + subjects_df["Subject Code"].tolist()
     elif "Code" in subjects_df.columns:  # fallback
@@ -85,8 +108,7 @@ def student_progress_tracker_page(db):
         subject_list = []
         st.warning("⚠️ No subject code column found in subjects_df.")
 
-
-
+    # --- Filters ---
     with st.container():
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -96,11 +118,9 @@ def student_progress_tracker_page(db):
         with col3:
             selected_subject = st.selectbox("Filter by Subject", subject_list)
 
-
-    # --- Main Page Button ---
-    if st.button("Generate Report"):   # <── now in main page
-        with st.spinner("Fetching student progress data...", show_time = True):
-
+    # --- Generate report ---
+    if st.button("Generate Report"):
+        with st.spinner("Fetching student progress data...", show_time=True):
             progress_data = get_student_progress_data(
                 db, selected_course, selected_year_level, selected_subject
             )
@@ -109,7 +129,7 @@ def student_progress_tracker_page(db):
             st.warning("No data found for the selected filters.")
             return
 
-        # --- Display DataFrame with Styling ---
+        # --- Display DataFrame ---
         st.markdown("### Student GPA Progress")
 
         def style_trend(val):
@@ -126,55 +146,30 @@ def student_progress_tracker_page(db):
         display_df = progress_data.fillna('-')
         st.dataframe(display_df.style.applymap(style_trend, subset=['Overall Trend']))
 
-        progress_data = progress_data.drop(columns=['StudentID'])
-        progress_data = progress_data.fillna(0)
-        st.markdown("---")
-        st.markdown("### Visualizations")
-
-        # Keep only numeric GPA columns (semesters)
+        # --- Visualizations ---
+        progress_data = progress_data.drop(columns=['StudentID']).fillna(0)
         gpa_cols = progress_data.select_dtypes(include='number').columns.tolist()
-
-        # Compute average GPA per semester
         avg_per_semester = progress_data[gpa_cols].mean().tolist()
 
-        # --- Line Chart ---
         st.markdown("#### Average GPA Trend per Semester")
-        with st.spinner("Processing Average GPA Trend", show_time=True):
-            line_options = {
-                "tooltip": {"trigger": "axis"},
-                "xAxis": {"type": "category", "data": gpa_cols, "name": "Semester"},
-                "yAxis": {"type": "value", "name": "Average GPA"},
-                "series": [{
-                    "name": "Average GPA",
-                    "type": "line",
-                    "data": avg_per_semester,
-                    "smooth": True,
-                }],
-            }
-
+        line_options = {
+            "tooltip": {"trigger": "axis"},
+            "xAxis": {"type": "category", "data": gpa_cols, "name": "Semester"},
+            "yAxis": {"type": "value", "name": "Average GPA"},
+            "series": [{
+                "name": "Average GPA",
+                "type": "line",
+                "data": avg_per_semester,
+                "smooth": True,
+            }],
+        }
         st_echarts(options=line_options, height="400px")
 
-
-
-        # --- Scatter Chart ---
+        # Scatter chart
         st.markdown("#### GPA Progress - Scatter Chart")
-
-        # Drop non-GPA column
-        
-
-        # Identify GPA columns (numeric only)
-        gpa_cols = progress_data.select_dtypes(include='number').columns.tolist()
-
-        # Compute general average per student
         progress_data["GeneralAverage"] = progress_data[gpa_cols].mean(axis=1)
-
-        # Find global min/max values across all GPA-related numbers
         all_values = progress_data[gpa_cols + ["GeneralAverage"]].values.flatten()
-        min_val = float(50)
-        max_val = float(pd.Series(all_values).max())
-        print('min:',min_val, 'max:', max_val)
-
-        # Build scatter chart
+        min_val, max_val = 50, float(pd.Series(all_values).max())
         scatter_options = {
             "tooltip": {"trigger": "item", "formatter": "{b}: {c}"},
             "legend": {"data": gpa_cols},
@@ -182,25 +177,17 @@ def student_progress_tracker_page(db):
             "yAxis": {"type": "value", "name": "Semester GPA", "min": min_val, "max": max_val},
             "series": []
         }
-
         for col in gpa_cols:
             scatter_options["series"].append({
                 "name": col,
                 "type": "scatter",
                 "data": [
                     {"value": [row["GeneralAverage"], row[col]], "name": row["Name"]}
-                    for _, row in progress_data.iterrows()
-                    if pd.notnull(row[col])  # skip NaN
+                    for _, row in progress_data.iterrows() if pd.notnull(row[col])
                 ],
                 "symbolSize": 12,
             })
-
         st_echarts(options=scatter_options, height="500px")
-
-
-
-    else:
-        st.info("Scatter plot requires at least two semesters of data.")
 
 
 def get_student_progress_data(db, course, year_level, subject_code):

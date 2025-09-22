@@ -80,21 +80,47 @@ def get_student_grades(db, teacher_name, subject_code):
 
     return merged[["StudentID", "Name", "Course", "YearLevel", "Grades"]]
 
+def get_teachers(db, teacher=None):
+    """
+    Returns a list of teacher names from the subjects collection.
+    
+    :param teacher: Optional string to filter by a specific teacher
+    :return: List of teacher names
+    """
+    query = {}
+    if teacher:
+        query['Teacher'] = teacher
+    
+    # Use distinct to get unique teacher names
+    teacher_names = db.subjects.distinct("Teacher", filter=query)
+    return teacher_names
+
 
 # ---------- Main Page ----------
 def student_grade_analytics_page(db):
     st.markdown("## 📊 Students Grade Analytics")
 
-    # Teacher dropdown (from grades collection)
-    with st.spinner("Loading meta data..."):
-        teacher_list = sorted({t for g in db.grades.find() for t in g.get("Teachers", [])})
-        teacher_name = st.selectbox("👩‍🏫 Select Teacher", [""] + teacher_list)
+    user_role = st.session_state.get("user_role", "")
+    teacher_list = []
 
+    if user_role == "registrar":
+        teacher_list = get_teachers(db)
+    elif user_role == "teacher":
+        teacher_list = get_teachers(db, st.session_state.get("fullname", ""))
+    else:
+        st.warning("⚠️ Unknown user role.")
+        return
+
+    if not teacher_list:
+        st.warning("⚠️ No teachers available for selection.")
+        return
+
+    teacher_name = st.selectbox("👩‍🏫 Select Teacher", [""] + teacher_list)
     if not teacher_name:
         st.info("Please select a teacher to continue.")
         return
 
-    # Load teacher’s subjects
+    # ---------- Load teacher's subjects ----------
     with st.spinner("Loading teacher's subjects..."):
         subjects_df = get_subjects_by_teacher(db, teacher_name)
 
@@ -107,11 +133,10 @@ def student_grade_analytics_page(db):
 
     selected_subject_label = st.selectbox("📘 Select Subject", subject_options)
     selected_subject_code = subject_map.get(selected_subject_label, None)
-
     if not selected_subject_code:
         return
 
-    # Fetch student grades
+    # ---------- Fetch student grades ----------
     with st.spinner("Fetching grades..."):
         df = get_student_grades(db, teacher_name, selected_subject_code)
 
@@ -119,7 +144,7 @@ def student_grade_analytics_page(db):
         st.warning("⚠️ No grades found for this subject.")
         return
 
-    # --- Summary Stats ---
+    # ---------- Summary Stats ----------
     st.subheader(f"📑 Grades Summary of Faculty: {teacher_name}")
     summary_data = {
         "Mean": round(df["Grades"].mean(), 2),
@@ -129,10 +154,9 @@ def student_grade_analytics_page(db):
     }
     st.table(pd.DataFrame([summary_data]))
 
-    # --- Histogram (Grade Distribution) ---
+    # ---------- Histogram (Grade Distribution) ----------
     st.subheader(f"📊 Grade Distribution - {selected_subject_label}")
     hist_data = df["Grades"].value_counts().sort_index()
-
     hist_options = {
         "tooltip": {"trigger": "axis"},
         "xAxis": {"type": "category", "data": [str(i) for i in hist_data.index.tolist()]},
@@ -141,13 +165,12 @@ def student_grade_analytics_page(db):
     }
     st_echarts(options=hist_options, height="400px")
 
-    # --- Pass vs Fail ---
+    # ---------- Pass vs Fail ----------
     st.subheader("✅ Pass vs ❌ Fail")
     pass_fail_counts = {
         "Pass": int((df["Grades"] >= 75).sum()),
         "Fail": int((df["Grades"] < 75).sum()),
     }
-
     pass_fail_options = {
         "tooltip": {"trigger": "axis"},
         "xAxis": {"type": "category", "data": list(pass_fail_counts.keys())},
@@ -162,14 +185,13 @@ def student_grade_analytics_page(db):
     }
     st_echarts(options=pass_fail_options, height="400px")
 
-    # --- Student Grades Table ---
+    # ---------- Student Grades Table ----------
     st.subheader("📝 Student Grades Table")
+    df["GradeDisplay"] = df["Grades"].apply(lambda g: "INC" if g == 0 else str(g))
+    df["Status"] = df["Grades"].apply(lambda x: "Pass" if x >= 75 else "Fail")
 
     def style_pass_fail(val):
         return "color: green; font-weight: bold" if val == "Pass" else "color: red; font-weight: bold"
-
-    df["GradeDisplay"] = df["Grades"].apply(lambda g: "INC" if g == 0 else str(g))
-    df["Status"] = df["Grades"].apply(lambda x: "Pass" if x >= 75 else "Fail")
 
     st.dataframe(
         df[["StudentID", "Name", "Course", "YearLevel", "GradeDisplay", "Status"]]

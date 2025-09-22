@@ -7,9 +7,14 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 # APPLICATION SETTINTS ----------------------------------------------------------
 DEFAULT_PAGE_TITLE = "MIT261-BSBA"
-# APP_TITLE = "🏫 University DASHBOARD"
+
 APP_TITLE = "🏫 BSBA Department Academic Records Management System"
-DB_NAME = "mit261"
+UNIVERSITY_NAME = "Notre Dame of Marbel University"
+
+# APP_TITLE = "Pratise Programing lang gud.. para maka toon"
+# UNIVERSITY_NAME = "DSWD UNIVERSITY HAHA"
+
+DB_NAME = "mit261m"
 
 # DATABASE CONFIGURATION --------------------------------------------------------
 MONGODB_USERNAME = os.getenv("MONGODB_USERNAME")

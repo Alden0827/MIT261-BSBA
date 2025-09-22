@@ -23,7 +23,7 @@ def faculty_view(db,user_role):
 
         print(f' -> [{user_role}]',)
         main_menu = ''
-        if user_role == 'faculty':
+        if user_role == 'faculty' or user_role == "registrar":
 
             main_menu = option_menu(
                 menu_title="Faculty Menu",
@@ -107,39 +107,7 @@ def faculty_view(db,user_role):
         class_scheduler_manager_page(db)
     elif menu == "Class Grade Distribution":
         from .faculty.class_grade_distribution import class_grade_distribution
-        from helpers.data_helper import data_helper
-
-        dh = data_helper({"db": db})
-
-        # Get data for filters
-        semesters = dh.get_semester_names()
-        school_years = dh.get_school_years()
-
-        teacher_name = None
-
-        # If the user is a teacher, default to their name.
-        # Otherwise, show a dropdown to select a faculty member.
-        if st.session_state["user_role"] == "teacher":
-            teacher_name = st.session_state["fullname"]
-        else:
-            teachers_df = dh.get_instructor_subjects()
-            teacher_names = teachers_df['Teacher'].unique()
-            teacher_name = st.selectbox("Select Faculty Name", teacher_names)
-
-        # Common filters for semester and school year
-        with st.container():
-            col1, col2 = st.columns(2)
-            with col1:
-                semester = st.selectbox("Select Semester", semesters)
-            with col2:
-                school_year = st.selectbox("Select School Year", school_years)
-
-        # Display the report if a teacher is selected
-        if teacher_name:
-            class_grade_distribution(db, teacher_name, semester, school_year)
-        else:
-            st.warning("Please select a faculty member to view the report.")
-
+        class_grade_distribution(db)
     elif menu == "Student Progress Tracker":
         from .faculty.student_progress_tracker import student_progress_tracker_page
         student_progress_tracker_page(db)

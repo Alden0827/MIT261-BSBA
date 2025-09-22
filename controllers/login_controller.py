@@ -1,6 +1,6 @@
 import streamlit as st
 from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
-from config.settings import APP_TITLE
+from config.settings import APP_TITLE, UNIVERSITY_NAME
 import helpers.user_helper as uh
 
 def login_view(db):
@@ -118,7 +118,7 @@ def login_view(db):
         <div style="text-align:center; margin-bottom:30px;">
             <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjvoWxGatGPpCoUDlDd_tHUcWr92COSNaEE4-1rtDQ0aplkWFjqhUBjraQHKx-3AmVB224hNeZWZzt-fTZ8ZQvSA8Wlu-zCh3xZ5FCJTwhyaBkWAm4nYRn4GaPVYT5Kxsp785Cma5prdWRW/s1600/ndmu-seal1.png" 
                  alt="NDMU Logo" width="150">
-            <h1 style="margin:5px 0;">Notre Dame of Marbel University</h1>
+            <h1 style="margin:5px 0;">{UNIVERSITY_NAME}</h1>
             <h3 style="color:gray; margin:0;">{APP_TITLE}</h3>
         </div>
         """,

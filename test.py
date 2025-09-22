@@ -6,54 +6,42 @@ import pandas as pd
 # client = MongoClient(MONGODB_URI)
 client = MongoClient('mongodb://localhost:27017/')
 
-db = client[DB_NAME]
+db = client['mit261m']
 
-def get_students_info(db, StudentID=None):
+def get_semesters(db, teacher=None):
     """
-    Returns a DataFrame of students with grades including these columns:
-    ['_id', 'Name', 'Course', 'YearLevel']
+    Returns semesters available in the database.
+    Optionally filters to only semesters where the specified teacher has subjects.
 
-    Column explanations:
-    _id       → Student ID
-    Name      → Student’s full name
-    Course    → Course enrolled
-    YearLevel → Year level of the student
+    :param db: MongoDB database object
+    :param teacher: Optional teacher name to filter semesters
+    :return: Dict with {_id: "Semester SchoolYear"}
+
+    Sample returned data: {13: 'FirstSem 2024', 14: 'SecondSem 2024'}
     """
-    pipeline = [
-        {"$match": {"StudentID": StudentID} if StudentID else {}},
-        {"$group": {"_id": "$StudentID"}},  # unique students with grades
-        {
-            "$lookup": {
-                "from": "students",
-                "localField": "_id",
-                "foreignField": "_id",
-                "as": "student"
-            }
-        },
-        {"$unwind": "$student"},
-        {
-            "$project": {
-                "_id": "$student._id",
-                "Name": "$student.Name",
-                "Course": "$student.Course",
-                "YearLevel": "$student.YearLevel"
-            }
-        },
-        {"$sort": {"Name": 1}}
-    ]
+    if not teacher:
+        semesters = db.semesters.find()
+    else:
+        # Get all subject codes taught by the teacher
+        teacher_subjects = db.subjects.find({"Teacher": teacher})
+        teacher_subject_codes = [s["_id"] for s in teacher_subjects]
 
-    cursor = db.grades.aggregate(pipeline)
-    df = pd.DataFrame(list(cursor))
-    
-    df.attrs['column_explanations'] = {
-        "_id": "Student ID",
-        "Name": "Student’s full name",
-        "Course": "Course enrolled",
-        "YearLevel": "Year level of the student"
-    }
-    
-    return df
+        # Get grades that match the teacher's subjects
+        grades_cursor = db.grades.find({"SubjectCodes": {"$in": teacher_subject_codes}})
+        semester_ids = {g["SemesterID"] for g in grades_cursor if "SemesterID" in g}
 
-# Example usage
-df = get_students_info(db, StudentID=500001)
-print(df)
+        # Fetch only semesters corresponding to the filtered IDs
+        semesters = db.semesters.find({"_id": {"$in": list(semester_ids)}})
+
+    # Build dictionary {id: "Semester SchoolYear"}
+    semester_dict = {s["_id"]: f"{s['Semester']} {s['SchoolYear']}" for s in semesters}
+
+    # Sort by SchoolYear + Semester (if needed)
+    semester_dict = dict(sorted(semester_dict.items(), key=lambda x: str(x[1])))
+
+    return semester_dict
+
+
+a = get_semesters(db,"Leonor Rivera")
+print(list(a))
+
