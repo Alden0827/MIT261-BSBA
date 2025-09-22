@@ -14,7 +14,7 @@ UNIVERSITY_NAME = "Notre Dame of Marbel University"
 # APP_TITLE = "Pratise Programing lang gud.. para maka toon"
 # UNIVERSITY_NAME = "DSWD UNIVERSITY HAHA"
 
-DB_NAME = "mit261m"
+DB_NAME = "mit261"
 
 # DATABASE CONFIGURATION --------------------------------------------------------
 MONGODB_USERNAME = os.getenv("MONGODB_USERNAME")

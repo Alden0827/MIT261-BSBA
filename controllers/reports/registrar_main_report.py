@@ -414,7 +414,7 @@ def report_page(db):
 
         with st.spinner(f"Preparing data for {report}.", show_time = True):
             df_retention = r.get_retention_rates(course=course_filter, year_level=year_level_filter)  # columns: ['Semester to Semester', 'Retained', 'Dropped Out', 'Retention Rate (%)']
-        
+            print('df_retention2:',df_retention)
         st.dataframe(df_retention)
 
         st.markdown("""

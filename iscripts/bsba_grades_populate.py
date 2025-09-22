@@ -8,8 +8,10 @@ from pymongo import MongoClient
 # -------------------------------------------------------------------
 try:
     client = MongoClient("mongodb+srv://aldenroxy:N53wxkFIvbAJjZjc@cluster0.l7fdbmf.mongodb.net")
-    # client = MongoClient("mongodb://localhost:27017/")
     db = client['mit261']
+
+    # client = MongoClient("mongodb://localhost:27017/")
+    # db = client['mit261m']
     print("✅ Successfully connected to MongoDB!")
 except Exception as e:
     print(f"❌ Error connecting to MongoDB: {e}")
