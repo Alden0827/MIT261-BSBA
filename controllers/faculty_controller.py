@@ -28,11 +28,12 @@ def faculty_view(db,user_role):
             main_menu = option_menu(
                 menu_title="Faculty Menu",
                 options=[
+                    "Grade Management",
                     "Class Scheduling",
                     "Reports",
                 ],
                 icons=[
-                    "bar-chart-line", "book", "book-half", "people",
+                    "pencil-square", "bar-chart-line", "book", "book-half", "people",
                     "calendar", "calendar-check", "file-earmark-text", "graph-up"
                 ],
                 menu_icon="cast",
@@ -51,10 +52,11 @@ def faculty_view(db,user_role):
             main_menu = option_menu(
                 menu_title="Faculty Menu",
                 options=[
+                    "Grade Management",
                     "Reports",
                 ],
                 icons=[
-                    "bar-chart-line", "book", "book-half", "people",
+                    "pencil-square", "bar-chart-line", "book", "book-half", "people",
                     "calendar", "calendar-check", "file-earmark-text", "graph-up"
                 ],
                 menu_icon="cast",
@@ -102,7 +104,10 @@ def faculty_view(db,user_role):
             )
 
     # --- Routing (works for all menus) ---
-    if menu == "Class Scheduling":
+    if menu == "Grade Management":
+        from .faculty.grade_management_controller import grade_management_page
+        grade_management_page(db)
+    elif menu == "Class Scheduling":
         from .faculty.class_scheduler_manager import class_scheduler_manager_page
         class_scheduler_manager_page(db)
     elif menu == "Class Grade Distribution":
