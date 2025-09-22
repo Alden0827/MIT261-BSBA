@@ -23,10 +23,6 @@ CACHE_DIR = "./cache"
 # ------------------------------
 # MongoDB Connection
 # ------------------------------
-# def get_db(uri=MONGODB_URI):
-#     client = MongoClient(uri)
-#     db = client.get_database()
-#     return db
 
 # ------------------------------
 # Student collection caching
@@ -911,8 +907,17 @@ class report_helper(object):
 # ------------------------------
 # Test all functions in __main__
 # ------------------------------
+from pymongo import MongoClient
+from config.settings import MONGODB_URI
+def get_db(uri=MONGODB_URI):
+    client = MongoClient(uri)
+    db = client.get_database()
+    return db
+
+
 if __name__ == "__main__":
-    
+    db = get_db()    
+
     # deans_list = get_deans_list(batch_size=10000) # 1. Dean's List
     # probation = get_academic_probation_batch_checkpoint(top_n=10) #2. Academic Probation
     # pass_fail = get_subject_pass_fail() # 3. Subject Pass/Fail Distribution
@@ -921,5 +926,8 @@ if __name__ == "__main__":
     # top_performers = get_top_performers() #6. Top Performers per Program
     # curriculum = get_curriculum_progress() #7. Curriculum Progress Viewer
     # print(curriculum.iloc[0])
-    
-    pass
+
+
+    # r = report_helper(db)
+    # data = r.get_predicted_subjects(student_id=500001,"Semester")
+    # pass

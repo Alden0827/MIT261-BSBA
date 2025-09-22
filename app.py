@@ -11,13 +11,13 @@ from config.settings import APP_TITLE, DEFAULT_PAGE_TITLE, MONGODB_URI, DB_NAME
 
 st.set_page_config(page_title=DEFAULT_PAGE_TITLE, layout="wide")
 
-# Database connection
+# -------------------------------------------------------
 client = MongoClient(MONGODB_URI)
 db = client[DB_NAME]
 
 # client = MongoClient('mongodb://localhost:27017/')
 # db = client['mit261m']
-
+# -------------------------------------------------------
 # Initialize session state
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False

@@ -9,6 +9,36 @@ from streamlit_echarts import st_echarts
 import helpers.data_helper as dh
 import pandas as pd
 
+
+
+def get_semesters(db, teacher=None):
+    """
+    Returns semesters available in the database.
+    Optionally filters to only semesters where the specified teacher has subjects.
+
+    :param db: MongoDB database object
+    :param teacher: Optional teacher name to filter semesters
+    :return: Dict with {_id: "Semester SchoolYear"}
+
+    Sample: {13: 'FirstSem 2024', 14: 'SecondSem 2024'}
+    """
+    if not teacher:
+        semesters = db.semesters.find()
+    else:
+        teacher_subjects = db.subjects.find({"Teacher": teacher})
+        teacher_subject_codes = [s["_id"] for s in teacher_subjects]
+
+        grades_cursor = db.grades.find({"SubjectCodes": {"$in": teacher_subject_codes}})
+        semester_ids = {g["SemesterID"] for g in grades_cursor if "SemesterID" in g}
+        semesters = db.semesters.find({"_id": {"$in": list(semester_ids)}})
+
+    semester_dict = {s["_id"]: f"{s['Semester']} {s['SchoolYear']}" for s in semesters}
+    semester_dict = dict(sorted(semester_dict.items(), key=lambda x: str(x[1])))  # sorted nicely
+
+    return semester_dict
+
+
+
 def report_page(db):
     r = rh.report_helper({"db": db})
     r2 = dh.data_helper({"db": db})
@@ -93,7 +123,7 @@ def report_page(db):
                     "This means no students met the GPA and grade requirements with the applied filters.")
         else:
             # Display table
-            st.dataframe(df_deans, use_container_width=True)
+            st.dataframe(df_deans, width="stretch")
 
             # Chart data
             names_deans = df_deans["Name"].tolist()
@@ -138,7 +168,7 @@ def report_page(db):
             st.info("No students are under academic probation with the applied filters.")
         else:
             # Display table
-            st.dataframe(df_probation, use_container_width=True)
+            st.dataframe(df_probation, width="stretch")
 
             # Chart data (safe conversion)
             required_cols = ["Name", "GPA", "Fail%"]
@@ -605,7 +635,7 @@ def report_page(db):
                                     "Subject Code", "Subject Description", "Lec Hours",
                                     "Lab Hours", "Units", "Prerequisites"
                                 ]]
-                                st.dataframe(sem_display, use_container_width=True)
+                                st.dataframe(sem_display, width="stretch")
                                 total_units = sem_data["Units"].sum()
                                 st.markdown(f"**Total Units:** {total_units}")
 
@@ -634,39 +664,122 @@ def report_page(db):
                 }
                 st_echarts(options=option, height="400px")
 
-            # --- Predicted Subjects Section ---
-            st.markdown("---")
-            st.subheader("🔮 Predicted Subjects for Next Semester")
 
-            # Get a list of future semesters
-            semesters_df = r2.get_semesters()
-            if not semesters_df.empty:
-                # Assuming you want to predict for semesters beyond the current ones in the DB
-                latest_year = semesters_df['SchoolYear'].max()
-                # Let's create options for the next 2 years
-                future_semesters = [f"FirstSem {latest_year + 1}", f"SecondSem {latest_year + 1}", f"Summer {latest_year + 2}", f"FirstSem {latest_year + 2}", f"SecondSem {latest_year + 2}"]
 
-                selected_semester_predict = st.selectbox("Select Semester for Prediction:", ["-- Select --"] + future_semesters)
 
-                if selected_semester_predict != "-- Select --":
-                    with st.spinner(f"Predicting subjects for {selected_semester_predict}..."):
-                        recommended_df, blocked_df = r.get_predicted_subjects(student['_id'], selected_semester_predict)
+
+
+
+
+
+
+
+#############
+
+            # # --- Predicted Subjects Section ---
+            # st.markdown("---")
+            # st.subheader("🔮 Predicted Subjects for Next Semester")
+
+            # # Get a list of semesters using the helper
+            # semester_dict = get_semesters(r2.db)   # returns {_id: "Semester SchoolYear"}
+            # semester_options = [""] + list(semester_dict.values())
+            # print('semester_dict:',semester_dict)
+
+            # if semester_dict:
+            #     # Extract the latest year from the available semesters
+            #     semesters_df = pd.DataFrame(list(semester_dict.items()), columns=["_id", "SemesterLabel"])
+            #     semesters_df["Year"] = semesters_df["SemesterLabel"].apply(lambda x: int(x.split()[-1]))
+            #     latest_year = semesters_df["Year"].max()
+
+            #     # Let's create options for the next 2 years
+
+            #     selected_semester_predict = st.selectbox(
+            #         "Select Semester for Prediction:",
+            #         ["-- Select --"] + semester_options
+            #     )
+            #     if selected_semester_predict != "-- Select --":
+            #         semester_id = next((k for k, v in semester_dict.items() if v == selected_sem_year), None)
+            #         with st.spinner(f"Predicting subjects for {selected_semester_predict}..."):
+            #             print('semester_id:',semester_id)
+            #             recommended_df, blocked_df = r.get_predicted_subjects(student['_id'], semester_id)
+
+            #         st.markdown(f"#### ✅ Recommended Subjects for {selected_semester_predict}")
+            #         if not recommended_df.empty:
+            #             st.dataframe(recommended_df, width="stretch")
+            #         else:
+            #             st.info("No recommended subjects for this semester. The student may have already taken them, or there are no subjects scheduled.")
+
+            #         st.markdown(f"#### 🚫 Blocked Subjects for {selected_semester_predict}")
+            #         if not blocked_df.empty:
+            #             st.dataframe(blocked_df, width="stretch")
+            #         else:
+            #             st.info("No blocked subjects for this semester.")
+
+            # # Get a list of semesters using the helper
+            semester_dict = get_semesters(r2.db)   # returns {_id: "Semester SchoolYear"}
+            semester_options = [""] + list(semester_dict.values())
+            
+            selected_semester_predict = st.selectbox(
+                "Select Semester for Prediction:",
+                semester_options
+            )
+
+            if selected_semester_predict != "":
+                # Get Curriculum & Grades
+
+                curriculum_df = r2.get_curriculum(selected_course)
+                student_grades_df = r2.get_student_subjects_grades(student.get("_id"))
+
+                # st.dataframe(curriculum_df)
+                # st.dataframe(student_grades_df)
+
+                if not curriculum_df.empty:
+                    passed_subjects = []
+                    if not student_grades_df.empty:
+                        passed_subjects = student_grades_df[student_grades_df["Grade"] >= 75]["Subject Code"].tolist()
+
+                    curriculum_df.columns = curriculum_df.columns.str.strip()
+
+                    taken_subjects = []
+                    if not student_grades_df.empty and "Subject Code" in student_grades_df.columns:
+                        taken_subjects = student_grades_df["Subject Code"].tolist()
+
+                    print('A =====================================')
+
+                    selected_semester, selected_year =  selected_semester_predict.replace("Sem", "").lower().split()
+
+                    potential_subjects = curriculum_df[
+                        (curriculum_df["semester"].str.lower() == selected_semester)
+                        & (curriculum_df["year"] == student.get("YearLevel"))
+                        & (~curriculum_df["Subject Code"].isin(taken_subjects))
+                    ].copy()
+                    print('selected_semester_predict:',selected_semester_predict.replace("Sem", "").lower())
+                    print('YearLevel:',student.get("YearLevel"))
+                    print('taken_subjects:',taken_subjects)
+                    available_subjects, blocked_subjects = [], []
+                    print('B =====================================')
+                    print('potential_subjects:',potential_subjects)
+                    for _, row in potential_subjects.iterrows():
+                        print('available_subjects:',available_subjects)
+                        prerequisites = row.get("preRequisites", [])
+                        if not prerequisites or all(prereq in passed_subjects for prereq in prerequisites):
+                            available_subjects.append(row)
+                        else:
+                            blocked_subjects.append(row)
+
+                    available_subjects_df = pd.DataFrame(available_subjects)
+                    blocked_subjects_df = pd.DataFrame(blocked_subjects)
 
                     st.markdown(f"#### ✅ Recommended Subjects for {selected_semester_predict}")
-                    if not recommended_df.empty:
-                        st.dataframe(recommended_df, use_container_width=True)
+                    if not available_subjects_df.empty:
+                        st.dataframe(available_subjects_df[["Subject Code", "Description", "unit"]])
                     else:
-                        st.info("No recommended subjects for this semester. The student may have already taken them, or there are no subjects scheduled.")
+                        st.info("No subjects available for enrollment.")
 
                     st.markdown(f"#### 🚫 Blocked Subjects for {selected_semester_predict}")
-                    if not blocked_df.empty:
-                        st.dataframe(blocked_df, use_container_width=True)
+                    if not blocked_subjects_df.empty:
+                        st.dataframe(blocked_subjects_df[["Subject Code", "Description", "unit", "preRequisites"]])
                     else:
                         st.info("No blocked subjects for this semester.")
-
-
-        st.markdown("""
-        **Insight:**  
-        Provides a comprehensive view of curriculum structure, subject prerequisites, and credit distribution.  
-        Supports **curriculum planning and academic advising** for students to track progress toward graduation.
-        """)
+                else:
+                    st.warning("No curriculum found for this course.")
