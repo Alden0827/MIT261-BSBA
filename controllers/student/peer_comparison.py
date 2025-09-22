@@ -20,23 +20,45 @@ def peer_comparison_page(db):
     r = dh.data_helper({"db": db})
     st.title("🧑‍🤝‍🧑 Subject Peer Comparison")
 
-    StudentID = st.session_state.get('uid', None)
-    if not StudentID:
-        st.warning("Student not logged in.")
+    # --- Role & UID ---
+    role = st.session_state.get("user_role", "student")  # "student" or "registrar"
+    StudentID = st.session_state.get("uid", None)
+
+    if role == "registrar":
+        students = r.get_students()
+        if students.empty:
+            st.warning("No students found.")
+            return
+
+        selected_student = st.selectbox(
+            "Select Student", 
+            students["Name"].tolist()
+        )
+        student_row = students[students["Name"] == selected_student].iloc[0]
+        StudentID = student_row["_id"]
+        student_name = student_row["Name"]
+
+    elif role == "student":
+        if not StudentID:
+            st.warning("Student not logged in.")
+            return
+
+        student_info = r.get_students(StudentID=StudentID)
+        if student_info.empty:
+            st.warning("Student not found.")
+            return
+        student_name = student_info.iloc[0]["Name"]
+
+    else:
+        st.error("Unauthorized role.")
         return
 
-    # --- Student Info ---
-    student_info = r.get_students(StudentID=StudentID)
-    if student_info.empty:
-        st.warning("Student not found.")
-        return
-    student_name = student_info.iloc[0]["Name"]
     st.subheader(f"Student: {student_name} ({StudentID})")
 
     # --- Get student's taken subjects and grades ---
     student_grades = r.get_student_subjects_grades(StudentID=StudentID)
     if student_grades.empty:
-        st.info("You have no grades recorded yet.")
+        st.info("No grades recorded for this student.")
         return
 
     # Get all subjects for description mapping
@@ -53,18 +75,16 @@ def peer_comparison_page(db):
 
         all_grades_subject = r.get_all_grades_for_subject(subject_code)
         if all_grades_subject.empty or len(all_grades_subject) < 2:
-            continue # Not enough data for comparison
+            continue  # Not enough data for comparison
 
         grades = all_grades_subject['Grade'].astype(float)
         total_students = len(grades)
         class_average = grades.mean()
 
-        # Calculate rank
-        # Sort grades descending, duplicates get same rank
-        sorted_grades = grades.sort_values(ascending=False).unique()
-        # Find the rank of the student's grade
-        rank = pd.Series(sorted_grades).searchsorted(your_grade, side='right')
-        your_rank = len(sorted_grades) - rank +1
+        # --- Rank calculation ---
+        sorted_grades = grades.sort_values(ascending=False)
+        # Rank is position (1 = top rank)
+        your_rank = (sorted_grades >= your_grade).sum()
 
         remarks = get_remarks(your_grade, class_average)
 
@@ -80,7 +100,7 @@ def peer_comparison_page(db):
 
     # --- Display Table ---
     if not report_data:
-        st.info("Could not generate peer comparison for your subjects.")
+        st.info("Could not generate peer comparison for this student's subjects.")
         return
 
     report_df = pd.DataFrame(report_data)

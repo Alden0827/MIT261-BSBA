@@ -7,24 +7,47 @@ def passed_failed_summary_page(db):
     r = dh.data_helper({"db": db})
     st.title("📊 Passed vs Failed Summary")
 
-    StudentID = st.session_state.get('uid', None)
-    if not StudentID:
-        st.warning("Student not logged in.")
+    # --- Role & UID ---
+    role = st.session_state.get("user_role", "student")
+    StudentID = st.session_state.get("uid", None)
+
+    if role == "registrar":
+        students = r.get_students()
+        if students.empty:
+            st.warning("No students found.")
+            return
+
+        selected_student = st.selectbox(
+            "Select Student",
+            students["Name"].tolist()
+        )
+        student_row = students[students["Name"] == selected_student].iloc[0]
+        StudentID = student_row["_id"]
+        student_name = student_row["Name"]
+        program_code = student_row["Course"]
+
+    elif role == "student":
+        if not StudentID:
+            st.warning("Student not logged in.")
+            return
+
+        student_info = r.get_students(StudentID=StudentID)
+        if student_info.empty:
+            st.warning("Student not found.")
+            return
+        student_name = student_info.iloc[0]["Name"]
+        program_code = student_info.iloc[0]["Course"]
+
+    else:
+        st.error("Unauthorized role.")
         return
 
-    # --- Student Info ---
-    student_info = r.get_students(StudentID=StudentID)
-    if student_info.empty:
-        st.warning("Student not found.")
-        return
-    student_name = student_info.iloc[0]["Name"]
-    program_code = student_info.iloc[0]["Course"]
     st.subheader(f"Student: {student_name} ({StudentID})")
 
     # --- Get Curriculum and Grades ---
     curriculum_df = r.get_curriculum(program_code)
     if curriculum_df.empty:
-        st.warning(f"No curriculum found for your course: {program_code}")
+        st.warning(f"No curriculum found for course: {program_code}")
         return
     total_required_subjects = len(curriculum_df)
 
@@ -32,10 +55,12 @@ def passed_failed_summary_page(db):
 
     # --- Calculations ---
     if not stud_grades.empty:
-        # Merge to align grades with curriculum
-        merged_df = pd.merge(curriculum_df, stud_grades[['Subject Code', 'Grade']], on="Subject Code", how="left")
-
-        # Ensure Grade is numeric
+        merged_df = pd.merge(
+            curriculum_df,
+            stud_grades[['Subject Code', 'Grade']],
+            on="Subject Code",
+            how="left"
+        )
         merged_df['Grade'] = pd.to_numeric(merged_df['Grade'], errors='coerce')
 
         passed_subjects = merged_df[merged_df['Grade'] >= 75].shape[0]
@@ -83,7 +108,6 @@ def passed_failed_summary_page(db):
     ax.set_ylabel("Number of Subjects")
     ax.set_title("Subject Completion Status")
 
-    # Add labels on top of bars
     for i, v in enumerate(chart_data.values()):
         ax.text(i, v + 0.1, str(v), ha='center', fontweight='bold')
 

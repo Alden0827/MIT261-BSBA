@@ -112,8 +112,8 @@ def get_students_info(db, StudentID=None):
 def prospectus_page(db):
     r = dh.data_helper({"db": db})
 
-    StudentID = st.session_state["uid"]
-    students = get_students_info(db, StudentID=StudentID)
+    user_role = st.session_state.get("user_role", "")
+    StudentID = st.session_state.get("uid")
 
     st.title("🧑‍🎓 Student Prospectus & GPA")
 
@@ -128,16 +128,30 @@ def prospectus_page(db):
         pdf_download_placeholder = st.empty()
 
     # ---------------- Student Selection ----------------
-    if students.empty:
-        st.warning("No students found.")
-        return
+    if user_role == "registrar":
+        # registrar can select any student
+        students = get_students_info(db)   # all students
+        if students.empty:
+            st.warning("No students found.")
+            return
 
-    selected_student = st.selectbox("Select Student", students["Name"].tolist())
-    student_row = students[students["Name"] == selected_student].iloc[0]
+        selected_student = st.selectbox("Select Student", students["Name"].tolist())
+        student_row = students[students["Name"] == selected_student].iloc[0]
 
+    else:
+        # student role: only their own record
+        students = get_students_info(db, StudentID=StudentID)
+        if students.empty:
+            st.warning("No student record found.")
+            return
+
+        student_row = students.iloc[0]
+
+    # ---------------- Display student info ----------------
     st.write(f"**Student ID:** {student_row['_id']}")
+    st.write(f"**Name:** {student_row['Name']}")
     st.write(f"**Course:** {student_row['Course']}")
-    st.write(f"**Year Level:** {student_row['YearLevel']}")
+    # st.write(f"**Year Level:** {student_row['YearLevel']}")
 
     # --- Get Curriculum and Grades ---
     student_id = student_row["_id"]
