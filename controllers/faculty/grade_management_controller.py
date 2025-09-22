@@ -18,26 +18,46 @@ def grade_management_page(db):
         return
 
     student_names = {s["_id"]: s["Name"] for s in students}
-
-    # Prepend a blank option to the dictionary of student names
     student_options = {0: ""}
     student_options.update(student_names)
 
-    selected_student_id = st.selectbox("Select Student", options=list(student_options.keys()), format_func=lambda x: student_options[x])
+    selected_student_id = st.selectbox(
+        "Select Student",
+        options=list(student_options.keys()),
+        format_func=lambda x: student_options[x],
+    )
 
     if selected_student_id:
-        st.subheader(f"Editing Grades for: {student_options[selected_student_id]}")
+        st.subheader(f"Editing Grades for: {student_options[selected_student_id]} [{selected_student_id}]")
 
-        grades_doc = db.grades.find_one({"StudentID": selected_student_id})
+        # Fetch all grade docs for this student
+        grades_docs = list(db.grades.find({"StudentID": selected_student_id}))
 
-        if grades_doc:
-            # Create a list of dictionaries for the data editor
+        if not grades_docs:
+            st.warning("No grades found for this student.")
+            return
+
+        semester_order = {"FirstSem": 1, "SecondSem": 2, "Summer": 3}
+        semester_grade_data = []
+
+        # Process each grade document
+        for grades_doc in grades_docs:
+            semester_id = grades_doc.get("SemesterID")
+            sem_doc = db.semesters.find_one({"_id": semester_id})
+
+            if sem_doc:
+                sem_label = f"{sem_doc['Semester']} {sem_doc['SchoolYear']}"
+                sem_year = sem_doc["SchoolYear"]
+                sem_rank = semester_order.get(sem_doc["Semester"], 99)
+            else:
+                sem_label = f"Semester {semester_id}"
+                sem_year = 9999
+                sem_rank = 99
+
             grade_data = []
-            for i, subject_code in enumerate(grades_doc["SubjectCodes"]):
-                # Find the teacher for the current subject
+            for i, subject_code in enumerate(grades_doc.get("SubjectCodes", [])):
                 current_teacher = grades_doc["Teachers"][i] if i < len(grades_doc["Teachers"]) else "N/A"
 
-                # Only allow editing if the logged-in teacher is the teacher for the subject
                 if current_teacher == teacher_name:
                     subject_info = db.subjects.find_one({"_id": subject_code})
                     grade_data.append({
@@ -47,13 +67,29 @@ def grade_management_page(db):
                         "Status": grades_doc["Status"][i]
                     })
 
+            # Skip semesters with no subjects for this teacher
             if not grade_data:
-                st.info("This student has no subjects assigned to you.")
-                return
+                continue
 
-            # --- Grade Table ---
-            df = pd.DataFrame(grade_data)
+            semester_grade_data.append({
+                "year": sem_year,
+                "rank": sem_rank,
+                "label": sem_label,
+                "grades_doc": grades_doc,
+                "grade_data": grade_data
+            })
 
+        # Sort semesters chronologically
+        semester_grade_data.sort(key=lambda x: (x["year"], x["rank"]))
+
+        # Render each semester
+        for sem in semester_grade_data:
+            st.markdown(f"### {sem['label']}")
+
+            df = pd.DataFrame(sem["grade_data"])
+            grades_doc = sem["grades_doc"]
+
+            # --- Editable Table ---
             for i, row in df.iterrows():
                 col1, col2, col3, col4, col5 = st.columns([2, 4, 1, 2, 1])
 
@@ -62,12 +98,22 @@ def grade_management_page(db):
                 with col2:
                     st.text(row["Description"])
                 with col3:
-                    new_grade = st.number_input("Grade", value=row["Grade"], key=f"grade_{i}", label_visibility="collapsed")
+                    new_grade = st.number_input(
+                        "Grade",
+                        value=row["Grade"],
+                        key=f"grade_{grades_doc['_id']}_{i}",
+                        label_visibility="collapsed"
+                    )
                 with col4:
-                    new_status = st.selectbox("Status", options=["", "Final", "INC"], index=["", "Final", "INC"].index(row["Status"]), key=f"status_{i}", label_visibility="collapsed")
+                    new_status = st.selectbox(
+                        "Status",
+                        options=["", "Final", "INC"],
+                        index=["", "Final", "INC"].index(row["Status"]),
+                        key=f"status_{grades_doc['_id']}_{i}",
+                        label_visibility="collapsed"
+                    )
                 with col5:
-                    if st.button("Delete", key=f"delete_{i}"):
-                        # Pull the element from the arrays
+                    if st.button("Delete", key=f"delete_{grades_doc['_id']}_{i}"):
                         db.grades.update_one(
                             {"_id": grades_doc["_id"]},
                             {
@@ -82,20 +128,15 @@ def grade_management_page(db):
                         st.success(f"Grade for {row['Subject Code']} deleted successfully!")
                         st.rerun()
 
-                # Update the DataFrame with the new values
+                # Update DataFrame with new values
                 df.at[i, "Grade"] = new_grade
                 df.at[i, "Status"] = new_status
 
-
-            if st.button("Save Changes"):
-                # Update the grades in the database
+            if st.button("Save Changes", key=f"save_{grades_doc['_id']}"):
                 for index, row in df.iterrows():
                     subject_code_to_update = row["Subject Code"]
-
-                    # Find the index of the subject in the original grades document
                     subject_index = grades_doc["SubjectCodes"].index(subject_code_to_update)
 
-                    # Update the grade and status
                     db.grades.update_one(
                         {"_id": grades_doc["_id"]},
                         {
@@ -110,8 +151,7 @@ def grade_management_page(db):
 
             # --- Add Grade Form ---
             with st.expander("➕ Add New Grade"):
-                with st.form("add_grade_form"):
-                    # Get subjects not yet graded for the student
+                with st.form(f"add_grade_form_{grades_doc['_id']}"):
                     all_subjects = db.subjects.find({"Teacher": teacher_name})
                     graded_subjects = grades_doc.get("SubjectCodes", [])
                     available_subjects = {
@@ -122,7 +162,11 @@ def grade_management_page(db):
                     if not available_subjects:
                         st.warning("No more subjects to add for this student.")
                     else:
-                        selected_subject = st.selectbox("Select Subject", options=list(available_subjects.keys()), format_func=lambda x: available_subjects[x])
+                        selected_subject = st.selectbox(
+                            "Select Subject",
+                            options=list(available_subjects.keys()),
+                            format_func=lambda x: available_subjects[x]
+                        )
                         new_grade = st.number_input("Enter Grade", min_value=0, max_value=100, step=1)
 
                         submitted = st.form_submit_button("Add Grade")
@@ -140,6 +184,3 @@ def grade_management_page(db):
                             )
                             st.success(f"Grade for {selected_subject} added successfully!")
                             st.rerun()
-
-        else:
-            st.warning("No grades found for this student.")
