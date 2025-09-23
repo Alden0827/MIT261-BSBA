@@ -24,7 +24,7 @@ def get_student_subjects_grades(db, StudentID=None, limit=1000):
     student_id = int(StudentID)
 
     # Fetch all grade documents for the student (all semesters)
-    grade_docs = list(db.grades.find({"StudentID": student_id}))
+    grade_docs = list(db.grades.findMany({"StudentID": student_id}))
     if not grade_docs:
         return pd.DataFrame()
 

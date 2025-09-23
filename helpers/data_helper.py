@@ -269,55 +269,57 @@ class data_helper(object):
 
         return pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
 
-    def get_student_subjects_grades(self,StudentID=None, limit=1000):
-        """
-        Returns all subjects and grades for a specific student with:
-        ["Subject Code", "Description", "Grade", "Semester", "SchoolYear"]
-        """
-        cache_key = f"student_subjects_grades_{StudentID}x"
+    # def get_student_subjects_grades(self,StudentID=None, limit=1000):
+    #     """
+    #     Returns all subjects and grades for a specific student with:
+    #     ["Subject Code", "Description", "Grade", "Semester", "SchoolYear"]
+    #     """
+    #     cache_key = f"student_subjects_grades_{StudentID}x"
 
-        def query():
-            if StudentID is not None:
-                student_id = int(StudentID)
-                grade_doc = self.db.grades.find_one({"StudentID": student_id})
-                print(grade_doc)
-            else:
-                return pd.DataFrame()
+    #     def query():
+    #         if StudentID is not None:
+    #             student_id = int(StudentID)
+    #             grade_doc = self.db.grades.find({"StudentID": student_id})
+    #             print(grade_doc)
+    #         else:
+    #             return pd.DataFrame()
 
-            if not grade_doc:
-                return pd.DataFrame()
+    #         if not grade_doc:
+    #             return pd.DataFrame()
 
-            # Build rows manually
-            rows = []
-            subject_codes = grade_doc.get("SubjectCodes", [])
-            grades = grade_doc.get("Grades", [])
-            semester_id = grade_doc.get("SemesterID")
+    #         # Build rows manually
+    #         rows = []
+    #         subject_codes = grade_doc.get("SubjectCodes", [])
+    #         grades = grade_doc.get("Grades", [])
+    #         semester_id = grade_doc.get("SemesterID")
 
 
-            # Lookup semester info once
-            sem = self.db.semesters.find_one({"_id": semester_id})
-            semester = sem["Semester"] if sem else None
-            school_year = sem["SchoolYear"] if sem else None
+    #         # Lookup semester info once
+    #         sem = self.db.semesters.find({"_id": semester_id})
+    #         semester = sem["Semester"] if sem else None
+    #         school_year = sem["SchoolYear"] if sem else None
 
-            for code, grade in zip(subject_codes, grades):
-                subj = self.db.subjects.find_one({"_id": code})
-                desc = subj["Description"] if subj else None
+    #         for code, grade in zip(subject_codes, grades):
+    #             subj = self.db.subjects.find({"_id": code})
+    #             desc = subj["Description"] if subj else None
 
-                rows.append({
-                    "Subject Code": code,
-                    "Description": desc,
-                    "Grade": grade,
-                    "Semester": semester,
-                    "SchoolYear": school_year
-                })
+    #             rows.append({
+    #                 "Subject Code": code,
+    #                 "Description": desc,
+    #                 "Grade": grade,
+    #                 "Semester": semester,
+    #                 "SchoolYear": school_year
+    #             })
 
-            # Apply limit
-            if limit:
-                rows = rows[:limit]
+    #         # Apply limit
+    #         if limit:
+    #             rows = rows[:limit]
 
-            return pd.DataFrame(rows)
+    #         return pd.DataFrame(rows)
 
-        return load_or_query(cache_key, query)
+    #     return load_or_query(cache_key, query)
+
+
 
 
     def get_all_grades(self):

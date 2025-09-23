@@ -3,6 +3,53 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import helpers.data_helper as dh
 
+
+def get_student_subjects_grades(db, StudentID=None, limit=1000):
+    """
+    Returns all subjects and grades for a specific student with:
+    ["Subject Code", "Description", "Grade", "Semester", "SchoolYear"]
+    """
+
+    def query():
+        if StudentID is None:
+            return pd.DataFrame()
+
+        student_id = int(StudentID)
+        grade_docs = db.grades.find({"StudentID": student_id})  # ✅ Multiple documents
+
+        rows = []
+        for grade_doc in grade_docs:
+            subject_codes = grade_doc.get("SubjectCodes", [])
+            grades = grade_doc.get("Grades", [])
+            semester_id = grade_doc.get("SemesterID")
+
+            # Fetch semester info
+            sem = db.semesters.find_one({"_id": semester_id})
+            semester = sem["Semester"] if sem else None
+            school_year = sem["SchoolYear"] if sem else None
+
+            # Process each subject
+            for code, grade in zip(subject_codes, grades):
+                subj = db.subjects.find_one({"_id": code})
+                desc = subj["Description"] if subj else None
+
+                rows.append({
+                    "Subject Code": code,
+                    "Description": desc,
+                    "Grade": grade,
+                    "Semester": semester,
+                    "SchoolYear": school_year
+                })
+
+        # Apply limit
+        if limit:
+            rows = rows[:limit]
+
+        return pd.DataFrame(rows)
+
+    return query()  # no caching
+
+
 def passed_failed_summary_page(db):
     r = dh.data_helper({"db": db})
     st.title("📊 Passed vs Failed Summary")
@@ -51,7 +98,7 @@ def passed_failed_summary_page(db):
         return
     total_required_subjects = len(curriculum_df)
 
-    stud_grades = r.get_student_subjects_grades(StudentID=StudentID)
+    stud_grades = get_student_subjects_grades(db,StudentID=StudentID)
 
     # --- Calculations ---
     if not stud_grades.empty:
@@ -61,6 +108,9 @@ def passed_failed_summary_page(db):
             on="Subject Code",
             how="left"
         )
+        # print('curriculum_df:',curriculum_df)
+        print('stud_grades:',stud_grades)
+        # print('merged_df:',merged_df)
         merged_df['Grade'] = pd.to_numeric(merged_df['Grade'], errors='coerce')
 
         passed_subjects = merged_df[merged_df['Grade'] >= 75].shape[0]

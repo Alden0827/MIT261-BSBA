@@ -3,95 +3,64 @@ from config.settings import APP_TITLE, DEFAULT_PAGE_TITLE, MONGODB_URI, DB_NAME
 import pandas as pd
 import os
 import pickle   # ✅ Needed for checkpoint save/load
+from helpers.cache_helper import cache_meta, load_or_query
 
 # Database connection
-# client = MongoClient(MONGODB_URI)
-client = MongoClient('mongodb://localhost:27017/')
+client = MongoClient(MONGODB_URI)
+# client = MongoClient('mongodb://localhost:27017/')
 CACHE_DIR = "./cache"
-db = client['mit261m']
+db = client['mit261']
 
 
 from pymongo import MongoClient
 import pandas as pd
 
-def get_predicted_subjects(db, student_id, semester_id):
+def get_student_subjects_grades(db, StudentID=None, limit=1000):
     """
-    Predicts recommended and blocked subjects for a student for a given semester.
-    Uses curriculum + student grades + prerequisites.
+    Returns all subjects and grades for a specific student with:
+    ["Subject Code", "Description", "Grade", "Semester", "SchoolYear"]
     """
 
-    from helpers.data_helper import data_helper
-    dh = data_helper({"db": db})
+    def query():
+        if StudentID is None:
+            return pd.DataFrame()
 
-    # 1. Get student info
-    student = db.students.find_one({"_id": student_id})
-    if not student:
-        return pd.DataFrame(), pd.DataFrame()
-    student_course = student.get("Course")
-    student_year = student.get("YearLevel")
+        student_id = int(StudentID)
+        grade_docs = db.grades.find({"StudentID": student_id})  # ✅ Multiple documents
 
-    # 2. Get curriculum for the student's course
-    curriculum_df = dh.get_curriculum(student_course)
-    if curriculum_df.empty:
-        return pd.DataFrame(), pd.DataFrame()
+        rows = []
+        for grade_doc in grade_docs:
+            subject_codes = grade_doc.get("SubjectCodes", [])
+            grades = grade_doc.get("Grades", [])
+            semester_id = grade_doc.get("SemesterID")
 
-    curriculum_df.columns = curriculum_df.columns.str.strip()  # cleanup
+            # Fetch semester info
+            sem = db.semesters.find_one({"_id": semester_id})
+            semester = sem["Semester"] if sem else None
+            school_year = sem["SchoolYear"] if sem else None
 
-    # 3. Get student's grades
-    grades_df = dh.get_grades(student_id=student_id)
-    passed_subjects, taken_subjects = [], []
-    if not grades_df.empty:
-        grades_flat = grades_df.explode(['SubjectCodes', 'Grades'])
-        passed_subjects = grades_flat[grades_flat['Grades'] >= 75]["SubjectCodes"].tolist()
-        taken_subjects = grades_flat["SubjectCodes"].tolist()
+            # Process each subject
+            for code, grade in zip(subject_codes, grades):
+                subj = db.subjects.find_one({"_id": code})
+                desc = subj["Description"] if subj else None
 
-    # 4. Get semester info
-    semester_doc = db.semesters.find_one({"_id": semester_id})
-    if not semester_doc:
-        return pd.DataFrame(), pd.DataFrame()
+                rows.append({
+                    "Subject Code": code,
+                    "Description": desc,
+                    "Grade": grade,
+                    "Semester": semester,
+                    "SchoolYear": school_year
+                })
 
-    semester_name = semester_doc.get("Semester")   # e.g. "First", "Second", "Summer"
-    school_year = semester_doc.get("SchoolYear")
+        # Apply limit
+        if limit:
+            rows = rows[:limit]
 
-    # 5. Filter curriculum for semester + year + not already taken
-    print(curriculum_df)
-    print('taken_subjects:',taken_subjects)
-    potential_subjects = curriculum_df[
-        (curriculum_df["semester"].str.lower() == semester_name.lower())
-        & (curriculum_df["year"] == student_year)
-        & (~curriculum_df["Subject Code"].isin(taken_subjects))
-    ].copy()
+        return pd.DataFrame(rows)
 
-    print('potential_subjects:',potential_subjects)
-
-    available_subjects, blocked_subjects = [], []
-
-    # 6. Evaluate prerequisites
-    for _, row in potential_subjects.iterrows():
-        prereqs = row.get("preRequisites", [])
-        if not prereqs or all(pr in passed_subjects for pr in prereqs):
-            available_subjects.append({
-                "Subject Code": row["code"],
-                "Description": row["name"],
-                "Units": row["unit"],
-                "Year Level": row["year"],
-                "Semester": row["semester"],
-                "SchoolYear": school_year
-            })
-        else:
-            blocked_subjects.append({
-                "Subject Code": row["code"],
-                "Description": row["name"],
-                "Units": row["unit"],
-                "Year Level": row["year"],
-                "Semester": row["semester"],
-                "Prerequisites": ", ".join(prereqs),
-                "SchoolYear": school_year
-            })
-
-    return pd.DataFrame(available_subjects), pd.DataFrame(blocked_subjects)
+    return query()  # no caching
 
 
-a = get_predicted_subjects(db=db, student_id=500001, semester_id=16)
-print(a)
+a = get_student_subjects_grades(db=db, StudentID=500002)
+a.to_excel("grades.xlsx")
 
